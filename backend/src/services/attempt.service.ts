@@ -1,0 +1,75 @@
+import { eq } from 'drizzle-orm';
+import { db } from '../db/client';
+import { attempts, reports } from '../db/schema';
+import { HttpError } from '../utils/http-error';
+
+/**
+ * Return the report for an attempt, but only if it belongs to the current user.
+ * Guest (unclaimed) attempts have a null user_id and are therefore denied until
+ * claimed. 404 if the attempt/report is missing, 403 if owned by someone else.
+ */
+export const getReport = async (userId: string, attemptId: string) => {
+  const [attempt] = await db
+    .select({
+      id: attempts.id,
+      userId: attempts.userId,
+      totalScore: attempts.totalScore,
+    })
+    .from(attempts)
+    .where(eq(attempts.id, attemptId))
+    .limit(1);
+
+  if (!attempt) {
+    throw new HttpError(404, 'Attempt not found');
+  }
+  if (attempt.userId !== userId) {
+    throw new HttpError(403, 'You do not have access to this report');
+  }
+
+  const [report] = await db
+    .select({ reportType: reports.reportType, content: reports.content })
+    .from(reports)
+    .where(eq(reports.attemptId, attemptId))
+    .limit(1);
+
+  if (!report) {
+    throw new HttpError(404, 'Report not found');
+  }
+
+  return {
+    attempt_id: attempt.id,
+    score: attempt.totalScore,
+    report: { type: report.reportType, content: report.content },
+  };
+};
+
+/**
+ * Claim a guest attempt for the current user (called after a guest logs in).
+ * - unclaimed (user_id null)        -> assign to current user
+ * - already owned by current user   -> no-op (idempotent)
+ * - owned by a different user        -> 403
+ * 404 if the attempt does not exist.
+ */
+export const claim = async (userId: string, attemptId: string) => {
+  const [attempt] = await db
+    .select({ id: attempts.id, userId: attempts.userId })
+    .from(attempts)
+    .where(eq(attempts.id, attemptId))
+    .limit(1);
+
+  if (!attempt) {
+    throw new HttpError(404, 'Attempt not found');
+  }
+  if (attempt.userId && attempt.userId !== userId) {
+    throw new HttpError(403, 'This attempt belongs to another user');
+  }
+
+  if (!attempt.userId) {
+    await db
+      .update(attempts)
+      .set({ userId })
+      .where(eq(attempts.id, attemptId));
+  }
+
+  return { attempt_id: attempt.id };
+};

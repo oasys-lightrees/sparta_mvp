@@ -85,7 +85,7 @@ submission.post('/:id/submit', async (c) => {
   try {
     const userId = await getOptionalUserId(c);
 
-    const result = await submissionService.submit(id, {
+    const { attemptId } = await submissionService.submit(id, {
       userId,
       // Authenticated users are recorded by user_id; guest_email is ignored.
       guestEmail: userId ? null : (body.guest_email ?? null),
@@ -95,7 +95,9 @@ submission.post('/:id/submit', async (c) => {
       })),
     });
 
-    return c.json(success(result), 201);
+    // The report is stored but gated: the user must authenticate (and claim a
+    // guest attempt) before retrieving it via GET /api/attempts/:id/report.
+    return c.json(success({ attempt_id: attemptId, requires_auth: true }), 201);
   } catch (err) {
     return handleError(c, err);
   }

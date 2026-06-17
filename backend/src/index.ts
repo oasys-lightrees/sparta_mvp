@@ -4,6 +4,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import adminRoutes from './routes/admin.routes';
 import assessmentRoutes from './routes/assessment.routes';
+import attemptRoutes from './routes/attempt.routes';
 import authRoutes from './routes/auth.routes';
 import mentorRoutes from './routes/mentor.routes';
 import questionRoutes from './routes/question.routes';
@@ -26,6 +27,7 @@ app.route('/api/assessments', submissionRoutes);
 app.route('/api', questionRoutes);
 app.route('/api/admin', adminRoutes);
 app.route('/api/mentor', mentorRoutes);
+app.route('/api/attempts', attemptRoutes);
 //   app.route('/api/admin', adminRoutes);
 //   app.route('/api/mentor', mentorRoutes);
 

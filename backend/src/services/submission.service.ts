@@ -133,15 +133,14 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
 
     const content = generateReportContent(assessment, score);
 
+    // The report is generated and stored now, but NOT returned here — it is
+    // only accessible after the user authenticates (see attempt.service).
     await tx.insert(reports).values({
       attemptId: attempt.id,
       reportType: 'FREE',
       content,
     });
 
-    return {
-      score,
-      report: { type: 'FREE' as const, content },
-    };
+    return { attemptId: attempt.id };
   });
 };
