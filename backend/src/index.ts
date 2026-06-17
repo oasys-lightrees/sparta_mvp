@@ -5,6 +5,7 @@ import { cors } from 'hono/cors';
 import assessmentRoutes from './routes/assessment.routes';
 import authRoutes from './routes/auth.routes';
 import questionRoutes from './routes/question.routes';
+import submissionRoutes from './routes/submission.routes';
 import { error, success } from './utils/response';
 
 const app = new Hono();
@@ -17,6 +18,7 @@ app.get('/api/health', (c) => c.json(success({ status: 'ok' })));
 // Feature routes.
 app.route('/api/auth', authRoutes);
 app.route('/api/assessments', assessmentRoutes);
+app.route('/api/assessments', submissionRoutes);
 // Question + mentor-editing routes (paths: /api/assessments/:id/questions,
 // /api/questions/:id, /api/mentor/assessments/:id).
 app.route('/api', questionRoutes);

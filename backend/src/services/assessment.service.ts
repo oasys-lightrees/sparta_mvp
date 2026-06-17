@@ -1,6 +1,6 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '../db/client';
-import { assessments } from '../db/schema';
+import { assessments, choices, questions } from '../db/schema';
 import { HttpError } from '../utils/http-error';
 
 export type AssessmentStatus = 'DRAFT' | 'PUBLISHED';
@@ -53,9 +53,8 @@ export const listPublished = async () => {
 };
 
 /**
- * Public detail — only if PUBLISHED. Choice scores are never exposed here.
- * `questions` is returned as an empty array for now; it is hydrated once the
- * question feature is implemented (kept in the shape so the contract is stable).
+ * Public detail — only if PUBLISHED. Returns the assessment with its questions
+ * and choices for a user to take the test. Choice scores are NEVER exposed here.
  */
 export const getPublishedById = async (id: string) => {
   const [row] = await db
@@ -68,7 +67,40 @@ export const getPublishedById = async (id: string) => {
     throw new HttpError(404, 'Assessment not found');
   }
 
-  return { ...row, questions: [] as unknown[] };
+  const questionRows = await db
+    .select({ id: questions.id, questionText: questions.questionText })
+    .from(questions)
+    .where(eq(questions.assessmentId, id))
+    .orderBy(questions.createdAt);
+
+  const questionIds = questionRows.map((q) => q.id);
+  // Note: `score` is intentionally not selected — scores must stay private.
+  const choiceRows = questionIds.length
+    ? await db
+        .select({
+          id: choices.id,
+          questionId: choices.questionId,
+          choiceText: choices.choiceText,
+        })
+        .from(choices)
+        .where(inArray(choices.questionId, questionIds))
+    : [];
+
+  const choicesByQuestion = new Map<string, { id: string; text: string }[]>();
+  for (const ch of choiceRows) {
+    const list = choicesByQuestion.get(ch.questionId) ?? [];
+    list.push({ id: ch.id, text: ch.choiceText });
+    choicesByQuestion.set(ch.questionId, list);
+  }
+
+  return {
+    ...row,
+    questions: questionRows.map((q) => ({
+      id: q.id,
+      question: q.questionText,
+      choices: choicesByQuestion.get(q.id) ?? [],
+    })),
+  };
 };
 
 /**
