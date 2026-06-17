@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import authRoutes from './routes/auth.routes';
 import { error, success } from './utils/response';
 
 const app = new Hono();
@@ -11,8 +12,10 @@ app.use('*', cors());
 // Health check — verifies the backend container is up.
 app.get('/api/health', (c) => c.json(success({ status: 'ok' })));
 
-// Feature routes are mounted here in later steps, e.g.:
-//   app.route('/api/auth', authRoutes);
+// Feature routes.
+app.route('/api/auth', authRoutes);
+
+// More routes are mounted here in later steps, e.g.:
 //   app.route('/api/assessments', assessmentRoutes);
 //   app.route('/api/admin', adminRoutes);
 //   app.route('/api/mentor', mentorRoutes);
