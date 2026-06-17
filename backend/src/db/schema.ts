@@ -18,6 +18,12 @@ export const assessmentStatus = pgEnum('assessment_status', [
   'PUBLISHED',
 ]);
 export const reportType = pgEnum('report_type', ['FREE', 'PREMIUM']);
+export const blogStatus = pgEnum('blog_status', ['DRAFT', 'PUBLISHED']);
+export const contactStatus = pgEnum('contact_status', [
+  'NEW',
+  'CONTACTED',
+  'CLOSED',
+]);
 
 /**
  * users
@@ -164,5 +170,49 @@ export const reportsRelations = relations(reports, ({ one }) => ({
   attempt: one(attempts, {
     fields: [reports.attemptId],
     references: [attempts.id],
+  }),
+}));
+
+/**
+ * blogs
+ * Marketing articles shown on the landing page. Only PUBLISHED blogs are
+ * exposed publicly.
+ */
+export const blogs = pgTable('blogs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  authorId: uuid('author_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  title: varchar('title', { length: 255 }).notNull(),
+  slug: varchar('slug', { length: 255 }).notNull().unique(),
+  excerpt: text('excerpt'),
+  content: text('content'),
+  coverImageUrl: text('cover_image_url'),
+  status: blogStatus('status').notNull().default('DRAFT'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+/**
+ * contacts
+ * Landing-page contact-form submissions, managed by admins.
+ */
+export const contacts = pgTable('contacts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull(),
+  phone: varchar('phone', { length: 50 }),
+  message: text('message').notNull(),
+  status: contactStatus('status').notNull().default('NEW'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const blogsRelations = relations(blogs, ({ one }) => ({
+  author: one(users, {
+    fields: [blogs.authorId],
+    references: [users.id],
   }),
 }));

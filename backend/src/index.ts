@@ -6,6 +6,8 @@ import adminRoutes from './routes/admin.routes';
 import assessmentRoutes from './routes/assessment.routes';
 import attemptRoutes from './routes/attempt.routes';
 import authRoutes from './routes/auth.routes';
+import blogRoutes from './routes/blog.routes';
+import contactRoutes from './routes/contact.routes';
 import mentorRoutes from './routes/mentor.routes';
 import questionRoutes from './routes/question.routes';
 import submissionRoutes from './routes/submission.routes';
@@ -28,6 +30,9 @@ app.route('/api', questionRoutes);
 app.route('/api/admin', adminRoutes);
 app.route('/api/mentor', mentorRoutes);
 app.route('/api/attempts', attemptRoutes);
+app.route('/api/blogs', blogRoutes);
+// Contact routes (public POST /api/contact + admin /api/admin/contacts).
+app.route('/api', contactRoutes);
 //   app.route('/api/admin', adminRoutes);
 //   app.route('/api/mentor', mentorRoutes);
 
