@@ -2,8 +2,10 @@ import 'dotenv/config';
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import adminRoutes from './routes/admin.routes';
 import assessmentRoutes from './routes/assessment.routes';
 import authRoutes from './routes/auth.routes';
+import mentorRoutes from './routes/mentor.routes';
 import questionRoutes from './routes/question.routes';
 import submissionRoutes from './routes/submission.routes';
 import { error, success } from './utils/response';
@@ -22,6 +24,8 @@ app.route('/api/assessments', submissionRoutes);
 // Question + mentor-editing routes (paths: /api/assessments/:id/questions,
 // /api/questions/:id, /api/mentor/assessments/:id).
 app.route('/api', questionRoutes);
+app.route('/api/admin', adminRoutes);
+app.route('/api/mentor', mentorRoutes);
 //   app.route('/api/admin', adminRoutes);
 //   app.route('/api/mentor', mentorRoutes);
 
