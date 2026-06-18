@@ -8,6 +8,13 @@ import { AssessmentManagement } from '@/components/admin/AssessmentManagement';
 import { ContentManagement } from '@/components/admin/ContentManagement';
 import { ContactManagement } from '@/components/admin/ContactManagement';
 import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 const TABS = [
   'Overview',
@@ -18,20 +25,46 @@ const TABS = [
 ] as const;
 type Tab = (typeof TABS)[number];
 
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>{children}</CardContent>
+    </Card>
+  );
+}
+
 function AdminHome() {
   const [tab, setTab] = useState<Tab>('Overview');
 
   return (
-    <div className="container py-10">
-      <h1 className="mb-6 text-2xl font-bold">Admin Dashboard</h1>
+    <div className="container space-y-8 py-10">
+      <div className="space-y-1">
+        <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+        <p className="text-muted-foreground">
+          Manage users, assessments, content and contact messages.
+        </p>
+      </div>
 
-      <div className="mb-6 flex flex-wrap gap-2 border-b pb-3">
+      <div className="inline-flex flex-wrap gap-1 rounded-lg border bg-muted/40 p-1">
         {TABS.map((t) => (
           <Button
             key={t}
-            variant={tab === t ? 'default' : 'ghost'}
+            variant="ghost"
             size="sm"
             onClick={() => setTab(t)}
+            className={cn(
+              'data-[active=true]:bg-background data-[active=true]:shadow-sm',
+            )}
+            data-active={tab === t}
           >
             {t}
           </Button>
@@ -39,10 +72,26 @@ function AdminHome() {
       </div>
 
       {tab === 'Overview' ? <StatsCards /> : null}
-      {tab === 'Users' ? <UserManagement /> : null}
-      {tab === 'Assessments' ? <AssessmentManagement /> : null}
-      {tab === 'Content' ? <ContentManagement /> : null}
-      {tab === 'Contacts' ? <ContactManagement /> : null}
+      {tab === 'Users' ? (
+        <Section title="User Management">
+          <UserManagement />
+        </Section>
+      ) : null}
+      {tab === 'Assessments' ? (
+        <Section title="Assessment Management">
+          <AssessmentManagement />
+        </Section>
+      ) : null}
+      {tab === 'Content' ? (
+        <Section title="Content Management">
+          <ContentManagement />
+        </Section>
+      ) : null}
+      {tab === 'Contacts' ? (
+        <Section title="Contact Messages">
+          <ContactManagement />
+        </Section>
+      ) : null}
     </div>
   );
 }

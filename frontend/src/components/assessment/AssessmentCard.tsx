@@ -17,22 +17,25 @@ export function AssessmentCard({
   assessment: AssessmentSummary;
 }) {
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col transition-shadow hover:shadow-md">
       <CardHeader>
-        <CardTitle className="text-xl">{assessment.title}</CardTitle>
+        <div className="flex items-start justify-between gap-3">
+          <CardTitle className="text-xl">{assessment.title}</CardTitle>
+          {assessment.price > 0 ? (
+            <Badge className="shrink-0">${assessment.price}</Badge>
+          ) : (
+            <Badge variant="secondary" className="shrink-0">
+              Free
+            </Badge>
+          )}
+        </div>
         {assessment.description ? (
           <CardDescription className="line-clamp-3">
             {assessment.description}
           </CardDescription>
         ) : null}
       </CardHeader>
-      <CardContent className="flex-1">
-        {assessment.price > 0 ? (
-          <Badge>${assessment.price}</Badge>
-        ) : (
-          <Badge variant="secondary">Free</Badge>
-        )}
-      </CardContent>
+      <CardContent className="flex-1" />
       <CardFooter>
         <Button asChild className="w-full">
           <Link href={`/assessments/${assessment.id}`}>Start Assessment</Link>

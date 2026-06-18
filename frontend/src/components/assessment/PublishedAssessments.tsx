@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { assessmentApi } from '@/services/assessment.api';
 import { AssessmentCard } from '@/components/assessment/AssessmentCard';
 import { Loading } from '@/components/common/Loading';
+import { EmptyState } from '@/components/common/EmptyState';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import type { AssessmentSummary } from '@/types';
 
@@ -30,14 +31,24 @@ export function PublishedAssessments() {
   }, []);
 
   return (
-    <section className="container py-12">
-      <h2 className="mb-6 text-2xl font-bold">Available Assessments</h2>
+    <section className="container py-16">
+      <div className="mb-8 space-y-1">
+        <h2 className="text-3xl font-bold tracking-tight">
+          Available Assessments
+        </h2>
+        <p className="text-muted-foreground">
+          Pick a test and start right away — no sign-up needed to take it.
+        </p>
+      </div>
       {error ? (
         <ErrorMessage message={error} />
       ) : items === null ? (
         <Loading />
       ) : items.length === 0 ? (
-        <p className="text-muted-foreground">No assessments available yet.</p>
+        <EmptyState
+          title="No assessments available yet"
+          description="Check back soon — new assessments are added regularly."
+        />
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((a) => (

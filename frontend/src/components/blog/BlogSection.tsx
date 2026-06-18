@@ -32,21 +32,28 @@ export function BlogSection() {
   if (!items || items.length === 0) return null;
 
   return (
-    <section className="container py-12">
-      <h2 className="mb-6 text-2xl font-bold">From the Blog</h2>
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((b) => (
-          <Card key={b.id}>
-            <CardHeader>
-              <CardTitle className="text-lg">{b.title}</CardTitle>
-              {b.excerpt ? (
-                <CardDescription className="line-clamp-3">
-                  {b.excerpt}
-                </CardDescription>
-              ) : null}
-            </CardHeader>
-          </Card>
-        ))}
+    <section className="border-t bg-muted/30">
+      <div className="container py-16">
+        <div className="mb-8 space-y-1">
+          <h2 className="text-3xl font-bold tracking-tight">From the Blog</h2>
+          <p className="text-muted-foreground">
+            Insights and updates from the SPARTA team.
+          </p>
+        </div>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((b) => (
+            <Card key={b.id} className="transition-shadow hover:shadow-md">
+              <CardHeader>
+                <CardTitle className="text-lg">{b.title}</CardTitle>
+                {b.excerpt ? (
+                  <CardDescription className="line-clamp-3">
+                    {b.excerpt}
+                  </CardDescription>
+                ) : null}
+              </CardHeader>
+            </Card>
+          ))}
+        </div>
       </div>
     </section>
   );

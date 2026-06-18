@@ -17,8 +17,16 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-screen bg-background text-foreground antialiased">
         <AuthProvider>
-          <Navbar />
-          <main>{children}</main>
+          <div className="flex min-h-screen flex-col">
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <footer className="border-t">
+              <div className="container flex h-16 items-center justify-between text-sm text-muted-foreground">
+                <span>© {new Date().getFullYear()} SPARTA</span>
+                <span>Self Assessment Platform</span>
+              </div>
+            </footer>
+          </div>
         </AuthProvider>
       </body>
     </html>

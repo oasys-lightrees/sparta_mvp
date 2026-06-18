@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Activity, DollarSign, FileText, Users } from 'lucide-react';
 import { adminApi } from '@/services/admin.api';
 import {
   Card,
@@ -36,26 +37,38 @@ export function StatsCards() {
   if (!stats) return <Loading />;
 
   const cards = [
-    { label: 'Total Users', value: stats.totalUsers },
-    { label: 'Total Assessments', value: stats.totalAssessments },
-    { label: 'Total Attempts', value: stats.totalAttempts },
-    { label: 'Potential Revenue', value: `$${stats.potentialRevenue}` },
+    { label: 'Total Users', value: stats.totalUsers, icon: Users },
+    {
+      label: 'Total Assessments',
+      value: stats.totalAssessments,
+      icon: FileText,
+    },
+    { label: 'Total Attempts', value: stats.totalAttempts, icon: Activity },
+    {
+      label: 'Potential Revenue',
+      value: `$${stats.potentialRevenue}`,
+      icon: DollarSign,
+    },
   ];
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {cards.map((c) => (
-        <Card key={c.label}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {c.label}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{c.value}</p>
-          </CardContent>
-        </Card>
-      ))}
+      {cards.map((c) => {
+        const Icon = c.icon;
+        return (
+          <Card key={c.label}>
+            <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {c.label}
+              </CardTitle>
+              <Icon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold tracking-tight">{c.value}</p>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }

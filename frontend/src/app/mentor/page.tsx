@@ -10,6 +10,7 @@ import {
   type AssessmentPayload,
 } from '@/components/mentor/AssessmentForm';
 import { Loading } from '@/components/common/Loading';
+import { EmptyState } from '@/components/common/EmptyState';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { Button } from '@/components/ui/button';
 import {
@@ -88,8 +89,15 @@ function MentorHome() {
 
   return (
     <div className="container py-10">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Mentor Dashboard</h1>
+      <div className="mb-8 flex items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight">
+            Mentor Dashboard
+          </h1>
+          <p className="text-muted-foreground">
+            Create and manage your assessments, questions and results.
+          </p>
+        </div>
         {!showCreate ? (
           <Button onClick={() => setShowCreate(true)}>Create assessment</Button>
         ) : null}
@@ -118,16 +126,28 @@ function MentorHome() {
         {items === null ? (
           <Loading />
         ) : items.length === 0 ? (
-          <p className="text-muted-foreground">
-            You have no assessments yet. Create your first one above.
-          </p>
-        ) : (
-          <AssessmentTable
-            items={items}
-            busyId={busyId}
-            onToggleStatus={handleToggle}
-            onDelete={handleDelete}
+          <EmptyState
+            title="No assessments yet"
+            description="Create your first assessment to start collecting responses."
+            action={
+              !showCreate ? (
+                <Button onClick={() => setShowCreate(true)}>
+                  Create assessment
+                </Button>
+              ) : undefined
+            }
           />
+        ) : (
+          <Card>
+            <CardContent className="p-0">
+              <AssessmentTable
+                items={items}
+                busyId={busyId}
+                onToggleStatus={handleToggle}
+                onDelete={handleDelete}
+              />
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>
