@@ -56,6 +56,8 @@ export const assessments = pgTable('assessments', {
   freeReportText: text('free_report_text'),
   lowScoreThreshold: integer('low_score_threshold'),
   highScoreThreshold: integer('high_score_threshold'),
+  // Listed price for analytics only (no payment/checkout in MVP).
+  price: integer('price').notNull().default(0),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')
     .notNull()

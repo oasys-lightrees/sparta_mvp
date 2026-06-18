@@ -15,6 +15,13 @@
       "when": 1781706861679,
       "tag": "0001_pink_ricochet",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781756374524,
+      "tag": "0002_chemical_blue_marvel",
+      "breakpoints": true
     }
   ]
 }

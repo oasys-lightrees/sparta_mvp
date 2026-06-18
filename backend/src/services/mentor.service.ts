@@ -12,6 +12,7 @@ export const listMyAssessments = async (mentorId: string) => {
       id: assessments.id,
       title: assessments.title,
       status: assessments.status,
+      price: assessments.price,
       totalAttempts: count(attempts.id),
     })
     .from(assessments)

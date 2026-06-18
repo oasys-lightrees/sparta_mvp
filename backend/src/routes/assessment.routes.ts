@@ -14,6 +14,42 @@ const UUID_REGEX =
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === 'string' && value.trim().length > 0;
 
+const isNullableString = (value: unknown): boolean =>
+  value === undefined || value === null || typeof value === 'string';
+
+const isNullableInt = (value: unknown): boolean =>
+  value === undefined || value === null || Number.isInteger(value);
+
+/**
+ * Validate the optional report-config + price fields shared by create/update.
+ * Returns an error message, or null when valid.
+ */
+const validateConfigFields = (body: Record<string, unknown>): string | null => {
+  if (!isNullableString(body.free_report_text)) {
+    return 'free_report_text must be a string';
+  }
+  if (!isNullableInt(body.low_score_threshold)) {
+    return 'low_score_threshold must be an integer';
+  }
+  if (!isNullableInt(body.high_score_threshold)) {
+    return 'high_score_threshold must be an integer';
+  }
+  if (
+    typeof body.low_score_threshold === 'number' &&
+    typeof body.high_score_threshold === 'number' &&
+    body.low_score_threshold > body.high_score_threshold
+  ) {
+    return 'low_score_threshold must be <= high_score_threshold';
+  }
+  if (
+    body.price !== undefined &&
+    (!Number.isInteger(body.price) || (body.price as number) < 0)
+  ) {
+    return 'price must be a non-negative integer';
+  }
+  return null;
+};
+
 /**
  * Maps a thrown HttpError to the error envelope; rethrows anything else so the
  * global onError handler returns a 500.
@@ -64,11 +100,19 @@ assessment.post('/', authMiddleware, requireRole('MENTOR'), async (c) => {
   if (body.description !== undefined && typeof body.description !== 'string') {
     return c.json(error('Description must be a string'), 400);
   }
+  const configError = validateConfigFields(body);
+  if (configError) {
+    return c.json(error(configError), 400);
+  }
 
   try {
     const created = await assessmentService.create(c.get('user').id, {
       title: body.title,
       description: body.description,
+      free_report_text: body.free_report_text,
+      low_score_threshold: body.low_score_threshold,
+      high_score_threshold: body.high_score_threshold,
+      price: body.price,
     });
     return c.json(success(created), 201);
   } catch (err) {
@@ -93,7 +137,19 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
   if (body.description !== undefined && typeof body.description !== 'string') {
     return c.json(error('Description must be a string'), 400);
   }
-  if (body.title === undefined && body.description === undefined) {
+  const configError = validateConfigFields(body);
+  if (configError) {
+    return c.json(error(configError), 400);
+  }
+  const updatableKeys = [
+    'title',
+    'description',
+    'free_report_text',
+    'low_score_threshold',
+    'high_score_threshold',
+    'price',
+  ];
+  if (!updatableKeys.some((k) => body[k] !== undefined)) {
     return c.json(error('Nothing to update'), 400);
   }
 
@@ -101,6 +157,10 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
     const updated = await assessmentService.update(c.get('user').id, id, {
       title: body.title,
       description: body.description,
+      free_report_text: body.free_report_text,
+      low_score_threshold: body.low_score_threshold,
+      high_score_threshold: body.high_score_threshold,
+      price: body.price,
     });
     return c.json(success(updated), 200);
   } catch (err) {

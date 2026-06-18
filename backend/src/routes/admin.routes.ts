@@ -64,4 +64,78 @@ admin.get('/stats', authMiddleware, requireRole('ADMIN'), async (c) => {
   }
 });
 
+// GET /api/admin/assessments — all assessments (moderation view)
+admin.get('/assessments', authMiddleware, requireRole('ADMIN'), async (c) => {
+  try {
+    const list = await adminService.listAllAssessments();
+    return c.json(success(list), 200);
+  } catch (err) {
+    return handleError(c, err);
+  }
+});
+
+// PATCH /api/admin/assessments/:id — update status and/or price
+admin.patch(
+  '/assessments/:id',
+  authMiddleware,
+  requireRole('ADMIN'),
+  async (c) => {
+    const id = c.req.param('id');
+    if (!UUID_REGEX.test(id)) {
+      return c.json(error('Invalid assessment id'), 400);
+    }
+
+    const body = await c.req.json().catch(() => null);
+    if (!body) {
+      return c.json(error('Invalid request body'), 400);
+    }
+    if (
+      body.status !== undefined &&
+      body.status !== 'DRAFT' &&
+      body.status !== 'PUBLISHED'
+    ) {
+      return c.json(error('status must be DRAFT or PUBLISHED'), 400);
+    }
+    if (
+      body.price !== undefined &&
+      (!Number.isInteger(body.price) || body.price < 0)
+    ) {
+      return c.json(error('price must be a non-negative integer'), 400);
+    }
+    if (body.status === undefined && body.price === undefined) {
+      return c.json(error('Nothing to update'), 400);
+    }
+
+    try {
+      const updated = await adminService.updateAssessment(id, {
+        status: body.status,
+        price: body.price,
+      });
+      return c.json(success(updated), 200);
+    } catch (err) {
+      return handleError(c, err);
+    }
+  },
+);
+
+// DELETE /api/admin/assessments/:id — delete any assessment
+admin.delete(
+  '/assessments/:id',
+  authMiddleware,
+  requireRole('ADMIN'),
+  async (c) => {
+    const id = c.req.param('id');
+    if (!UUID_REGEX.test(id)) {
+      return c.json(error('Invalid assessment id'), 400);
+    }
+
+    try {
+      await adminService.deleteAssessment(id);
+      return c.json(success({ id }), 200);
+    } catch (err) {
+      return handleError(c, err);
+    }
+  },
+);
+
 export default admin;

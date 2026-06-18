@@ -228,6 +228,7 @@ export const getMentorAssessmentDetail = async (
     free_report_text: assessment.freeReportText,
     low_score_threshold: assessment.lowScoreThreshold,
     high_score_threshold: assessment.highScoreThreshold,
+    price: assessment.price,
     created_at: assessment.createdAt,
     updated_at: assessment.updatedAt,
     questions: questionRows.map((q) => ({
