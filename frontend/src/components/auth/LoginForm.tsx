@@ -34,9 +34,7 @@ export function LoginForm() {
       const user = await login(email, password);
       // If a guest attempt is pending, continue to claim + report; else role home.
       const pending = getPendingAttempt();
-      router.replace(
-        pending ? `/assessments/result?attempt=${pending}` : roleHome(user.role),
-      );
+      router.replace(pending ? `/reports/${pending}` : roleHome(user.role));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
       setSubmitting(false);

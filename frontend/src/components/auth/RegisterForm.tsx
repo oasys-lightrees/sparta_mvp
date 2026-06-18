@@ -38,9 +38,7 @@ export function RegisterForm() {
     try {
       const user = await register(name, email, password);
       const pending = getPendingAttempt();
-      router.replace(
-        pending ? `/assessments/result?attempt=${pending}` : roleHome(user.role),
-      );
+      router.replace(pending ? `/reports/${pending}` : roleHome(user.role));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
       setSubmitting(false);
