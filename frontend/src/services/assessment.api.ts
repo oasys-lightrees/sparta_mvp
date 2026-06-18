@@ -1,0 +1,74 @@
+import { apiClient } from '@/services/api';
+import type {
+  Answer,
+  AssessmentDetail,
+  AssessmentStatus,
+  AssessmentSummary,
+  MentorChoice,
+  MentorQuestion,
+  SubmitResult,
+} from '@/types';
+
+type AssessmentConfig = {
+  title?: string;
+  description?: string | null;
+  free_report_text?: string | null;
+  low_score_threshold?: number | null;
+  high_score_threshold?: number | null;
+  price?: number;
+};
+
+export const assessmentApi = {
+  // Public
+  listPublished: () => apiClient.get<AssessmentSummary[]>('/api/assessments'),
+
+  getPublic: (id: string) =>
+    apiClient.get<AssessmentDetail>(`/api/assessments/${id}`),
+
+  submit: (id: string, input: { guest_email?: string; answers: Answer[] }) =>
+    apiClient.post<SubmitResult>(`/api/assessments/${id}/submit`, input),
+
+  // Mentor (owner)
+  create: (input: AssessmentConfig & { title: string }) =>
+    apiClient.post<{ id: string; status: AssessmentStatus }>(
+      '/api/assessments',
+      input,
+    ),
+
+  update: (id: string, input: AssessmentConfig) =>
+    apiClient.patch(`/api/assessments/${id}`, input),
+
+  remove: (id: string) => apiClient.del<{ id: string }>(`/api/assessments/${id}`),
+
+  setStatus: (id: string, status: AssessmentStatus) =>
+    apiClient.patch<{ id: string; status: AssessmentStatus }>(
+      `/api/assessments/${id}/status`,
+      { status },
+    ),
+
+  // Questions (owner)
+  addQuestion: (
+    assessmentId: string,
+    input: {
+      question_text: string;
+      choices: { choice_text: string; score: number }[];
+    },
+  ) =>
+    apiClient.post<MentorQuestion>(
+      `/api/assessments/${assessmentId}/questions`,
+      input,
+    ),
+
+  updateQuestion: (
+    questionId: string,
+    input: {
+      question_text?: string;
+      choices?: { choice_text: string; score: number }[];
+    },
+  ) => apiClient.patch<MentorQuestion>(`/api/questions/${questionId}`, input),
+
+  deleteQuestion: (questionId: string) =>
+    apiClient.del<{ id: string }>(`/api/questions/${questionId}`),
+};
+
+export type { AssessmentConfig, MentorChoice };
