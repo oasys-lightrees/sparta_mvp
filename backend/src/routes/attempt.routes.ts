@@ -17,6 +17,16 @@ const handleError = (c: Context<AppEnv>, err: unknown) => {
   throw err;
 };
 
+// GET /api/attempts/me — the current user's completed attempts (authenticated)
+attempt.get('/me', authMiddleware, async (c) => {
+  try {
+    const list = await attemptService.listMine(c.get('user').id);
+    return c.json(success(list), 200);
+  } catch (err) {
+    return handleError(c, err);
+  }
+});
+
 // GET /api/attempts/:id/report — owner-only report access (authenticated)
 attempt.get('/:id/report', authMiddleware, async (c) => {
   const id = c.req.param('id');

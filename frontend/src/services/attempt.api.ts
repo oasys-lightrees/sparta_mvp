@@ -1,5 +1,5 @@
 import { apiClient } from '@/services/api';
-import type { AttemptReport, ClaimResult } from '@/types';
+import type { AttemptReport, ClaimResult, MyAttempt } from '@/types';
 
 export const attemptApi = {
   claim: (attemptId: string) =>
@@ -7,4 +7,6 @@ export const attemptApi = {
 
   getReport: (attemptId: string) =>
     apiClient.get<AttemptReport>(`/api/attempts/${attemptId}/report`),
+
+  listMine: () => apiClient.get<MyAttempt[]>('/api/attempts/me'),
 };
