@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import { Navbar } from '@/components/common/Navbar';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
   title: 'SPARTA — Self Assessment Platform',
@@ -14,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <body className="min-h-screen bg-background text-foreground antialiased">
         <AuthProvider>
           <div className="flex min-h-screen flex-col">
