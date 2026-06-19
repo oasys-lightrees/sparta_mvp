@@ -71,6 +71,12 @@ question.post(
       const created = await questionService.addQuestion(c.get('user').id, id, {
         question_text: body.question_text,
         choices: choices.value,
+        correct_answer:
+          typeof body.correct_answer === 'string'
+            ? body.correct_answer
+            : undefined,
+        explanation:
+          typeof body.explanation === 'string' ? body.explanation : undefined,
       });
       return c.json(success(created), 201);
     } catch (err) {
@@ -167,6 +173,36 @@ question.get(
         id,
       );
       return c.json(success(detail), 200);
+    } catch (err) {
+      return handleError(c, err);
+    }
+  },
+);
+
+// POST /api/mentor/assessments/:id/ai/questions — AI import PREVIEW (owner only).
+// Returns structured questions for the mentor to review; nothing is inserted.
+question.post(
+  '/mentor/assessments/:id/ai/questions',
+  authMiddleware,
+  requireRole('MENTOR'),
+  async (c) => {
+    const id = c.req.param('id');
+    if (!UUID_REGEX.test(id)) {
+      return c.json(error('Invalid assessment id'), 400);
+    }
+
+    const body = await c.req.json().catch(() => null);
+    if (!body || !isNonEmptyString(body.rawText)) {
+      return c.json(error('rawText is required'), 400);
+    }
+
+    try {
+      const preview = await questionService.aiPreviewQuestions(
+        c.get('user').id,
+        id,
+        body.rawText,
+      );
+      return c.json(success(preview), 200);
     } catch (err) {
       return handleError(c, err);
     }

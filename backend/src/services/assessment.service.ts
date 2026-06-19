@@ -16,6 +16,8 @@ export type CreateInput = {
   free_report_template?: string | null;
   premium_report_description?: string | null;
   email_template?: string | null;
+  base_knowledge?: string | null;
+  ai_enabled?: boolean;
 };
 
 export type UpdateInput = {
@@ -29,6 +31,8 @@ export type UpdateInput = {
   free_report_template?: string | null;
   premium_report_description?: string | null;
   email_template?: string | null;
+  base_knowledge?: string | null;
+  ai_enabled?: boolean;
 };
 
 const publicColumns = {
@@ -138,6 +142,8 @@ export const create = async (mentorId: string, input: CreateInput) => {
       freeReportTemplate: input.free_report_template ?? null,
       premiumReportDescription: input.premium_report_description ?? null,
       emailTemplate: input.email_template ?? null,
+      baseKnowledge: input.base_knowledge ?? null,
+      aiEnabled: input.ai_enabled ?? false,
     })
     .returning({ id: assessments.id, status: assessments.status });
 
@@ -165,6 +171,8 @@ export const update = async (
     freeReportTemplate: string | null;
     premiumReportDescription: string | null;
     emailTemplate: string | null;
+    baseKnowledge: string | null;
+    aiEnabled: boolean;
   }> = {};
   if (input.title !== undefined) values.title = input.title.trim();
   if (input.description !== undefined) values.description = input.description;
@@ -183,6 +191,9 @@ export const update = async (
     values.premiumReportDescription = input.premium_report_description;
   if (input.email_template !== undefined)
     values.emailTemplate = input.email_template;
+  if (input.base_knowledge !== undefined)
+    values.baseKnowledge = input.base_knowledge;
+  if (input.ai_enabled !== undefined) values.aiEnabled = input.ai_enabled;
 
   const [updated] = await db
     .update(assessments)
@@ -201,6 +212,8 @@ export const update = async (
       free_report_template: assessments.freeReportTemplate,
       premium_report_description: assessments.premiumReportDescription,
       email_template: assessments.emailTemplate,
+      base_knowledge: assessments.baseKnowledge,
+      ai_enabled: assessments.aiEnabled,
     });
 
   return updated;

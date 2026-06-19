@@ -98,7 +98,18 @@ export type MentorChoice = { id: string; choice_text: string; score: number };
 export type MentorQuestion = {
   id: string;
   question_text: string;
+  correct_answer: string | null;
+  explanation: string | null;
   choices: MentorChoice[];
+};
+
+// AI question import preview (not yet saved).
+export type AIChoice = { text: string; score: number };
+export type AIQuestionPreview = {
+  question: string;
+  choices: AIChoice[];
+  correct_answer: string;
+  explanation: string;
 };
 export type MentorAssessmentDetail = {
   id: string;
@@ -113,6 +124,8 @@ export type MentorAssessmentDetail = {
   free_report_template: string | null;
   premium_report_description: string | null;
   email_template: string | null;
+  base_knowledge: string | null;
+  ai_enabled: boolean;
   created_at: string;
   updated_at: string;
   questions: MentorQuestion[];

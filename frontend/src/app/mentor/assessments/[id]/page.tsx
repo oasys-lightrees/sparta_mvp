@@ -177,6 +177,8 @@ function DetailView({ id }: { id: string }) {
                 free_report_template: detail.free_report_template,
                 premium_report_description: detail.premium_report_description,
                 email_template: detail.email_template,
+                base_knowledge: detail.base_knowledge,
+                ai_enabled: detail.ai_enabled,
               }}
               onSubmit={handleSave}
               onCancel={() => setEditing(false)}

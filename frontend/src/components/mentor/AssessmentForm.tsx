@@ -18,6 +18,8 @@ export type AssessmentPayload = {
   free_report_template: string | null;
   premium_report_description: string | null;
   email_template: string | null;
+  base_knowledge: string | null;
+  ai_enabled: boolean;
 };
 
 type Props = {
@@ -32,6 +34,8 @@ type Props = {
     free_report_template: string | null;
     premium_report_description: string | null;
     email_template: string | null;
+    base_knowledge: string | null;
+    ai_enabled: boolean;
   }>;
   submitLabel: string;
   submitting: boolean;
@@ -69,6 +73,10 @@ export function AssessmentForm({
   const [emailTemplate, setEmailTemplate] = useState(
     str(initial?.email_template),
   );
+  const [baseKnowledge, setBaseKnowledge] = useState(
+    str(initial?.base_knowledge),
+  );
+  const [aiEnabled, setAiEnabled] = useState(Boolean(initial?.ai_enabled));
   const [localError, setLocalError] = useState('');
 
   const toNum = (s: string) => (s.trim() === '' ? null : Number(s));
@@ -98,6 +106,8 @@ export function AssessmentForm({
       premium_report_description:
         premiumDesc.trim() === '' ? null : premiumDesc,
       email_template: emailTemplate.trim() === '' ? null : emailTemplate,
+      base_knowledge: baseKnowledge.trim() === '' ? null : baseKnowledge,
+      ai_enabled: aiEnabled,
     });
   };
 
@@ -202,6 +212,37 @@ export function AssessmentForm({
           placeholder={
             'Optional. Variables: {{assessment_title}}, {{score}}, {{category}}, {{summary}}, {{free_report}}'
           }
+        />
+      </div>
+
+      <div className="space-y-2 rounded-md border p-4">
+        <div className="flex items-center justify-between">
+          <Label>AI assistant</Label>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant={aiEnabled ? 'default' : 'outline'}
+              onClick={() => setAiEnabled(true)}
+            >
+              On
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={!aiEnabled ? 'default' : 'outline'}
+              onClick={() => setAiEnabled(false)}
+            >
+              Off
+            </Button>
+          </div>
+        </div>
+        <Label htmlFor="base_knowledge">Base knowledge</Label>
+        <Textarea
+          id="base_knowledge"
+          value={baseKnowledge}
+          onChange={(e) => setBaseKnowledge(e.target.value)}
+          placeholder="e.g. High score means advanced leadership. Low score means needs communication improvement."
         />
       </div>
 

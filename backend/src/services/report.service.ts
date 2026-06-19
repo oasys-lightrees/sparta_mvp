@@ -1,9 +1,17 @@
 import { and, eq, sql } from 'drizzle-orm';
 import { db } from '../db/client';
-import { assessments, attempts, reports, transactions, users } from '../db/schema';
+import {
+  assessments,
+  attempts,
+  questions,
+  reports,
+  transactions,
+  users,
+} from '../db/schema';
 import { HttpError } from '../utils/http-error';
+import * as aiService from './ai.service';
 
-// Placeholder premium content (no AI integration yet).
+// Fallback used when AI is disabled/unconfigured or generation fails.
 const PREMIUM_CONTENT = 'Premium AI analysis coming soon';
 
 /**
@@ -30,6 +38,7 @@ export const unlockPremium = async (userId: string, reportId: string) => {
       id: attempts.id,
       userId: attempts.userId,
       assessmentId: attempts.assessmentId,
+      totalScore: attempts.totalScore,
     })
     .from(attempts)
     .where(eq(attempts.id, report.attemptId))
@@ -46,6 +55,9 @@ export const unlockPremium = async (userId: string, reportId: string) => {
       id: assessments.id,
       mentorId: assessments.mentorId,
       cost: assessments.premiumTokenCost,
+      title: assessments.title,
+      baseKnowledge: assessments.baseKnowledge,
+      aiEnabled: assessments.aiEnabled,
     })
     .from(assessments)
     .where(eq(assessments.id, attempt.assessmentId))
@@ -85,6 +97,41 @@ export const unlockPremium = async (userId: string, reportId: string) => {
     throw new HttpError(400, 'Not enough tokens');
   }
 
+  // Generate the premium content BEFORE the transaction (a long AI call should
+  // not hold a DB transaction). AI is used only when the assessment opts in and
+  // a key is configured; any failure falls back to the placeholder so the
+  // unlock (and token accounting) always completes.
+  let content = PREMIUM_CONTENT;
+  if (assessment.aiEnabled && aiService.isAiConfigured()) {
+    try {
+      const [free] = await db
+        .select({ content: reports.content })
+        .from(reports)
+        .where(
+          and(
+            eq(reports.attemptId, attempt.id),
+            eq(reports.reportType, 'FREE'),
+          ),
+        )
+        .limit(1);
+      const questionRows = await db
+        .select({ text: questions.questionText })
+        .from(questions)
+        .where(eq(questions.assessmentId, assessment.id));
+
+      content = await aiService.generatePremiumReport({
+        title: assessment.title,
+        baseKnowledge: assessment.baseKnowledge,
+        score: attempt.totalScore,
+        freeReport: free?.content ?? '',
+        questions: questionRows.map((q) => q.text),
+      });
+    } catch (err) {
+      console.error('[ai] premium report generation failed, using fallback:', err);
+      content = PREMIUM_CONTENT;
+    }
+  }
+
   return db.transaction(async (tx) => {
     await tx
       .update(users)
@@ -96,7 +143,7 @@ export const unlockPremium = async (userId: string, reportId: string) => {
       .values({
         attemptId: attempt.id,
         reportType: 'PREMIUM',
-        content: PREMIUM_CONTENT,
+        content,
       })
       .returning({ id: reports.id, content: reports.content });
 

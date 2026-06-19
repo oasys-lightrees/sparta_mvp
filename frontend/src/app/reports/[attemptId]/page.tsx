@@ -92,10 +92,25 @@ function ReportContent({ attemptId }: { attemptId: string }) {
               <Badge>PREMIUM</Badge>
             </div>
           </CardHeader>
-          <CardContent>
-            <p className="whitespace-pre-line text-sm leading-relaxed">
-              {report.premium.content}
-            </p>
+          <CardContent className="space-y-3 text-sm leading-relaxed">
+            {(report.premium.content ?? '')
+              .split('\n')
+              .map((line, i) => {
+                const heading = line.match(/^#{1,6}\s+(.*)$/);
+                if (heading) {
+                  return (
+                    <h3 key={i} className="pt-2 font-semibold">
+                      {heading[1]}
+                    </h3>
+                  );
+                }
+                if (line.trim() === '') return null;
+                return (
+                  <p key={i} className="text-muted-foreground">
+                    {line}
+                  </p>
+                );
+              })}
           </CardContent>
         </Card>
       ) : report.premium.cost > 0 ? (

@@ -2,6 +2,7 @@ import { eq, inArray } from 'drizzle-orm';
 import { db } from '../db/client';
 import { assessments, choices, questions } from '../db/schema';
 import { HttpError } from '../utils/http-error';
+import * as aiService from './ai.service';
 
 export type ChoiceInput = {
   choice_text: string;
@@ -11,6 +12,8 @@ export type ChoiceInput = {
 export type AddQuestionInput = {
   question_text: string;
   choices: ChoiceInput[];
+  correct_answer?: string | null;
+  explanation?: string | null;
 };
 
 export type UpdateQuestionInput = {
@@ -86,7 +89,12 @@ export const addQuestion = async (
   return db.transaction(async (tx) => {
     const [question] = await tx
       .insert(questions)
-      .values({ assessmentId, questionText: input.question_text.trim() })
+      .values({
+        assessmentId,
+        questionText: input.question_text.trim(),
+        correctAnswer: input.correct_answer ?? null,
+        explanation: input.explanation ?? null,
+      })
       .returning({ id: questions.id, questionText: questions.questionText });
 
     const insertedChoices = await tx
@@ -195,7 +203,12 @@ export const getMentorAssessmentDetail = async (
   }
 
   const questionRows = await db
-    .select({ id: questions.id, questionText: questions.questionText })
+    .select({
+      id: questions.id,
+      questionText: questions.questionText,
+      correctAnswer: questions.correctAnswer,
+      explanation: questions.explanation,
+    })
     .from(questions)
     .where(eq(questions.assessmentId, assessmentId))
     .orderBy(questions.createdAt);
@@ -233,12 +246,30 @@ export const getMentorAssessmentDetail = async (
     free_report_template: assessment.freeReportTemplate,
     premium_report_description: assessment.premiumReportDescription,
     email_template: assessment.emailTemplate,
+    base_knowledge: assessment.baseKnowledge,
+    ai_enabled: assessment.aiEnabled,
     created_at: assessment.createdAt,
     updated_at: assessment.updatedAt,
     questions: questionRows.map((q) => ({
       id: q.id,
       question_text: q.questionText,
+      correct_answer: q.correctAnswer,
+      explanation: q.explanation,
       choices: choicesByQuestion.get(q.id) ?? [],
     })),
   };
+};
+
+/**
+ * AI question import (PREVIEW ONLY). Verifies mentor ownership, then asks the
+ * AI to structure the pasted text. Nothing is inserted — the mentor reviews
+ * the returned questions and saves them explicitly.
+ */
+export const aiPreviewQuestions = async (
+  mentorId: string,
+  assessmentId: string,
+  rawText: string,
+): Promise<aiService.GeneratedQuestion[]> => {
+  await assertAssessmentOwned(mentorId, assessmentId);
+  return aiService.generateQuestionsFromText(rawText);
 };

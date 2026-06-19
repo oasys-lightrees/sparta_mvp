@@ -1,5 +1,6 @@
 import { relations } from 'drizzle-orm';
 import {
+  boolean,
   integer,
   pgEnum,
   pgTable,
@@ -68,6 +69,9 @@ export const assessments = pgTable('assessments', {
   freeReportTemplate: text('free_report_template'),
   premiumReportDescription: text('premium_report_description'),
   emailTemplate: text('email_template'),
+  // AI assistant (v2 sprint 3).
+  baseKnowledge: text('base_knowledge'),
+  aiEnabled: boolean('ai_enabled').notNull().default(false),
   // Listed price for analytics only (no payment/checkout in MVP).
   price: integer('price').notNull().default(0),
   // Token cost to unlock this assessment's premium report (0 = no premium).
@@ -89,6 +93,9 @@ export const questions = pgTable('questions', {
     .notNull()
     .references(() => assessments.id, { onDelete: 'cascade' }),
   questionText: text('question_text').notNull(),
+  // Optional metadata (e.g. from AI import).
+  correctAnswer: text('correct_answer'),
+  explanation: text('explanation'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 

@@ -63,6 +63,12 @@ const validateConfigFields = (body: Record<string, unknown>): string | null => {
   if (!isNullableString(body.email_template)) {
     return 'email_template must be a string';
   }
+  if (!isNullableString(body.base_knowledge)) {
+    return 'base_knowledge must be a string';
+  }
+  if (body.ai_enabled !== undefined && typeof body.ai_enabled !== 'boolean') {
+    return 'ai_enabled must be a boolean';
+  }
   return null;
 };
 
@@ -133,6 +139,8 @@ assessment.post('/', authMiddleware, requireRole('MENTOR'), async (c) => {
       free_report_template: body.free_report_template,
       premium_report_description: body.premium_report_description,
       email_template: body.email_template,
+      base_knowledge: body.base_knowledge,
+      ai_enabled: body.ai_enabled,
     });
     return c.json(success(created), 201);
   } catch (err) {
@@ -172,6 +180,8 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
     'free_report_template',
     'premium_report_description',
     'email_template',
+    'base_knowledge',
+    'ai_enabled',
   ];
   if (!updatableKeys.some((k) => body[k] !== undefined)) {
     return c.json(error('Nothing to update'), 400);
@@ -189,6 +199,8 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
       free_report_template: body.free_report_template,
       premium_report_description: body.premium_report_description,
       email_template: body.email_template,
+      base_knowledge: body.base_knowledge,
+      ai_enabled: body.ai_enabled,
     });
     return c.json(success(updated), 200);
   } catch (err) {

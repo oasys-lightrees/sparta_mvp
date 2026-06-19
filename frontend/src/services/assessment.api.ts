@@ -20,6 +20,8 @@ type AssessmentConfig = {
   free_report_template?: string | null;
   premium_report_description?: string | null;
   email_template?: string | null;
+  base_knowledge?: string | null;
+  ai_enabled?: boolean;
 };
 
 export const assessmentApi = {
@@ -56,6 +58,8 @@ export const assessmentApi = {
     input: {
       question_text: string;
       choices: { choice_text: string; score: number }[];
+      correct_answer?: string | null;
+      explanation?: string | null;
     },
   ) =>
     apiClient.post<MentorQuestion>(

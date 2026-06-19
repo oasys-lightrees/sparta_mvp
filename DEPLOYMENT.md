@@ -32,6 +32,9 @@ Create a root `.env` (from `.env.example`) used by `docker compose`:
 | `SMTP_PORT` | backend | `587` | `465` enables implicit TLS |
 | `SMTP_USER` / `SMTP_PASSWORD` | backend | *(provider credentials)* | omit for unauthenticated relays |
 | `SMTP_FROM` | backend | `no-reply@sparta.jearimjarden.com` | From address for result emails |
+| `OPENAI_API_KEY` | backend (optional) | `sk-…` | **AI disabled when unset** — AI endpoints return a clear error; premium unlock falls back to a placeholder. Backend-only, never sent to the browser |
+| `OPENAI_MODEL` | backend | `gpt-5-mini` | no hardcoded model — set per deployment |
+| `OPENAI_BASE_URL` | backend (optional) | `https://api.openai.com/v1` | override for Azure / OpenAI-compatible proxies |
 | `NEXT_PUBLIC_API_URL` | frontend | `https://sparta.jearimjarden.com` | **build-time** — see the note below |
 
 Generate strong secrets, e.g.:
