@@ -18,6 +18,16 @@ const handleError = (c: Context<AppEnv>, err: unknown) => {
   throw err;
 };
 
+// GET /api/mentor/stats — aggregate analytics for the mentor dashboard
+mentor.get('/stats', authMiddleware, requireRole('MENTOR'), async (c) => {
+  try {
+    const stats = await mentorService.getStats(c.get('user').id);
+    return c.json(success(stats), 200);
+  } catch (err) {
+    return handleError(c, err);
+  }
+});
+
 // GET /api/mentor/assessments — the current mentor's assessments + attempt count
 mentor.get('/assessments', authMiddleware, requireRole('MENTOR'), async (c) => {
   try {
