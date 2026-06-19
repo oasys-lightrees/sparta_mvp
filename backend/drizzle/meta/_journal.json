@@ -29,6 +29,13 @@
       "when": 1781839154082,
       "tag": "0003_closed_harry_osborn",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781863867058,
+      "tag": "0004_daily_elektra",
+      "breakpoints": true
     }
   ]
 }

@@ -17,6 +17,9 @@ type AssessmentConfig = {
   high_score_threshold?: number | null;
   price?: number;
   premium_token_cost?: number;
+  free_report_template?: string | null;
+  premium_report_description?: string | null;
+  email_template?: string | null;
 };
 
 export const assessmentApi = {

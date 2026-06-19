@@ -28,6 +28,10 @@ Create a root `.env` (from `.env.example`) used by `docker compose`:
 | `JWT_SECRET` | backend | *(long random secret)* | **must** be strong/secret |
 | `DATABASE_URL` | backend (local tooling) | `postgres://sparta:…@localhost:5432/sparta` | inside compose the backend derives its own URL with host `database` |
 | `CORS_ORIGINS` | backend (optional) | `https://sparta.jearimjarden.com,http://localhost:3000` | defaults to the production domain + localhost when unset |
+| `SMTP_HOST` | backend (optional) | `smtp.example.com` | **email disabled when unset** — sends are skipped/logged, submission never breaks |
+| `SMTP_PORT` | backend | `587` | `465` enables implicit TLS |
+| `SMTP_USER` / `SMTP_PASSWORD` | backend | *(provider credentials)* | omit for unauthenticated relays |
+| `SMTP_FROM` | backend | `no-reply@sparta.jearimjarden.com` | From address for result emails |
 | `NEXT_PUBLIC_API_URL` | frontend | `https://sparta.jearimjarden.com` | **build-time** — see the note below |
 
 Generate strong secrets, e.g.:
@@ -230,5 +234,6 @@ This is intentionally deferred; no auth code is changed in this deployment prep.
 - [ ] Let's Encrypt auto-renewal verified (`certbot renew --dry-run`).
 - [ ] `docker compose exec backend npm run db:migrate` run after each deploy with schema changes.
 - [ ] First admin promoted (`UPDATE users SET role='ADMIN' WHERE email='…';`) or demo seed run.
+- [ ] SMTP_* configured if result emails are wanted (otherwise email is cleanly skipped — submission still works).
 - [ ] Backups configured for the `postgres_data` volume.
 - [ ] Container logs monitored (`docker compose logs`); restart policy is `unless-stopped`.

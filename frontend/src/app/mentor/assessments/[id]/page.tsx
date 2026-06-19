@@ -174,6 +174,9 @@ function DetailView({ id }: { id: string }) {
                 high_score_threshold: detail.high_score_threshold,
                 free_report_text: detail.free_report_text,
                 premium_token_cost: detail.premium_token_cost,
+                free_report_template: detail.free_report_template,
+                premium_report_description: detail.premium_report_description,
+                email_template: detail.email_template,
               }}
               onSubmit={handleSave}
               onCancel={() => setEditing(false)}

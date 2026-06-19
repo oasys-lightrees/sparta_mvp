@@ -13,6 +13,9 @@ export type CreateInput = {
   high_score_threshold?: number | null;
   price?: number;
   premium_token_cost?: number;
+  free_report_template?: string | null;
+  premium_report_description?: string | null;
+  email_template?: string | null;
 };
 
 export type UpdateInput = {
@@ -23,6 +26,9 @@ export type UpdateInput = {
   high_score_threshold?: number | null;
   price?: number;
   premium_token_cost?: number;
+  free_report_template?: string | null;
+  premium_report_description?: string | null;
+  email_template?: string | null;
 };
 
 const publicColumns = {
@@ -129,6 +135,9 @@ export const create = async (mentorId: string, input: CreateInput) => {
       highScoreThreshold: input.high_score_threshold ?? null,
       price: input.price ?? 0,
       premiumTokenCost: input.premium_token_cost ?? 0,
+      freeReportTemplate: input.free_report_template ?? null,
+      premiumReportDescription: input.premium_report_description ?? null,
+      emailTemplate: input.email_template ?? null,
     })
     .returning({ id: assessments.id, status: assessments.status });
 
@@ -153,6 +162,9 @@ export const update = async (
     highScoreThreshold: number | null;
     price: number;
     premiumTokenCost: number;
+    freeReportTemplate: string | null;
+    premiumReportDescription: string | null;
+    emailTemplate: string | null;
   }> = {};
   if (input.title !== undefined) values.title = input.title.trim();
   if (input.description !== undefined) values.description = input.description;
@@ -165,6 +177,12 @@ export const update = async (
   if (input.price !== undefined) values.price = input.price;
   if (input.premium_token_cost !== undefined)
     values.premiumTokenCost = input.premium_token_cost;
+  if (input.free_report_template !== undefined)
+    values.freeReportTemplate = input.free_report_template;
+  if (input.premium_report_description !== undefined)
+    values.premiumReportDescription = input.premium_report_description;
+  if (input.email_template !== undefined)
+    values.emailTemplate = input.email_template;
 
   const [updated] = await db
     .update(assessments)
@@ -180,6 +198,9 @@ export const update = async (
       high_score_threshold: assessments.highScoreThreshold,
       price: assessments.price,
       premium_token_cost: assessments.premiumTokenCost,
+      free_report_template: assessments.freeReportTemplate,
+      premium_report_description: assessments.premiumReportDescription,
+      email_template: assessments.emailTemplate,
     });
 
   return updated;

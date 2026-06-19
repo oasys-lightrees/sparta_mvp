@@ -63,6 +63,11 @@ export const assessments = pgTable('assessments', {
   freeReportText: text('free_report_text'),
   lowScoreThreshold: integer('low_score_threshold'),
   highScoreThreshold: integer('high_score_threshold'),
+  // Mentor-authored report templates (v2). Rendered with {{score}},
+  // {{category}}, {{assessment_title}}, {{summary}} placeholders.
+  freeReportTemplate: text('free_report_template'),
+  premiumReportDescription: text('premium_report_description'),
+  emailTemplate: text('email_template'),
   // Listed price for analytics only (no payment/checkout in MVP).
   price: integer('price').notNull().default(0),
   // Token cost to unlock this assessment's premium report (0 = no premium).

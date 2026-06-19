@@ -41,6 +41,7 @@ export type ClaimResult = { attempt_id: string };
 export type Report = { type: ReportType; content: string };
 export type PremiumInfo = {
   cost: number;
+  description: string | null;
   unlocked: boolean;
   content: string | null;
 };
@@ -109,6 +110,9 @@ export type MentorAssessmentDetail = {
   high_score_threshold: number | null;
   price: number;
   premium_token_cost: number;
+  free_report_template: string | null;
+  premium_report_description: string | null;
+  email_template: string | null;
   created_at: string;
   updated_at: string;
   questions: MentorQuestion[];

@@ -99,17 +99,27 @@ function ReportContent({ attemptId }: { attemptId: string }) {
           </CardContent>
         </Card>
       ) : report.premium.cost > 0 ? (
-        <Card>
+        <Card className="border-dashed">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Premium Report 🔒</CardTitle>
+              <Badge variant="outline">{report.premium.cost} Tokens</Badge>
             </div>
-            <CardDescription>Cost: {report.premium.cost} Tokens</CardDescription>
+            <CardDescription>
+              Unlock a deeper, personalized analysis.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-4">
+            {report.premium.description ? (
+              <p className="whitespace-pre-line text-sm text-muted-foreground">
+                {report.premium.description}
+              </p>
+            ) : null}
             <ErrorMessage message={premiumError} />
             <Button onClick={unlock} disabled={unlocking}>
-              {unlocking ? 'Unlocking…' : 'Unlock Premium'}
+              {unlocking
+                ? 'Unlocking…'
+                : `Unlock Premium (${report.premium.cost} tokens)`}
             </Button>
           </CardContent>
         </Card>

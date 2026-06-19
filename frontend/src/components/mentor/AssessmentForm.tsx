@@ -15,6 +15,9 @@ export type AssessmentPayload = {
   high_score_threshold: number | null;
   free_report_text: string | null;
   premium_token_cost: number;
+  free_report_template: string | null;
+  premium_report_description: string | null;
+  email_template: string | null;
 };
 
 type Props = {
@@ -26,6 +29,9 @@ type Props = {
     high_score_threshold: number | null;
     free_report_text: string | null;
     premium_token_cost: number;
+    free_report_template: string | null;
+    premium_report_description: string | null;
+    email_template: string | null;
   }>;
   submitLabel: string;
   submitting: boolean;
@@ -54,6 +60,15 @@ export function AssessmentForm({
   const [low, setLow] = useState(numStr(initial?.low_score_threshold));
   const [high, setHigh] = useState(numStr(initial?.high_score_threshold));
   const [freeText, setFreeText] = useState(str(initial?.free_report_text));
+  const [freeTemplate, setFreeTemplate] = useState(
+    str(initial?.free_report_template),
+  );
+  const [premiumDesc, setPremiumDesc] = useState(
+    str(initial?.premium_report_description),
+  );
+  const [emailTemplate, setEmailTemplate] = useState(
+    str(initial?.email_template),
+  );
   const [localError, setLocalError] = useState('');
 
   const toNum = (s: string) => (s.trim() === '' ? null : Number(s));
@@ -79,6 +94,10 @@ export function AssessmentForm({
       high_score_threshold: highNum,
       free_report_text: freeText.trim() === '' ? null : freeText,
       premium_token_cost: premiumCost.trim() === '' ? 0 : Number(premiumCost),
+      free_report_template: freeTemplate.trim() === '' ? null : freeTemplate,
+      premium_report_description:
+        premiumDesc.trim() === '' ? null : premiumDesc,
+      email_template: emailTemplate.trim() === '' ? null : emailTemplate,
     });
   };
 
@@ -147,7 +166,42 @@ export function AssessmentForm({
           id="free_report_text"
           value={freeText}
           onChange={(e) => setFreeText(e.target.value)}
-          placeholder="Intro shown above the score band in the free report"
+          placeholder="Intro shown above the score band (legacy fallback)"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="free_report_template">Free report template</Label>
+        <Textarea
+          id="free_report_template"
+          value={freeTemplate}
+          onChange={(e) => setFreeTemplate(e.target.value)}
+          className="min-h-[120px] font-mono text-xs"
+          placeholder={
+            'Variables: {{assessment_title}}, {{score}}, {{category}}, {{summary}}'
+          }
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="premium_report_description">
+          Premium report description
+        </Label>
+        <Textarea
+          id="premium_report_description"
+          value={premiumDesc}
+          onChange={(e) => setPremiumDesc(e.target.value)}
+          placeholder="What the premium report includes (shown to users)"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="email_template">Email template</Label>
+        <Textarea
+          id="email_template"
+          value={emailTemplate}
+          onChange={(e) => setEmailTemplate(e.target.value)}
+          className="min-h-[120px] font-mono text-xs"
+          placeholder={
+            'Optional. Variables: {{assessment_title}}, {{score}}, {{category}}, {{summary}}, {{free_report}}'
+          }
         />
       </div>
 

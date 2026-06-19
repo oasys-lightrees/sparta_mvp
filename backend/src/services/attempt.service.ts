@@ -40,7 +40,10 @@ export const getReport = async (userId: string, attemptId: string) => {
   }
 
   const [assessment] = await db
-    .select({ cost: assessments.premiumTokenCost })
+    .select({
+      cost: assessments.premiumTokenCost,
+      description: assessments.premiumReportDescription,
+    })
     .from(assessments)
     .where(eq(assessments.id, attempt.assessmentId))
     .limit(1);
@@ -60,6 +63,7 @@ export const getReport = async (userId: string, attemptId: string) => {
     report: { type: 'FREE' as const, content: freeReport.content },
     premium: {
       cost: assessment?.cost ?? 0,
+      description: assessment?.description ?? null,
       unlocked: Boolean(premium),
       content: premium?.content ?? null,
     },

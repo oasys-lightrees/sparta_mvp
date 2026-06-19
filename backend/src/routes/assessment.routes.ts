@@ -54,6 +54,15 @@ const validateConfigFields = (body: Record<string, unknown>): string | null => {
   ) {
     return 'premium_token_cost must be a non-negative integer';
   }
+  if (!isNullableString(body.free_report_template)) {
+    return 'free_report_template must be a string';
+  }
+  if (!isNullableString(body.premium_report_description)) {
+    return 'premium_report_description must be a string';
+  }
+  if (!isNullableString(body.email_template)) {
+    return 'email_template must be a string';
+  }
   return null;
 };
 
@@ -121,6 +130,9 @@ assessment.post('/', authMiddleware, requireRole('MENTOR'), async (c) => {
       high_score_threshold: body.high_score_threshold,
       price: body.price,
       premium_token_cost: body.premium_token_cost,
+      free_report_template: body.free_report_template,
+      premium_report_description: body.premium_report_description,
+      email_template: body.email_template,
     });
     return c.json(success(created), 201);
   } catch (err) {
@@ -157,6 +169,9 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
     'high_score_threshold',
     'price',
     'premium_token_cost',
+    'free_report_template',
+    'premium_report_description',
+    'email_template',
   ];
   if (!updatableKeys.some((k) => body[k] !== undefined)) {
     return c.json(error('Nothing to update'), 400);
@@ -171,6 +186,9 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
       high_score_threshold: body.high_score_threshold,
       price: body.price,
       premium_token_cost: body.premium_token_cost,
+      free_report_template: body.free_report_template,
+      premium_report_description: body.premium_report_description,
+      email_template: body.email_template,
     });
     return c.json(success(updated), 200);
   } catch (err) {
