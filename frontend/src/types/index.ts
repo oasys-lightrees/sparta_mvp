@@ -46,6 +46,14 @@ export type AttemptReport = {
 };
 
 // --- Mentor ---
+export type MentorStats = {
+  totalAssessments: number;
+  publishedAssessments: number;
+  draftAssessments: number;
+  totalAttempts: number;
+  averageScore: number;
+};
+
 export type MentorAssessmentListItem = {
   id: string;
   title: string;

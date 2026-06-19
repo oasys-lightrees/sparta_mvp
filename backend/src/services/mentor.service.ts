@@ -1,4 +1,4 @@
-import { count, desc, eq } from 'drizzle-orm';
+import { avg, count, desc, eq } from 'drizzle-orm';
 import { db } from '../db/client';
 import { assessments, attempts, users } from '../db/schema';
 import { HttpError } from '../utils/http-error';
@@ -22,6 +22,47 @@ export const listMyAssessments = async (mentorId: string) => {
     .orderBy(desc(assessments.createdAt));
 
   return rows.map((r) => ({ ...r, totalAttempts: Number(r.totalAttempts) }));
+};
+
+/**
+ * Aggregate analytics for the mentor dashboard overview.
+ */
+export const getStats = async (mentorId: string) => {
+  // Assessment counts by status (one grouped query).
+  const statusRows = await db
+    .select({ status: assessments.status, value: count() })
+    .from(assessments)
+    .where(eq(assessments.mentorId, mentorId))
+    .groupBy(assessments.status);
+
+  let publishedAssessments = 0;
+  let draftAssessments = 0;
+  for (const row of statusRows) {
+    if (row.status === 'PUBLISHED') publishedAssessments = Number(row.value);
+    else if (row.status === 'DRAFT') draftAssessments = Number(row.value);
+  }
+
+  // Attempt count + average score across all of the mentor's assessments.
+  const [agg] = await db
+    .select({
+      total: count(attempts.id),
+      average: avg(attempts.totalScore),
+    })
+    .from(attempts)
+    .innerJoin(assessments, eq(attempts.assessmentId, assessments.id))
+    .where(eq(assessments.mentorId, mentorId));
+
+  const totalAttempts = Number(agg?.total ?? 0);
+  const averageScore =
+    agg?.average != null ? Math.round(Number(agg.average) * 10) / 10 : 0;
+
+  return {
+    totalAssessments: publishedAssessments + draftAssessments,
+    publishedAssessments,
+    draftAssessments,
+    totalAttempts,
+    averageScore,
+  };
 };
 
 /**

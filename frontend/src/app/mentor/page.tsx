@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { BarChart3, CheckCircle2, FileText, Users } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { mentorApi } from '@/services/mentor.api';
 import { assessmentApi } from '@/services/assessment.api';
@@ -19,10 +20,35 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import type { MentorAssessmentListItem } from '@/types';
+import type { MentorAssessmentListItem, MentorStats } from '@/types';
+
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+}: {
+  label: string;
+  value: string | number;
+  icon: typeof FileText;
+}) {
+  return (
+    <Card>
+      <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">
+          {label}
+        </CardTitle>
+        <Icon className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <p className="text-3xl font-bold tracking-tight">{value}</p>
+      </CardContent>
+    </Card>
+  );
+}
 
 function MentorHome() {
   const [items, setItems] = useState<MentorAssessmentListItem[] | null>(null);
+  const [stats, setStats] = useState<MentorStats | null>(null);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -31,7 +57,12 @@ function MentorHome() {
 
   const load = useCallback(async () => {
     try {
-      setItems(await mentorApi.listMyAssessments());
+      const [list, mentorStats] = await Promise.all([
+        mentorApi.listMyAssessments(),
+        mentorApi.getStats(),
+      ]);
+      setItems(list);
+      setStats(mentorStats);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load');
     }
@@ -101,6 +132,30 @@ function MentorHome() {
         {!showCreate ? (
           <Button onClick={() => setShowCreate(true)}>Create assessment</Button>
         ) : null}
+      </div>
+
+      {/* Overview analytics */}
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label="Total Assessments"
+          value={stats === null ? '—' : stats.totalAssessments}
+          icon={FileText}
+        />
+        <StatCard
+          label="Published Assessments"
+          value={stats === null ? '—' : stats.publishedAssessments}
+          icon={CheckCircle2}
+        />
+        <StatCard
+          label="Total People Taken Tests"
+          value={stats === null ? '—' : stats.totalAttempts}
+          icon={Users}
+        />
+        <StatCard
+          label="Average Score"
+          value={stats === null ? '—' : stats.averageScore}
+          icon={BarChart3}
+        />
       </div>
 
       {showCreate ? (
