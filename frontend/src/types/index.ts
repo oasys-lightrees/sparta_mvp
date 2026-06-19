@@ -39,21 +39,41 @@ export type Answer = { question_id: string; choice_id: string };
 export type SubmitResult = { attempt_id: string; requires_auth: boolean };
 export type ClaimResult = { attempt_id: string };
 export type Report = { type: ReportType; content: string };
+export type PremiumInfo = {
+  cost: number;
+  unlocked: boolean;
+  content: string | null;
+};
 export type AttemptReport = {
   attempt_id: string;
   score: number;
+  report_id: string;
   report: Report;
+  premium: PremiumInfo;
 };
 
 export type MyAttempt = {
   attempt_id: string;
   assessment_id: string;
   assessment_title: string;
+  premium_token_cost: number;
   score: number;
   created_at: string;
   report_id: string | null;
   report_type: ReportType | null;
   report_content: string | null;
+  premium_unlocked: boolean;
+  premium_content: string | null;
+};
+
+// --- Tokens ---
+export type TokenBalance = { balance: number };
+export type UnlockResult = {
+  report_id: string;
+  type: ReportType;
+  content: string;
+  charged: number;
+  already_unlocked: boolean;
 };
 
 // --- Mentor ---
@@ -88,6 +108,7 @@ export type MentorAssessmentDetail = {
   low_score_threshold: number | null;
   high_score_threshold: number | null;
   price: number;
+  premium_token_cost: number;
   created_at: string;
   updated_at: string;
   questions: MentorQuestion[];
@@ -99,12 +120,24 @@ export type MentorResult = {
   created_at: string;
 };
 
+export type MentorRevenueTxn = {
+  assessmentTitle: string | null;
+  amount: number;
+  date: string;
+};
+export type MentorRevenue = {
+  totalRevenue: number;
+  premiumUnlocks: number;
+  transactions: MentorRevenueTxn[];
+};
+
 // --- Admin ---
 export type AdminUser = {
   id: string;
   name: string | null;
   email: string;
   role: Role;
+  token_balance: number;
   created_at: string;
 };
 

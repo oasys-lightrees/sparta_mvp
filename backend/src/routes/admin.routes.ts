@@ -54,6 +54,31 @@ admin.patch(
   },
 );
 
+// PATCH /api/admin/users/:id/tokens — grant tokens to a user
+admin.patch(
+  '/users/:id/tokens',
+  authMiddleware,
+  requireRole('ADMIN'),
+  async (c) => {
+    const id = c.req.param('id');
+    if (!UUID_REGEX.test(id)) {
+      return c.json(error('Invalid user id'), 400);
+    }
+
+    const body = await c.req.json().catch(() => null);
+    if (!body || !Number.isInteger(body.amount) || body.amount <= 0) {
+      return c.json(error('amount must be a positive integer'), 400);
+    }
+
+    try {
+      const updated = await adminService.grantTokens(id, body.amount);
+      return c.json(success(updated), 200);
+    } catch (err) {
+      return handleError(c, err);
+    }
+  },
+);
+
 // GET /api/admin/stats
 admin.get('/stats', authMiddleware, requireRole('ADMIN'), async (c) => {
   try {

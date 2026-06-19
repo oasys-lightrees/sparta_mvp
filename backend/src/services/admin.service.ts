@@ -1,12 +1,12 @@
 import { count, desc, eq, sql } from 'drizzle-orm';
 import { db } from '../db/client';
-import { assessments, attempts, users } from '../db/schema';
+import { assessments, attempts, transactions, users } from '../db/schema';
 import type { AssessmentStatus } from './assessment.service';
 import type { Role } from '../middleware/auth.middleware';
 import { HttpError } from '../utils/http-error';
 
 /**
- * List all users (admin view).
+ * List all users (admin view), including their token balance.
  */
 export const listUsers = async () => {
   return db
@@ -15,10 +15,34 @@ export const listUsers = async () => {
       name: users.name,
       email: users.email,
       role: users.role,
+      token_balance: users.tokenBalance,
       created_at: users.createdAt,
     })
     .from(users)
     .orderBy(users.createdAt);
+};
+
+/**
+ * Grant tokens to a user and record an ADMIN_GRANT transaction. 404 if missing.
+ */
+export const grantTokens = async (userId: string, amount: number) => {
+  return db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(users)
+      .set({ tokenBalance: sql`${users.tokenBalance} + ${amount}` })
+      .where(eq(users.id, userId))
+      .returning({ id: users.id, token_balance: users.tokenBalance });
+
+    if (!updated) {
+      throw new HttpError(404, 'User not found');
+    }
+
+    await tx
+      .insert(transactions)
+      .values({ userId, amount, type: 'ADMIN_GRANT' });
+
+    return updated;
+  });
 };
 
 /**

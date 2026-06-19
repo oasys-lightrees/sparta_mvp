@@ -9,13 +9,23 @@ import { clearPendingAttempt } from '@/lib/storage';
 import { ReportView } from '@/components/assessment/ReportView';
 import { Loading } from '@/components/common/Loading';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import type { AttemptReport } from '@/types';
 
 function ReportContent({ attemptId }: { attemptId: string }) {
   const [report, setReport] = useState<AttemptReport | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [unlocking, setUnlocking] = useState(false);
+  const [premiumError, setPremiumError] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -41,6 +51,21 @@ function ReportContent({ attemptId }: { attemptId: string }) {
     };
   }, [attemptId]);
 
+  const unlock = async () => {
+    if (!report) return;
+    setUnlocking(true);
+    setPremiumError('');
+    try {
+      await attemptApi.unlockPremium(report.report_id);
+      const fresh = await attemptApi.getReport(attemptId);
+      setReport(fresh);
+    } catch (err) {
+      setPremiumError(err instanceof Error ? err.message : 'Unlock failed');
+    } finally {
+      setUnlocking(false);
+    }
+  };
+
   if (loading) return <Loading label="Preparing your report…" />;
   if (error) {
     return (
@@ -57,6 +82,39 @@ function ReportContent({ attemptId }: { attemptId: string }) {
   return (
     <div className="space-y-6">
       <ReportView data={report} />
+
+      {/* Premium report */}
+      {report.premium.unlocked ? (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Premium Report</CardTitle>
+              <Badge>PREMIUM</Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="whitespace-pre-line text-sm leading-relaxed">
+              {report.premium.content}
+            </p>
+          </CardContent>
+        </Card>
+      ) : report.premium.cost > 0 ? (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Premium Report 🔒</CardTitle>
+            </div>
+            <CardDescription>Cost: {report.premium.cost} Tokens</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <ErrorMessage message={premiumError} />
+            <Button onClick={unlock} disabled={unlocking}>
+              {unlocking ? 'Unlocking…' : 'Unlock Premium'}
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
+
       <Button asChild variant="outline">
         <Link href="/dashboard">Go to dashboard</Link>
       </Button>

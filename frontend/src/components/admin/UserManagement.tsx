@@ -47,6 +47,26 @@ export function UserManagement() {
     }
   };
 
+  const grantTokens = async (id: string) => {
+    const input = window.prompt('How many tokens to grant?', '10');
+    if (input === null) return;
+    const amount = Number(input);
+    if (!Number.isInteger(amount) || amount <= 0) {
+      setError('Token amount must be a positive whole number');
+      return;
+    }
+    setBusyId(id);
+    setError('');
+    try {
+      await adminApi.grantTokens(id, amount);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to grant tokens');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   if (error && !users) return <ErrorMessage message={error} />;
   if (!users) return <Loading />;
   if (users.length === 0)
@@ -61,6 +81,8 @@ export function UserManagement() {
             <TableHead>Name</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Role</TableHead>
+            <TableHead>Tokens</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -82,6 +104,17 @@ export function UserManagement() {
                     </Button>
                   ))}
                 </div>
+              </TableCell>
+              <TableCell className="font-medium">{u.token_balance}</TableCell>
+              <TableCell className="text-right">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={busyId === u.id}
+                  onClick={() => grantTokens(u.id)}
+                >
+                  Grant Tokens
+                </Button>
               </TableCell>
             </TableRow>
           ))}

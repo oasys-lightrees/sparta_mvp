@@ -24,6 +24,11 @@ export const contactStatus = pgEnum('contact_status', [
   'CONTACTED',
   'CLOSED',
 ]);
+export const transactionType = pgEnum('transaction_type', [
+  'TOKEN_TOPUP',
+  'PREMIUM_UNLOCK',
+  'ADMIN_GRANT',
+]);
 
 /**
  * users
@@ -36,6 +41,8 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 255 }).notNull().unique(),
   passwordHash: text('password_hash').notNull(),
   role: userRole('role').notNull().default('USER'),
+  // Token wallet for unlocking premium reports (no real payment).
+  tokenBalance: integer('token_balance').notNull().default(0),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
@@ -58,6 +65,8 @@ export const assessments = pgTable('assessments', {
   highScoreThreshold: integer('high_score_threshold'),
   // Listed price for analytics only (no payment/checkout in MVP).
   price: integer('price').notNull().default(0),
+  // Token cost to unlock this assessment's premium report (0 = no premium).
+  premiumTokenCost: integer('premium_token_cost').notNull().default(0),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')
     .notNull()
@@ -218,3 +227,27 @@ export const blogsRelations = relations(blogs, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+/**
+ * transactions
+ * Token ledger: top-ups, admin grants and premium unlocks. mentor_id /
+ * assessment_id / report_id are only set for PREMIUM_UNLOCK rows.
+ */
+export const transactions = pgTable('transactions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  mentorId: uuid('mentor_id').references(() => users.id, {
+    onDelete: 'set null',
+  }),
+  assessmentId: uuid('assessment_id').references(() => assessments.id, {
+    onDelete: 'set null',
+  }),
+  reportId: uuid('report_id').references(() => reports.id, {
+    onDelete: 'set null',
+  }),
+  amount: integer('amount').notNull(),
+  type: transactionType('type').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});

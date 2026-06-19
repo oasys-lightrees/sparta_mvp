@@ -16,6 +16,7 @@ type AssessmentConfig = {
   low_score_threshold?: number | null;
   high_score_threshold?: number | null;
   price?: number;
+  premium_token_cost?: number;
 };
 
 export const assessmentApi = {

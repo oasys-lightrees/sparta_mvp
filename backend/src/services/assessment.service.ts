@@ -12,6 +12,7 @@ export type CreateInput = {
   low_score_threshold?: number | null;
   high_score_threshold?: number | null;
   price?: number;
+  premium_token_cost?: number;
 };
 
 export type UpdateInput = {
@@ -21,6 +22,7 @@ export type UpdateInput = {
   low_score_threshold?: number | null;
   high_score_threshold?: number | null;
   price?: number;
+  premium_token_cost?: number;
 };
 
 const publicColumns = {
@@ -126,6 +128,7 @@ export const create = async (mentorId: string, input: CreateInput) => {
       lowScoreThreshold: input.low_score_threshold ?? null,
       highScoreThreshold: input.high_score_threshold ?? null,
       price: input.price ?? 0,
+      premiumTokenCost: input.premium_token_cost ?? 0,
     })
     .returning({ id: assessments.id, status: assessments.status });
 
@@ -149,6 +152,7 @@ export const update = async (
     lowScoreThreshold: number | null;
     highScoreThreshold: number | null;
     price: number;
+    premiumTokenCost: number;
   }> = {};
   if (input.title !== undefined) values.title = input.title.trim();
   if (input.description !== undefined) values.description = input.description;
@@ -159,6 +163,8 @@ export const update = async (
   if (input.high_score_threshold !== undefined)
     values.highScoreThreshold = input.high_score_threshold;
   if (input.price !== undefined) values.price = input.price;
+  if (input.premium_token_cost !== undefined)
+    values.premiumTokenCost = input.premium_token_cost;
 
   const [updated] = await db
     .update(assessments)
@@ -173,6 +179,7 @@ export const update = async (
       low_score_threshold: assessments.lowScoreThreshold,
       high_score_threshold: assessments.highScoreThreshold,
       price: assessments.price,
+      premium_token_cost: assessments.premiumTokenCost,
     });
 
   return updated;

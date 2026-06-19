@@ -10,7 +10,9 @@ import blogRoutes from './routes/blog.routes';
 import contactRoutes from './routes/contact.routes';
 import mentorRoutes from './routes/mentor.routes';
 import questionRoutes from './routes/question.routes';
+import reportRoutes from './routes/report.routes';
 import submissionRoutes from './routes/submission.routes';
+import tokenRoutes from './routes/token.routes';
 import { error, success } from './utils/response';
 
 const app = new Hono();
@@ -49,6 +51,8 @@ app.route('/api/admin', adminRoutes);
 app.route('/api/mentor', mentorRoutes);
 app.route('/api/attempts', attemptRoutes);
 app.route('/api/blogs', blogRoutes);
+app.route('/api/tokens', tokenRoutes);
+app.route('/api/reports', reportRoutes);
 // Contact routes (public POST /api/contact + admin /api/admin/contacts).
 app.route('/api', contactRoutes);
 //   app.route('/api/admin', adminRoutes);

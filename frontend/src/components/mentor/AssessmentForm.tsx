@@ -14,6 +14,7 @@ export type AssessmentPayload = {
   low_score_threshold: number | null;
   high_score_threshold: number | null;
   free_report_text: string | null;
+  premium_token_cost: number;
 };
 
 type Props = {
@@ -24,6 +25,7 @@ type Props = {
     low_score_threshold: number | null;
     high_score_threshold: number | null;
     free_report_text: string | null;
+    premium_token_cost: number;
   }>;
   submitLabel: string;
   submitting: boolean;
@@ -46,6 +48,9 @@ export function AssessmentForm({
   const [title, setTitle] = useState(str(initial?.title));
   const [description, setDescription] = useState(str(initial?.description));
   const [price, setPrice] = useState(numStr(initial?.price));
+  const [premiumCost, setPremiumCost] = useState(
+    numStr(initial?.premium_token_cost),
+  );
   const [low, setLow] = useState(numStr(initial?.low_score_threshold));
   const [high, setHigh] = useState(numStr(initial?.high_score_threshold));
   const [freeText, setFreeText] = useState(str(initial?.free_report_text));
@@ -73,6 +78,7 @@ export function AssessmentForm({
       low_score_threshold: lowNum,
       high_score_threshold: highNum,
       free_report_text: freeText.trim() === '' ? null : freeText,
+      premium_token_cost: premiumCost.trim() === '' ? 0 : Number(premiumCost),
     });
   };
 
@@ -95,7 +101,7 @@ export function AssessmentForm({
           onChange={(e) => setDescription(e.target.value)}
         />
       </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-2">
           <Label htmlFor="price">Price</Label>
           <Input
@@ -104,6 +110,16 @@ export function AssessmentForm({
             min={0}
             value={price}
             onChange={(e) => setPrice(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="premium_token_cost">Premium cost (tokens)</Label>
+          <Input
+            id="premium_token_cost"
+            type="number"
+            min={0}
+            value={premiumCost}
+            onChange={(e) => setPremiumCost(e.target.value)}
           />
         </div>
         <div className="space-y-2">

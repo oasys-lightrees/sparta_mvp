@@ -47,6 +47,13 @@ const validateConfigFields = (body: Record<string, unknown>): string | null => {
   ) {
     return 'price must be a non-negative integer';
   }
+  if (
+    body.premium_token_cost !== undefined &&
+    (!Number.isInteger(body.premium_token_cost) ||
+      (body.premium_token_cost as number) < 0)
+  ) {
+    return 'premium_token_cost must be a non-negative integer';
+  }
   return null;
 };
 
@@ -113,6 +120,7 @@ assessment.post('/', authMiddleware, requireRole('MENTOR'), async (c) => {
       low_score_threshold: body.low_score_threshold,
       high_score_threshold: body.high_score_threshold,
       price: body.price,
+      premium_token_cost: body.premium_token_cost,
     });
     return c.json(success(created), 201);
   } catch (err) {
@@ -148,6 +156,7 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
     'low_score_threshold',
     'high_score_threshold',
     'price',
+    'premium_token_cost',
   ];
   if (!updatableKeys.some((k) => body[k] !== undefined)) {
     return c.json(error('Nothing to update'), 400);
@@ -161,6 +170,7 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
       low_score_threshold: body.low_score_threshold,
       high_score_threshold: body.high_score_threshold,
       price: body.price,
+      premium_token_cost: body.premium_token_cost,
     });
     return c.json(success(updated), 200);
   } catch (err) {

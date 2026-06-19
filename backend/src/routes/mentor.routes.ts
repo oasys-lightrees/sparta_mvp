@@ -28,6 +28,16 @@ mentor.get('/stats', authMiddleware, requireRole('MENTOR'), async (c) => {
   }
 });
 
+// GET /api/mentor/revenue — token revenue from premium unlocks
+mentor.get('/revenue', authMiddleware, requireRole('MENTOR'), async (c) => {
+  try {
+    const revenue = await mentorService.getRevenue(c.get('user').id);
+    return c.json(success(revenue), 200);
+  } catch (err) {
+    return handleError(c, err);
+  }
+});
+
 // GET /api/mentor/assessments — the current mentor's assessments + attempt count
 mentor.get('/assessments', authMiddleware, requireRole('MENTOR'), async (c) => {
   try {

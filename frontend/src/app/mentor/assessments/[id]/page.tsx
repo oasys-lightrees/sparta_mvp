@@ -173,6 +173,7 @@ function DetailView({ id }: { id: string }) {
                 low_score_threshold: detail.low_score_threshold,
                 high_score_threshold: detail.high_score_threshold,
                 free_report_text: detail.free_report_text,
+                premium_token_cost: detail.premium_token_cost,
               }}
               onSubmit={handleSave}
               onCancel={() => setEditing(false)}
@@ -183,6 +184,14 @@ function DetailView({ id }: { id: string }) {
               <Info
                 label="Price"
                 value={detail.price > 0 ? `$${detail.price}` : 'Free'}
+              />
+              <Info
+                label="Premium cost"
+                value={
+                  detail.premium_token_cost > 0
+                    ? `${detail.premium_token_cost} tokens`
+                    : '—'
+                }
               />
               <Info
                 label="Low threshold"

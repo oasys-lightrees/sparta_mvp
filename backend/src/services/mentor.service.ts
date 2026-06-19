@@ -1,6 +1,6 @@
-import { avg, count, desc, eq } from 'drizzle-orm';
+import { and, avg, count, desc, eq, sql } from 'drizzle-orm';
 import { db } from '../db/client';
-import { assessments, attempts, users } from '../db/schema';
+import { assessments, attempts, transactions, users } from '../db/schema';
 import { HttpError } from '../utils/http-error';
 
 /**
@@ -62,6 +62,42 @@ export const getStats = async (mentorId: string) => {
     draftAssessments,
     totalAttempts,
     averageScore,
+  };
+};
+
+/**
+ * Token revenue for the mentor: sum + count of PREMIUM_UNLOCK transactions
+ * crediting this mentor, plus the recent unlock list.
+ */
+export const getRevenue = async (mentorId: string) => {
+  const premiumFilter = and(
+    eq(transactions.mentorId, mentorId),
+    eq(transactions.type, 'PREMIUM_UNLOCK'),
+  );
+
+  const [agg] = await db
+    .select({
+      total: sql<string>`coalesce(sum(${transactions.amount}), 0)`,
+      unlocks: count(transactions.id),
+    })
+    .from(transactions)
+    .where(premiumFilter);
+
+  const rows = await db
+    .select({
+      assessmentTitle: assessments.title,
+      amount: transactions.amount,
+      date: transactions.createdAt,
+    })
+    .from(transactions)
+    .leftJoin(assessments, eq(transactions.assessmentId, assessments.id))
+    .where(premiumFilter)
+    .orderBy(desc(transactions.createdAt));
+
+  return {
+    totalRevenue: Number(agg?.total ?? 0),
+    premiumUnlocks: Number(agg?.unlocks ?? 0),
+    transactions: rows,
   };
 };
 
