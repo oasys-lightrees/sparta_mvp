@@ -1,6 +1,6 @@
-import { eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { db } from '../db/client';
-import { attempts, reports } from '../db/schema';
+import { assessments, attempts, reports } from '../db/schema';
 import { HttpError } from '../utils/http-error';
 
 /**
@@ -41,6 +41,29 @@ export const getReport = async (userId: string, attemptId: string) => {
     score: attempt.totalScore,
     report: { type: report.reportType, content: report.content },
   };
+};
+
+/**
+ * List the current user's completed attempts with their assessment and report.
+ * Newest first. Used by the user dashboard.
+ */
+export const listMine = async (userId: string) => {
+  return db
+    .select({
+      attempt_id: attempts.id,
+      assessment_id: assessments.id,
+      assessment_title: assessments.title,
+      score: attempts.totalScore,
+      created_at: attempts.createdAt,
+      report_id: reports.id,
+      report_type: reports.reportType,
+      report_content: reports.content,
+    })
+    .from(attempts)
+    .innerJoin(assessments, eq(attempts.assessmentId, assessments.id))
+    .leftJoin(reports, eq(reports.attemptId, attempts.id))
+    .where(eq(attempts.userId, userId))
+    .orderBy(desc(attempts.createdAt));
 };
 
 /**

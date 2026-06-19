@@ -45,6 +45,17 @@ export type AttemptReport = {
   report: Report;
 };
 
+export type MyAttempt = {
+  attempt_id: string;
+  assessment_id: string;
+  assessment_title: string;
+  score: number;
+  created_at: string;
+  report_id: string | null;
+  report_type: ReportType | null;
+  report_content: string | null;
+};
+
 // --- Mentor ---
 export type MentorAssessmentListItem = {
   id: string;
