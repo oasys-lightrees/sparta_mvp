@@ -15,7 +15,25 @@ import { error, success } from './utils/response';
 
 const app = new Hono();
 
-app.use('*', cors());
+// CORS allowlist. Defaults to the production domain + local dev; override with
+// the CORS_ORIGINS env var (comma-separated). Auth uses Bearer tokens (not
+// cookies), so credentials are not enabled.
+const allowedOrigins = (
+  process.env.CORS_ORIGINS ??
+  'https://sparta.jearimjarden.com,http://localhost:3000'
+)
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(
+  '*',
+  cors({
+    origin: allowedOrigins,
+    allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'Authorization'],
+  }),
+);
 
 // Health check — verifies the backend container is up.
 app.get('/api/health', (c) => c.json(success({ status: 'ok' })));

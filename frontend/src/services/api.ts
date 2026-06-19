@@ -4,7 +4,12 @@
 
 import { getToken } from '@/lib/storage';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+// API base URL. Set via NEXT_PUBLIC_API_URL (inlined at build time):
+//   production -> https://sparta.jearimjarden.com (same origin via nginx)
+//   local dev  -> http://localhost:3001 (see frontend/.env.example)
+// Falls back to a relative base ('') so same-origin deployments work even when
+// the value is omitted. No hardcoded localhost or IP.
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 
 export type ApiResponse<T> =
   | { success: true; data: T }
