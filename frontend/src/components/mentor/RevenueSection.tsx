@@ -88,7 +88,10 @@ export function RevenueSection() {
             />
           </div>
           {data.transactions.length === 0 ? (
-            <EmptyState title="No premium unlocks yet" />
+            <EmptyState
+              title="Premium unlocks will appear here"
+              description="When a user unlocks a premium report, the token revenue shows up in this list."
+            />
           ) : (
             <Card>
               <CardContent className="p-0">

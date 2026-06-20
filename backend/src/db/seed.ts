@@ -10,27 +10,23 @@ import {
   contacts,
   questions,
   reports,
+  transactions,
   users,
 } from './schema';
 
 /**
- * Production demo seed — populates SPARTA with realistic, presentation-ready
- * data. Seed-only: it does not change any application logic. Safe to re-run
- * (it removes the demo accounts/blogs/contacts by their known keys first, which
- * cascades their assessments, questions, choices, attempts and reports).
+ * Demo seed — populates SPARTA with realistic, presentation-ready SaaS data so
+ * every dashboard (user, mentor, admin) and report looks alive during a live
+ * MVP demo. Seed-only: it does not change any application logic and is safe to
+ * re-run (it removes the known demo accounts first, which cascades their
+ * assessments, questions, choices, attempts, reports and transactions).
  *
  *   npm run db:seed
  */
 
 const DEMO_PASSWORD = 'password123';
 
-const DEMO_EMAILS = [
-  'admin@sparta.demo',
-  'mentor@sparta.demo',
-  'user@sparta.demo',
-];
-
-// Likert choices reused across questions (realistic 0–3 scoring).
+// Likert choices reused across questions (0–3 scoring → max 30 over 10 Qs).
 const LIKERT = [
   { choice_text: 'Strongly disagree', score: 0 },
   { choice_text: 'Disagree', score: 1 },
@@ -38,81 +34,182 @@ const LIKERT = [
   { choice_text: 'Strongly agree', score: 3 },
 ];
 
-type AssessmentSeed = {
-  title: string;
-  description: string;
-  price: number;
-  freeReportText: string;
-  low: number;
-  high: number;
-  questions: string[];
+// Score bands shared by every demo assessment (low/high thresholds).
+const LOW = 12;
+const HIGH = 21;
+
+const FREE_TEMPLATE =
+  'You scored {{score}} on the {{assessment_title}}, which places you at the ' +
+  '{{category}} level.\n\n{{summary}}\n\nThis is a quick snapshot of where you ' +
+  'are today. Unlock your premium report for a personalized breakdown of your ' +
+  'strengths, the gaps holding you back, and a 30-day plan to level up.';
+
+type Band = 'LOW' | 'MEDIUM' | 'HIGH';
+const CATEGORY: Record<Band, string> = {
+  LOW: 'Beginner',
+  MEDIUM: 'Intermediate',
+  HIGH: 'Advanced',
+};
+const SUMMARY: Record<Band, string> = {
+  LOW: 'You are getting started — focus on building the fundamentals.',
+  MEDIUM: 'You have a solid foundation with clear room to grow.',
+  HIGH: 'You show strong proficiency in this area.',
+};
+const bandFor = (score: number): Band =>
+  score < LOW ? 'LOW' : score < HIGH ? 'MEDIUM' : 'HIGH';
+
+const renderFree = (title: string, score: number): string => {
+  const band = bandFor(score);
+  return FREE_TEMPLATE.replaceAll('{{score}}', String(score))
+    .replaceAll('{{assessment_title}}', title)
+    .replaceAll('{{category}}', CATEGORY[band])
+    .replaceAll('{{summary}}', SUMMARY[band]);
 };
 
-// Max score per assessment = 5 questions * 3 = 15. Bands: <6 low, 6–10 medium, >=11 high.
-const ASSESSMENTS: AssessmentSeed[] = [
+// Sectioned premium report (matches the AI output format: ## Overview, etc.).
+const renderPremium = (title: string, score: number): string => {
+  const band = bandFor(score);
+  const level = CATEGORY[band];
+  return [
+    '## Overview',
+    `Based on your score of ${score} on the ${title}, you are performing at the ${level} level. This report breaks down what is working, where you can improve, and a concrete plan for the next 30 days.`,
+    '## Strengths',
+    '- You show consistent effort and a genuine willingness to grow.\n- Your strongest responses point to reliable fundamentals you can build on.\n- You bring self-awareness about where you stand today.',
+    '## Weaknesses',
+    '- A few areas show hesitation under pressure or ambiguity.\n- Consistency dips when situations fall outside your comfort zone.\n- Some advanced competencies are still developing.',
+    '## Recommendations',
+    '1. Double down on your two strongest areas to create momentum.\n2. Pick one weakness and practice it deliberately each week.\n3. Seek feedback from someone a level ahead of you.\n4. Review your results again in 30 days to measure progress.',
+    '## 30-Day Improvement Roadmap',
+    'Week 1: Audit your current habits and set one measurable goal.\nWeek 2: Apply a new technique in a real situation and reflect.\nWeek 3: Get feedback and adjust your approach.\nWeek 4: Consolidate the habit and retake the assessment to see your growth.',
+  ].join('\n\n');
+};
+
+type MentorSeed = {
+  name: string;
+  email: string;
+  assessment: {
+    title: string;
+    description: string;
+    price: number;
+    premiumTokenCost: number;
+    premiumReportDescription: string;
+    baseKnowledge: string;
+    questions: string[];
+  };
+};
+
+const MENTORS: MentorSeed[] = [
   {
-    title: 'Leadership Potential Assessment',
-    description:
-      'Discover how your instincts, communication and decision-making shape your leadership potential.',
-    price: 29,
-    freeReportText:
-      'Thank you for completing the Leadership Potential Assessment. Your result reflects your current leadership tendencies and where you can grow next.',
-    low: 6,
-    high: 11,
-    questions: [
-      'I naturally take initiative when no one else steps up.',
-      'I stay calm and focused when the pressure is high.',
-      'I communicate goals and expectations clearly to others.',
-      'I give credit to my team and openly own my mistakes.',
-      'I make timely decisions even with incomplete information.',
-    ],
+    name: 'AI Career Coach',
+    email: 'mentor@sparta.demo',
+    assessment: {
+      title: 'AI Engineer Readiness Assessment',
+      description:
+        'Find out how ready you are for a professional AI/ML engineering role across modeling, MLOps, software craft and applied research.',
+      price: 49,
+      premiumTokenCost: 50,
+      premiumReportDescription:
+        'A personalized deep-dive into your AI engineering readiness: your strongest competencies, the specific gaps holding you back, recommended resources, and a 30-day roadmap to become production-ready.',
+      baseKnowledge:
+        'This assessment measures readiness for a professional AI/ML engineering role across modeling, MLOps, software engineering and applied research. Higher scores indicate production-grade competency. Beginners should focus on Python and ML fundamentals; intermediates on deployment and evaluation; advanced engineers on research and system design.',
+      questions: [
+        'I can design and train machine learning models for production use.',
+        'I understand how transformer architectures and attention work.',
+        'I can build, deploy and monitor ML services in production.',
+        'I write clean, well-tested Python for data and ML workloads.',
+        'I understand vector databases and retrieval-augmented generation.',
+        'I can evaluate model quality with the right offline and online metrics.',
+        'I am comfortable working with cloud infrastructure and GPUs.',
+        'I keep up with current AI research and apply it pragmatically.',
+        'I can debug data pipelines and reason about data quality.',
+        'I can translate ambiguous business problems into ML solutions.',
+      ],
+    },
   },
   {
-    title: 'Career Direction Assessment',
-    description:
-      'Gauge how clear you are about the work you want and the path to get there.',
-    price: 39,
-    freeReportText:
-      'Thanks for taking the Career Direction Assessment. Here is a snapshot of your career clarity and momentum.',
-    low: 6,
-    high: 11,
-    questions: [
-      'I have a clear picture of the work I find meaningful.',
-      'I know which skills I most want to grow this year.',
-      'I regularly seek feedback about my strengths.',
-      'I can describe my ideal work environment in detail.',
-      'I feel confident making decisions about my career.',
-    ],
+    name: 'Leadership Coach',
+    email: 'leadership@sparta.demo',
+    assessment: {
+      title: 'Leadership Potential Test',
+      description:
+        'Discover how your instincts, communication and decision-making shape your leadership potential.',
+      price: 39,
+      premiumTokenCost: 40,
+      premiumReportDescription:
+        'An in-depth look at your leadership style: where you naturally lead, the blind spots that hold teams back, and a focused 30-day plan to grow your influence.',
+      baseKnowledge:
+        'This assessment measures leadership potential across initiative, composure, communication, accountability, decisiveness and people development. Higher scores indicate stronger leadership instincts. Beginners should focus on self-management and communication; intermediates on coaching and conflict; advanced leaders on vision and organizational influence.',
+      questions: [
+        'I naturally take initiative when no one else steps up.',
+        'I stay calm and focused when the pressure is high.',
+        'I communicate goals and expectations clearly to others.',
+        'I give credit to my team and openly own my mistakes.',
+        'I make timely decisions even with incomplete information.',
+        'I actively develop and coach the people around me.',
+        'I can align a group around a shared vision.',
+        'I handle conflict directly and constructively.',
+        'I adapt my style to what each situation needs.',
+        'I hold myself and others accountable to high standards.',
+      ],
+    },
   },
   {
-    title: 'Personal Growth Assessment',
-    description:
-      'Reflect on your habits, mindset and self-awareness to understand your growth trajectory.',
-    price: 0,
-    freeReportText:
-      'Thank you for completing the Personal Growth Assessment. This reflects your current growth mindset and self-awareness.',
-    low: 6,
-    high: 11,
-    questions: [
-      'I set aside time for reflection and self-improvement.',
-      'I view setbacks as opportunities to learn.',
-      'I am aware of my emotional triggers.',
-      'I follow through on commitments I make to myself.',
-      'I actively seek out new experiences and perspectives.',
-    ],
+    name: 'Sales Coach',
+    email: 'sales@sparta.demo',
+    assessment: {
+      title: 'Sales Personality Assessment',
+      description:
+        'Understand your natural sales strengths — from rapport and discovery to resilience and closing.',
+      price: 29,
+      premiumTokenCost: 30,
+      premiumReportDescription:
+        'A tailored breakdown of your sales personality: the instincts that win deals, the habits that cost you, and a 30-day plan to sharpen your pipeline and close rate.',
+      baseKnowledge:
+        'This assessment measures sales aptitude across rapport, discovery, resilience, tailoring, closing, follow-up, product mastery, qualification, negotiation and drive. Higher scores indicate stronger natural selling ability. Beginners should focus on listening and follow-up; intermediates on qualification and objection handling; advanced sellers on negotiation and strategic accounts.',
+      questions: [
+        'I build rapport with new people quickly and naturally.',
+        'I listen more than I talk during a discovery conversation.',
+        'I stay resilient and positive after hearing "no".',
+        'I tailor my message to each prospect’s real needs.',
+        'I am comfortable asking directly for the sale.',
+        'I follow up consistently without being pushy.',
+        'I understand my product deeply enough to handle objections.',
+        'I qualify opportunities instead of chasing every lead.',
+        'I negotiate confidently while protecting the relationship.',
+        'I am driven by clear targets and measurable goals.',
+      ],
+    },
   },
+];
+
+// Realistic registered users (besides admin + mentors). Token balances vary so
+// the user dashboards and admin token column look populated.
+const USERS = [
+  { name: 'Demo User', email: 'user@sparta.demo', tokens: 120 },
+  { name: 'Olivia Bennett', email: 'olivia.bennett@sparta.demo', tokens: 70 },
+  { name: 'Liam Carter', email: 'liam.carter@sparta.demo', tokens: 35 },
+  { name: 'Sophia Nguyen', email: 'sophia.nguyen@sparta.demo', tokens: 0 },
+  { name: 'Noah Patel', email: 'noah.patel@sparta.demo', tokens: 60 },
+  { name: 'Emma Rossi', email: 'emma.rossi@sparta.demo', tokens: 15 },
+];
+
+// Guest (not-registered) takers, used for some attempts + the contact inbox.
+const GUESTS = [
+  'james.okoro@example.com',
+  'mia.larsen@example.com',
+  'lucas.silva@example.com',
 ];
 
 const BLOGS = [
   {
-    title: '5 Small Habits That Compound Into Real Self-Growth',
-    slug: 'habits-for-self-growth',
+    title: 'Are You Ready for Your First AI Engineering Role?',
+    slug: 'ready-for-first-ai-engineering-role',
     excerpt:
-      'Big change rarely comes from big gestures. Here are five tiny, repeatable habits that quietly transform how you work and live.',
+      'The skills that actually get you hired as an AI engineer — and a simple way to find your gaps before the interview.',
     content:
-      'Self-growth is less about dramatic reinvention and more about the small things you repeat.\n\n1. Reflect for five minutes a day.\n2. Write down one thing you learned.\n3. Ask for feedback before you need it.\n4. Protect a single block of deep focus.\n5. Celebrate tiny wins out loud.\n\nStack these for a few months and the compounding effect is hard to ignore.',
+      'Breaking into AI engineering is less about knowing every paper and more about a handful of durable skills.\n\nYou need solid Python, a real grasp of how models train and fail, and the ability to ship and monitor a service in production. Add clear thinking about data quality and evaluation, and you are most of the way there.\n\nThe fastest way forward is to find your specific gaps — then close them one at a time.',
     cover_image_url:
-      'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800',
+      'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800',
   },
   {
     title: 'What Great Leaders Actually Do Differently',
@@ -125,40 +222,75 @@ const BLOGS = [
       'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800',
   },
   {
-    title: 'Navigating Your Next Career Move With Confidence',
-    slug: 'navigating-your-next-career-move',
+    title: 'The Sales Habits That Quietly Win Deals',
+    slug: 'sales-habits-that-win-deals',
     excerpt:
-      'Career decisions feel huge in the moment. A simple framework can make your next move feel a lot less daunting.',
+      'Top sellers are rarely the loudest in the room. These are the quiet habits that move deals forward.',
     content:
-      'When a career decision looms, clarity beats certainty.\n\nStart by naming the work that energises you. Then map the skills that move you toward it, and the environment where you do your best work. Finally, talk to people already doing the role.\n\nConfidence is a by-product of clarity — not the other way around.',
+      'The best salespeople we know listen more than they pitch.\n\nThey qualify hard, follow up without nagging, and tailor every message to the buyer in front of them. They stay resilient after a "no" and treat negotiation as a way to protect the relationship, not win a point.\n\nMaster these and your pipeline takes care of itself.',
     cover_image_url:
-      'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800',
+      'https://images.unsplash.com/photo-1556745757-8d76bdb6984b?w=800',
   },
 ];
 
-// Guest takers used for sample results.
-const GUESTS = [
-  'olivia.bennett@example.com',
-  'liam.carter@example.com',
-  'sophia.nguyen@example.com',
-  'noah.patel@example.com',
-  'emma.rossi@example.com',
-  'james.okoro@example.com',
-];
-
-const bandLabel = (score: number, low: number, high: number) =>
-  score < low ? 'Needs improvement' : score < high ? 'Average' : 'Strong';
-
-const reportContent = (
-  freeText: string,
-  score: number,
-  low: number,
-  high: number,
-) => `${freeText}\n\n${bandLabel(score, low, high)}`;
-
 const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000);
 
+// Attempt plan per assessment (index aligns with MENTORS/assessment order).
+// who: index into USERS, or 'guest:N' for a guest taker. premium = unlocked.
+type AttemptSpec = {
+  who: number | string;
+  score: number;
+  daysAgo: number;
+  premium?: boolean;
+};
+
+const ATTEMPTS: AttemptSpec[][] = [
+  // AI Engineer Readiness
+  [
+    { who: 0, score: 26, daysAgo: 3, premium: true },
+    { who: 1, score: 19, daysAgo: 6, premium: true },
+    { who: 3, score: 9, daysAgo: 9 },
+    { who: 4, score: 23, daysAgo: 14, premium: true },
+    { who: 'guest:0', score: 14, daysAgo: 18 },
+    { who: 2, score: 11, daysAgo: 22 },
+    { who: 5, score: 17, daysAgo: 27, premium: true },
+    { who: 'guest:1', score: 7, daysAgo: 33 },
+    { who: 1, score: 25, daysAgo: 41 },
+    { who: 4, score: 20, daysAgo: 52 },
+  ],
+  // Leadership Potential
+  [
+    { who: 0, score: 22, daysAgo: 2, premium: true },
+    { who: 2, score: 16, daysAgo: 5, premium: true },
+    { who: 4, score: 27, daysAgo: 11, premium: true },
+    { who: 'guest:2', score: 10, daysAgo: 16 },
+    { who: 5, score: 13, daysAgo: 21 },
+    { who: 1, score: 24, daysAgo: 29, premium: true },
+    { who: 3, score: 8, daysAgo: 37 },
+    { who: 0, score: 18, daysAgo: 46 },
+    { who: 'guest:0', score: 20, daysAgo: 58 },
+  ],
+  // Sales Personality
+  [
+    { who: 1, score: 21, daysAgo: 1, premium: true },
+    { who: 0, score: 28, daysAgo: 4, premium: true },
+    { who: 3, score: 12, daysAgo: 8 },
+    { who: 5, score: 15, daysAgo: 13 },
+    { who: 'guest:1', score: 6, daysAgo: 19 },
+    { who: 4, score: 25, daysAgo: 24, premium: true },
+    { who: 2, score: 17, daysAgo: 31 },
+    { who: 'guest:2', score: 23, daysAgo: 44 },
+    { who: 1, score: 19, daysAgo: 55 },
+  ],
+];
+
 async function seed() {
+  const allDemoEmails = [
+    'admin@sparta.demo',
+    ...MENTORS.map((m) => m.email),
+    ...USERS.map((u) => u.email),
+  ];
+
   await db.transaction(async (tx) => {
     // --- Clean previous demo data (idempotent) ---
     await tx.delete(blogs).where(
@@ -168,50 +300,92 @@ async function seed() {
       ),
     );
     await tx.delete(contacts).where(inArray(contacts.email, GUESTS));
-    // Deleting demo users cascades their assessments -> questions/choices/
-    // attempts/reports and authored blogs.
-    await tx.delete(users).where(inArray(users.email, DEMO_EMAILS));
+    // Deleting demo users cascades assessments -> questions/choices/attempts/
+    // reports, transactions and authored blogs.
+    await tx.delete(users).where(inArray(users.email, allDemoEmails));
 
-    // --- Users ---
     const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
-    const [admin, mentor, user] = await tx
+
+    // --- Admin ---
+    const [admin] = await tx
       .insert(users)
-      .values([
-        {
-          name: 'Demo Admin',
-          email: 'admin@sparta.demo',
-          passwordHash,
-          role: 'ADMIN',
-        },
-        {
-          name: 'Demo Mentor',
-          email: 'mentor@sparta.demo',
-          passwordHash,
-          role: 'MENTOR',
-        },
-        {
-          name: 'Demo User',
-          email: 'user@sparta.demo',
-          passwordHash,
-          role: 'USER',
-        },
-      ])
+      .values({
+        name: 'Demo Admin',
+        email: 'admin@sparta.demo',
+        passwordHash,
+        role: 'ADMIN',
+      })
       .returning({ id: users.id });
 
-    // --- Assessments + questions + choices ---
-    let attemptSeq = 0;
-    for (const a of ASSESSMENTS) {
+    // --- Mentors ---
+    const mentorRows = await tx
+      .insert(users)
+      .values(
+        MENTORS.map((m) => ({
+          name: m.name,
+          email: m.email,
+          passwordHash,
+          role: 'MENTOR' as const,
+        })),
+      )
+      .returning({ id: users.id, email: users.email });
+    const mentorIdByEmail = new Map(mentorRows.map((m) => [m.email, m.id]));
+
+    // --- Registered users ---
+    const userRows = await tx
+      .insert(users)
+      .values(
+        USERS.map((u) => ({
+          name: u.name,
+          email: u.email,
+          passwordHash,
+          role: 'USER' as const,
+          tokenBalance: u.tokens,
+        })),
+      )
+      .returning({ id: users.id });
+    const userIds = userRows.map((u) => u.id);
+
+    // Token top-up ledger so the admin transaction count looks real.
+    const topups = USERS.map((u, i) => ({ u, id: userIds[i] })).filter(
+      (x) => x.u.tokens > 0,
+    );
+    if (topups.length) {
+      await tx.insert(transactions).values(
+        topups.map((x, i) => ({
+          userId: x.id,
+          amount: x.u.tokens + 50, // topped up more than the current balance
+          type: 'TOKEN_TOPUP' as const,
+          createdAt: daysAgo(60 - i * 3),
+        })),
+      );
+    }
+
+    // --- Assessments + questions + choices + attempts + premium unlocks ---
+    let premiumUnlocks = 0;
+    let totalAttempts = 0;
+
+    for (let ai = 0; ai < MENTORS.length; ai++) {
+      const m = MENTORS[ai];
+      const a = m.assessment;
+      const mentorId = mentorIdByEmail.get(m.email)!;
+
       const [assessment] = await tx
         .insert(assessments)
         .values({
-          mentorId: mentor.id,
+          mentorId,
           title: a.title,
           description: a.description,
           status: 'PUBLISHED',
-          freeReportText: a.freeReportText,
-          lowScoreThreshold: a.low,
-          highScoreThreshold: a.high,
+          freeReportText: `Thank you for completing the ${a.title}.`,
+          freeReportTemplate: FREE_TEMPLATE,
+          premiumReportDescription: a.premiumReportDescription,
+          baseKnowledge: a.baseKnowledge,
+          aiEnabled: true,
+          lowScoreThreshold: LOW,
+          highScoreThreshold: HIGH,
           price: a.price,
+          premiumTokenCost: a.premiumTokenCost,
         })
         .returning({ id: assessments.id });
 
@@ -220,7 +394,6 @@ async function seed() {
           .insert(questions)
           .values({ assessmentId: assessment.id, questionText: qText })
           .returning({ id: questions.id });
-
         await tx.insert(choices).values(
           LIKERT.map((c) => ({
             questionId: question.id,
@@ -230,33 +403,57 @@ async function seed() {
         );
       }
 
-      // --- Sample attempts + reports (varied scores across bands) ---
-      const sampleScores = [4, 7, 9, 11, 14];
-      for (let i = 0; i < sampleScores.length; i++) {
-        const score = sampleScores[i];
-        // First attempt is the registered demo user; the rest are guests.
-        const isUser = i === 0;
-        const guestEmail = GUESTS[(attemptSeq + i) % GUESTS.length];
-        const createdAt = daysAgo(attemptSeq * 2 + i + 1);
+      for (const spec of ATTEMPTS[ai]) {
+        const isGuest = typeof spec.who === 'string';
+        const userId = isGuest
+          ? null
+          : userIds[spec.who as number];
+        const guestEmail = isGuest
+          ? GUESTS[Number((spec.who as string).split(':')[1])]
+          : null;
+        const createdAt = daysAgo(spec.daysAgo);
 
         const [attempt] = await tx
           .insert(attempts)
           .values({
             assessmentId: assessment.id,
-            userId: isUser ? user.id : null,
-            guestEmail: isUser ? null : guestEmail,
-            totalScore: score,
+            userId,
+            guestEmail,
+            totalScore: spec.score,
             createdAt,
           })
           .returning({ id: attempts.id });
+        totalAttempts++;
 
         await tx.insert(reports).values({
           attemptId: attempt.id,
           reportType: 'FREE',
-          content: reportContent(a.freeReportText, score, a.low, a.high),
+          content: renderFree(a.title, spec.score),
         });
+
+        // Premium unlocks (registered users only) → premium report + revenue.
+        if (spec.premium && userId) {
+          const [premium] = await tx
+            .insert(reports)
+            .values({
+              attemptId: attempt.id,
+              reportType: 'PREMIUM',
+              content: renderPremium(a.title, spec.score),
+            })
+            .returning({ id: reports.id });
+
+          await tx.insert(transactions).values({
+            userId,
+            mentorId,
+            assessmentId: assessment.id,
+            reportId: premium.id,
+            amount: a.premiumTokenCost,
+            type: 'PREMIUM_UNLOCK',
+            createdAt: new Date(createdAt.getTime() + 60 * 60 * 1000),
+          });
+          premiumUnlocks++;
+        }
       }
-      attemptSeq += sampleScores.length;
     }
 
     // --- Blogs (published) ---
@@ -269,35 +466,46 @@ async function seed() {
         content: b.content,
         coverImageUrl: b.cover_image_url,
         status: 'PUBLISHED' as const,
-        createdAt: daysAgo((i + 1) * 3),
+        createdAt: daysAgo((i + 1) * 4),
       })),
     );
 
-    // --- A few contact messages (so the admin inbox looks alive) ---
+    // --- Contact inbox ---
     await tx.insert(contacts).values([
       {
-        name: 'Olivia Bennett',
+        name: 'James Okoro',
         email: GUESTS[0],
         phone: '+1 555 0142',
-        message: 'Loved the Leadership assessment — do you offer team packages?',
+        message:
+          'Loved the AI Engineer Readiness assessment — do you offer team packages for our bootcamp?',
         status: 'NEW',
       },
       {
-        name: 'Liam Carter',
+        name: 'Mia Larsen',
         email: GUESTS[1],
-        message: 'Can I retake an assessment and compare results over time?',
+        message: 'Can I retake an assessment and compare my results over time?',
         status: 'CONTACTED',
       },
+      {
+        name: 'Lucas Silva',
+        email: GUESTS[2],
+        message: 'Is there a way to white-label these assessments for my coaching business?',
+        status: 'NEW',
+      },
     ]);
+
+    return { totalAttempts, premiumUnlocks };
   });
 
   console.log('✅ Demo seed complete.');
-  console.log('   Accounts (password for all: %s):', DEMO_PASSWORD);
-  console.log('     ADMIN  -> admin@sparta.demo');
-  console.log('     MENTOR -> mentor@sparta.demo');
-  console.log('     USER   -> user@sparta.demo');
-  console.log('   3 published assessments (5 questions x 4 choices each)');
-  console.log('   15 sample attempts + reports, 3 blog posts, 2 contacts');
+  console.log('   Password for all accounts: %s', DEMO_PASSWORD);
+  console.log('   ADMIN   -> admin@sparta.demo');
+  console.log('   MENTORS -> mentor@sparta.demo (AI Career Coach)');
+  console.log('              leadership@sparta.demo (Leadership Coach)');
+  console.log('              sales@sparta.demo (Sales Coach)');
+  console.log('   USERS   -> user@sparta.demo (+ 5 named users)');
+  console.log('   3 published assessments (10 questions each, AI enabled)');
+  console.log('   Historical attempts + premium unlocks + mentor revenue');
 }
 
 seed()

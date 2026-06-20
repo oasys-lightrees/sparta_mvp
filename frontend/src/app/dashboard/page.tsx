@@ -63,6 +63,7 @@ function DashboardHome() {
   const [balance, setBalance] = useState<number | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [actionError, setActionError] = useState('');
+  const [actionNotice, setActionNotice] = useState('');
 
   const loadWallet = useCallback(async () => {
     const [mine, wallet] = await Promise.all([
@@ -115,9 +116,11 @@ function DashboardHome() {
     }
     setBusy('topup');
     setActionError('');
+    setActionNotice('');
     try {
       const wallet = await tokenApi.topupDemo(amount);
       setBalance(wallet.balance);
+      setActionNotice(`Added ${amount} tokens — your balance is now ${wallet.balance}.`);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Top-up failed');
     } finally {
@@ -128,9 +131,11 @@ function DashboardHome() {
   const unlock = async (reportId: string) => {
     setBusy(reportId);
     setActionError('');
+    setActionNotice('');
     try {
       await attemptApi.unlockPremium(reportId);
       await loadWallet();
+      setActionNotice('Premium report unlocked — open it to see your full analysis.');
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Unlock failed');
     } finally {
@@ -188,14 +193,19 @@ function DashboardHome() {
       <section className="space-y-4">
         <h2 className="text-xl font-semibold tracking-tight">My Assessments</h2>
         <ErrorMessage message={actionError} />
+        {actionNotice ? (
+          <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+            {actionNotice}
+          </p>
+        ) : null}
         {attemptsError ? (
           <ErrorMessage message={attemptsError} />
         ) : attempts === null ? (
           <Loading />
         ) : attempts.length === 0 ? (
           <EmptyState
-            title="No assessments yet"
-            description="Take an assessment below and your results will show up here."
+            title="Complete an assessment to receive insights"
+            description="Take an assessment below and your personalized results and reports will show up here."
           />
         ) : (
           <Card>

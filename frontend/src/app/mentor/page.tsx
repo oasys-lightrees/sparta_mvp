@@ -184,8 +184,8 @@ function MentorHome() {
           <Loading />
         ) : items.length === 0 ? (
           <EmptyState
-            title="No assessments yet"
-            description="Create your first assessment to start collecting responses."
+            title="Create your first AI assessment"
+            description="Build a test, generate questions with AI, and start collecting responses and revenue."
             action={
               !showCreate ? (
                 <Button onClick={() => setShowCreate(true)}>

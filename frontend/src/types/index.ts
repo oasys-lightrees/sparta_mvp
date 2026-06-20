@@ -48,6 +48,8 @@ export type PremiumInfo = {
 export type AttemptReport = {
   attempt_id: string;
   score: number;
+  level: string;
+  assessment_title: string | null;
   report_id: string;
   report: Report;
   premium: PremiumInfo;
