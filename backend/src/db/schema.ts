@@ -129,6 +129,9 @@ export const choices = pgTable('choices', {
   // Display/answer order within a question. Drives the A/B/C/D labels used by
   // the category engine and answer snapshot. Legacy rows default to 0.
   position: integer('position').notNull().default(0),
+  // Psychometric answer key (additive): result category codes this choice
+  // contributes to (e.g. ["PB","CH"]). Null/empty -> not a psychometric choice.
+  categoryCodes: jsonb('category_codes').$type<string[]>(),
 });
 
 /**
@@ -152,11 +155,15 @@ export type AnswerSnapshotItem = {
  * even if the mentor later edits the categories. Null for exam-style attempts.
  */
 export type CategoryResult = {
-  distribution: Record<string, number>; // label -> times chosen
-  total: number; // answered questions counted
-  dominant: string; // winning label (A, B, …)
+  distribution: Record<string, number>; // label/code -> points
+  total: number; // sum of points (or answered count in legacy mode)
+  dominant: string; // winning label/code
   dominantName: string; // winning category name
   categories: ResultCategories; // config snapshot
+  // Psychometric mode (additive): answer-key scores keyed by category code and
+  // the winning code. In legacy A/B/C/D mode these are omitted.
+  scores?: Record<string, number>;
+  winner?: string;
 };
 
 /**

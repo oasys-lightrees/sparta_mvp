@@ -1,0 +1,1 @@
+ALTER TABLE "choices" ADD COLUMN "category_codes" jsonb;

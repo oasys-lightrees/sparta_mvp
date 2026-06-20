@@ -69,7 +69,11 @@ const chat = async (
   }
 };
 
-export type GeneratedChoice = { text: string; score: number };
+export type GeneratedChoice = {
+  text: string;
+  score: number;
+  categories: string[];
+};
 export type GeneratedQuestion = {
   question: string;
   choices: GeneratedChoice[];
@@ -77,24 +81,35 @@ export type GeneratedQuestion = {
   explanation: string;
 };
 
+// Category context passed to the question generator so it can assign mappings.
+export type GeneratorCategory = { code: string; name: string };
+
 /**
  * Convert raw pasted text into structured MCQ questions. Validates the AI's
  * JSON and rejects malformed output.
  */
 export const generateQuestionsFromText = async (
   rawText: string,
+  categories?: GeneratorCategory[],
 ): Promise<GeneratedQuestion[]> => {
+  const hasCats = Array.isArray(categories) && categories.length > 0;
+  const catList = hasCats
+    ? categories!.map((c) => `${c.code} (${c.name})`).join(', ')
+    : '';
+
   const system =
     'You convert raw assessment text into structured diagnostic ' +
     'multiple-choice questions for a personality/category assessment. ' +
     'Each question must offer distinct answer options that represent DIFFERENT ' +
     'types, styles, or preferences — NOT one correct answer and others wrong. ' +
-    'Keep the options in a consistent order across questions so the first option ' +
-    'reflects the same type throughout, the second option the same type, and so ' +
-    'on (these positions map to result categories A, B, C, D). ' +
-    'Respond ONLY with JSON of shape ' +
-    '{"questions":[{"question":string,"choices":[{"text":string,"score":number}],' +
-    '"correct_answer":string,"explanation":string}]}. ' +
+    (hasCats
+      ? `The available result categories are: ${catList}. For EVERY choice, set ` +
+        '"maps_to" to an array of the category CODES that selecting it should ' +
+        'increase (usually one, occasionally more). Use ONLY codes from the list.'
+      : 'Set "maps_to" to an empty array for every choice.') +
+    ' Respond ONLY with JSON of shape ' +
+    '{"questions":[{"question":string,"choices":[{"text":string,"score":number,' +
+    '"maps_to":[string]}],"correct_answer":string,"explanation":string}]}. ' +
     'Use score 0 for every choice (diagnostic answers are not graded) and leave ' +
     'correct_answer as an empty string. Use explanation to briefly note what the ' +
     'question reveals. Do not include any prose outside the JSON.';
@@ -133,9 +148,13 @@ export const generateQuestionsFromText = async (
         throw new HttpError(502, 'AI returned an invalid choice');
       }
       const num = Number(c.score);
+      const mapsTo = Array.isArray(c.maps_to)
+        ? c.maps_to.filter((x): x is string => typeof x === 'string')
+        : [];
       choices.push({
         text: c.text,
         score: Number.isFinite(num) ? Math.round(num) : 0,
+        categories: mapsTo,
       });
     }
     if (choices.length === 0) {

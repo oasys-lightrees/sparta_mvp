@@ -243,6 +243,7 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
       questionId: choices.questionId,
       choiceText: choices.choiceText,
       score: choices.score,
+      categoryCodes: choices.categoryCodes,
     })
     .from(choices)
     .innerJoin(questions, eq(choices.questionId, questions.id))
@@ -250,6 +251,18 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
     // Order by mentor-defined position so A/B/C/D labels are deterministic.
     .orderBy(asc(choices.position), asc(choices.id));
   const choiceMap = new Map(choiceRows.map((c) => [c.id, c]));
+
+  // Psychometric mode: each choice carries an answer key (category codes). It
+  // takes priority over the legacy A/B/C/D position-counting category mode.
+  const psychometric =
+    categoryMode &&
+    resultCategories !== null &&
+    choiceRows.some((c) => (c.categoryCodes?.length ?? 0) > 0);
+  // Initialize every configured category to 0 so unscored ones still appear.
+  const scores: Record<string, number> = {};
+  if (psychometric && resultCategories) {
+    for (const code of Object.keys(resultCategories)) scores[code] = 0;
+  }
 
   // Group each question's choices (ordered) so we can label them and find the
   // highest-scoring "expected" answer for the evaluation snapshot.
@@ -288,6 +301,13 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
     const selectedLabel = labelFor(selectedIdx);
     distribution[selectedLabel] = (distribution[selectedLabel] ?? 0) + 1;
     answeredCount += 1;
+
+    // Psychometric: increment each category code this choice maps to.
+    if (psychometric && resultCategories) {
+      for (const code of choice.categoryCodes ?? []) {
+        if (code in scores) scores[code] += 1;
+      }
+    }
     snapshot.push({
       question: question.questionText,
       userAnswer: selectedLabel,
@@ -305,7 +325,25 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
   let content: string;
   let category: string;
   let summary: string;
-  if (categoryMode && resultCategories) {
+  if (psychometric && resultCategories) {
+    // Answer-key scoring: the winning category is the highest total.
+    const winner = pickDominant(scores);
+    const total = Object.values(scores).reduce((a, b) => a + b, 0);
+    categoryResult = {
+      distribution: scores,
+      total,
+      dominant: winner,
+      dominantName: resultCategories[winner]?.name ?? `Result ${winner}`,
+      categories: resultCategories,
+      scores,
+      winner,
+    };
+    ({ content, category, summary } = generateCategoryFreeReport(
+      assessment,
+      categoryResult,
+    ));
+  } else if (categoryMode && resultCategories) {
+    // Legacy A/B/C/D position-counting category mode (unchanged).
     const dominant = pickDominant(distribution);
     categoryResult = {
       distribution,

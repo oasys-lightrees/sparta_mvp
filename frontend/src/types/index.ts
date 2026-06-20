@@ -98,7 +98,12 @@ export type MentorAssessmentListItem = {
   totalAttempts: number;
 };
 
-export type MentorChoice = { id: string; choice_text: string; score: number };
+export type MentorChoice = {
+  id: string;
+  choice_text: string;
+  score: number;
+  categories: string[] | null;
+};
 export type MentorQuestion = {
   id: string;
   question_text: string;
@@ -108,7 +113,7 @@ export type MentorQuestion = {
 };
 
 // AI question import preview (not yet saved).
-export type AIChoice = { text: string; score: number };
+export type AIChoice = { text: string; score: number; categories?: string[] };
 export type AIQuestionPreview = {
   question: string;
   choices: AIChoice[];

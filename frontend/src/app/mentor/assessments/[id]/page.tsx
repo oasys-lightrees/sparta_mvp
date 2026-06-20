@@ -237,6 +237,7 @@ function DetailView({ id }: { id: string }) {
       <QuestionEditor
         assessmentId={id}
         questions={detail.questions}
+        categories={detail.result_categories}
         onChanged={loadDetail}
       />
 

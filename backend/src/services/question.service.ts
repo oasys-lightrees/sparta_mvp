@@ -7,6 +7,7 @@ import * as aiService from './ai.service';
 export type ChoiceInput = {
   choice_text: string;
   score: number;
+  categories?: string[];
 };
 
 export type AddQuestionInput = {
@@ -21,7 +22,12 @@ export type UpdateQuestionInput = {
   choices?: ChoiceInput[];
 };
 
-type ChoiceView = { id: string; choice_text: string; score: number };
+type ChoiceView = {
+  id: string;
+  choice_text: string;
+  score: number;
+  categories: string[] | null;
+};
 type QuestionView = {
   id: string;
   question_text: string;
@@ -32,11 +38,17 @@ const toChoiceView = (row: {
   id: string;
   choiceText: string;
   score: number;
+  categoryCodes?: string[] | null;
 }): ChoiceView => ({
   id: row.id,
   choice_text: row.choiceText,
   score: row.score,
+  categories: row.categoryCodes ?? null,
 });
+
+// Normalize an optional categories array to a stored value (null when empty).
+const normalizeCategories = (categories?: string[]): string[] | null =>
+  Array.isArray(categories) && categories.length > 0 ? categories : null;
 
 /**
  * Ensure the mentor owns the assessment. 404 if missing, 403 if not owner.
@@ -105,12 +117,14 @@ export const addQuestion = async (
           choiceText: ch.choice_text.trim(),
           score: ch.score,
           position: i,
+          categoryCodes: normalizeCategories(ch.categories),
         })),
       )
       .returning({
         id: choices.id,
         choiceText: choices.choiceText,
         score: choices.score,
+        categoryCodes: choices.categoryCodes,
       });
 
     return {
@@ -148,6 +162,7 @@ export const updateQuestion = async (
           choiceText: ch.choice_text.trim(),
           score: ch.score,
           position: i,
+          categoryCodes: normalizeCategories(ch.categories),
         })),
       );
     }
@@ -163,6 +178,7 @@ export const updateQuestion = async (
         id: choices.id,
         choiceText: choices.choiceText,
         score: choices.score,
+        categoryCodes: choices.categoryCodes,
       })
       .from(choices)
       .where(eq(choices.questionId, questionId))
@@ -224,6 +240,7 @@ export const getMentorAssessmentDetail = async (
           questionId: choices.questionId,
           choiceText: choices.choiceText,
           score: choices.score,
+          categoryCodes: choices.categoryCodes,
         })
         .from(choices)
         .where(inArray(choices.questionId, questionIds))
@@ -277,5 +294,20 @@ export const aiPreviewQuestions = async (
   rawText: string,
 ): Promise<aiService.GeneratedQuestion[]> => {
   await assertAssessmentOwned(mentorId, assessmentId);
-  return aiService.generateQuestionsFromText(rawText);
+
+  // Pass the assessment's result categories so the AI can assign choice -> code
+  // mappings for psychometric assessments.
+  const [row] = await db
+    .select({ resultCategories: assessments.resultCategories })
+    .from(assessments)
+    .where(eq(assessments.id, assessmentId))
+    .limit(1);
+  const categories = row?.resultCategories
+    ? Object.entries(row.resultCategories).map(([code, c]) => ({
+        code,
+        name: c.name,
+      }))
+    : undefined;
+
+  return aiService.generateQuestionsFromText(rawText, categories);
 };

@@ -60,7 +60,7 @@ export const assessmentApi = {
     assessmentId: string,
     input: {
       question_text: string;
-      choices: { choice_text: string; score: number }[];
+      choices: { choice_text: string; score: number; categories?: string[] }[];
       correct_answer?: string | null;
       explanation?: string | null;
     },
@@ -74,7 +74,7 @@ export const assessmentApi = {
     questionId: string,
     input: {
       question_text?: string;
-      choices?: { choice_text: string; score: number }[];
+      choices?: { choice_text: string; score: number; categories?: string[] }[];
     },
   ) => apiClient.patch<MentorQuestion>(`/api/questions/${questionId}`, input),
 
