@@ -192,6 +192,7 @@ function DetailView({ id }: { id: string }) {
                 email_template: detail.email_template,
                 base_knowledge: detail.base_knowledge,
                 ai_enabled: detail.ai_enabled,
+                result_categories: detail.result_categories,
               }}
               onSubmit={handleSave}
               onCancel={() => setEditing(false)}

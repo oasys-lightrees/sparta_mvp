@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { AssessmentImage } from '@/components/assessment/AssessmentImage';
+import type { ResultCategories } from '@/types';
 
 export type AssessmentPayload = {
   title: string;
@@ -22,7 +23,12 @@ export type AssessmentPayload = {
   email_template: string | null;
   base_knowledge: string | null;
   ai_enabled: boolean;
+  result_categories: ResultCategories | null;
 };
+
+// Result-category editor rows (diagnostic/personality assessments).
+const CATEGORY_LABELS = ['A', 'B', 'C', 'D'] as const;
+type CategoryRow = { name: string; knowledge: string };
 
 type Props = {
   initial?: Partial<{
@@ -39,6 +45,7 @@ type Props = {
     email_template: string | null;
     base_knowledge: string | null;
     ai_enabled: boolean;
+    result_categories: ResultCategories | null;
   }>;
   submitLabel: string;
   submitting: boolean;
@@ -81,7 +88,33 @@ export function AssessmentForm({
     str(initial?.base_knowledge),
   );
   const [aiEnabled, setAiEnabled] = useState(Boolean(initial?.ai_enabled));
+  const [categories, setCategories] = useState<CategoryRow[]>(() =>
+    CATEGORY_LABELS.map((label) => ({
+      name: initial?.result_categories?.[label]?.name ?? '',
+      knowledge: initial?.result_categories?.[label]?.knowledge ?? '',
+    })),
+  );
   const [localError, setLocalError] = useState('');
+
+  const setCategory = (i: number, patch: Partial<CategoryRow>) =>
+    setCategories((prev) =>
+      prev.map((c, idx) => (idx === i ? { ...c, ...patch } : c)),
+    );
+
+  // Build the result_categories map from rows that have a name. Null when the
+  // mentor left them all blank (-> exam-style assessment).
+  const buildResultCategories = (): ResultCategories | null => {
+    const out: ResultCategories = {};
+    categories.forEach((c, i) => {
+      if (c.name.trim() !== '') {
+        out[CATEGORY_LABELS[i]] = {
+          name: c.name.trim(),
+          knowledge: c.knowledge.trim(),
+        };
+      }
+    });
+    return Object.keys(out).length > 0 ? out : null;
+  };
 
   const toNum = (s: string) => (s.trim() === '' ? null : Number(s));
 
@@ -113,6 +146,7 @@ export function AssessmentForm({
       email_template: emailTemplate.trim() === '' ? null : emailTemplate,
       base_knowledge: baseKnowledge.trim() === '' ? null : baseKnowledge,
       ai_enabled: aiEnabled,
+      result_categories: buildResultCategories(),
     });
   };
 
@@ -279,6 +313,36 @@ export function AssessmentForm({
           onChange={(e) => setBaseKnowledge(e.target.value)}
           placeholder="e.g. High score means advanced leadership. Low score means needs communication improvement."
         />
+      </div>
+
+      <div className="space-y-3 rounded-md border p-4">
+        <div className="space-y-1">
+          <Label>Result categories (diagnostic / personality)</Label>
+          <p className="text-xs text-muted-foreground">
+            Optional. Map each answer position (A, B, C, D) to a result type. When
+            set, results are based on the taker&apos;s answer pattern instead of a
+            score. Leave blank for an exam-style assessment.
+          </p>
+        </div>
+        {categories.map((c, i) => (
+          <div key={CATEGORY_LABELS[i]} className="space-y-2">
+            <Label htmlFor={`cat_name_${i}`} className="text-sm">
+              {CATEGORY_LABELS[i]} result name
+            </Label>
+            <Input
+              id={`cat_name_${i}`}
+              value={c.name}
+              onChange={(e) => setCategory(i, { name: e.target.value })}
+              placeholder={`e.g. ${['Technical Builder', 'Strategic Leader', 'Research Expert', 'Communicator'][i]}`}
+            />
+            <Textarea
+              id={`cat_knowledge_${i}`}
+              value={c.knowledge}
+              onChange={(e) => setCategory(i, { knowledge: e.target.value })}
+              placeholder={`${CATEGORY_LABELS[i]} knowledge — what this result type means`}
+            />
+          </div>
+        ))}
       </div>
 
       <ErrorMessage message={localError || error || ''} />

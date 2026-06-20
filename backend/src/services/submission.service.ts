@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { asc, eq } from 'drizzle-orm';
 import { db } from '../db/client';
 import {
   assessments,
@@ -8,14 +8,17 @@ import {
   reports,
   users,
   type AnswerSnapshotItem,
+  type CategoryResult,
+  type ResultCategories,
 } from '../db/schema';
 import { HttpError } from '../utils/http-error';
 import { sendEmail } from './email.service';
-
-// Synthesize choice labels (A, B, C…) for the answer snapshot.
-const LABELS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-const labelFor = (index: number) =>
-  index < LABELS.length ? LABELS[index] : `#${index + 1}`;
+import {
+  hasCategories,
+  labelFor,
+  percentFor,
+  pickDominant,
+} from './category.engine';
 
 export type SubmitAnswer = {
   question_id: string;
@@ -36,6 +39,51 @@ type AssessmentForReport = {
   emailTemplate: string | null;
   lowScoreThreshold: number | null;
   highScoreThreshold: number | null;
+};
+
+/**
+ * FREE report for a category (diagnostic/personality) assessment. Shows the
+ * dominant result and the full distribution of the taker's answer pattern.
+ * Honors free_report_template when set (category -> {{category}}, dominant
+ * knowledge -> {{summary}}).
+ */
+const generateCategoryFreeReport = (
+  assessment: AssessmentForReport,
+  result: CategoryResult,
+): { content: string; category: string; summary: string } => {
+  const category = result.dominantName;
+  const summary = result.categories[result.dominant]?.knowledge ?? '';
+
+  // All configured categories, sorted by label, with their percentage.
+  const lines = Object.keys(result.categories)
+    .sort()
+    .map((label) => {
+      const name = result.categories[label]?.name ?? `Result ${label}`;
+      const pct = percentFor(result.distribution[label] ?? 0, result.total);
+      return `${name}: ${pct}%`;
+    });
+
+  if (assessment.freeReportTemplate) {
+    return {
+      content: renderTemplate(assessment.freeReportTemplate, {
+        score: result.total,
+        category,
+        assessment_title: assessment.title,
+        summary,
+      }),
+      category,
+      summary,
+    };
+  }
+
+  const content = [
+    `Your result: ${category}`,
+    summary,
+    `Your pattern:\n${lines.join('\n')}`,
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+  return { content, category, summary };
 };
 
 type ReportBand = 'LOW' | 'MEDIUM' | 'HIGH';
@@ -164,6 +212,7 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
       emailTemplate: assessments.emailTemplate,
       lowScoreThreshold: assessments.lowScoreThreshold,
       highScoreThreshold: assessments.highScoreThreshold,
+      resultCategories: assessments.resultCategories,
     })
     .from(assessments)
     .where(eq(assessments.id, assessmentId))
@@ -172,6 +221,10 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
   if (!assessment || assessment.status !== 'PUBLISHED') {
     throw new HttpError(404, 'Assessment not found');
   }
+
+  const resultCategories: ResultCategories | null =
+    assessment.resultCategories ?? null;
+  const categoryMode = hasCategories(resultCategories);
 
   const questionRows = await db
     .select({
@@ -194,7 +247,8 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
     .from(choices)
     .innerJoin(questions, eq(choices.questionId, questions.id))
     .where(eq(questions.assessmentId, assessmentId))
-    .orderBy(choices.id);
+    // Order by mentor-defined position so A/B/C/D labels are deterministic.
+    .orderBy(asc(choices.position), asc(choices.id));
   const choiceMap = new Map(choiceRows.map((c) => [c.id, c]));
 
   // Group each question's choices (ordered) so we can label them and find the
@@ -208,6 +262,8 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
 
   let score = 0;
   const snapshot: AnswerSnapshotItem[] = [];
+  const distribution: Record<string, number> = {};
+  let answeredCount = 0;
   for (const ans of input.answers) {
     const question = questionById.get(ans.question_id);
     if (!question) {
@@ -222,16 +278,19 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
     }
     score += choice.score;
 
-    // Build the per-question evaluation snapshot.
+    // Build the per-question evaluation snapshot + the category distribution.
     const qChoices = choicesByQuestion.get(ans.question_id) ?? [];
     const selectedIdx = qChoices.findIndex((c) => c.id === ans.choice_id);
     const best = qChoices.reduce(
       (acc, c, i) => (c.score > acc.choice.score ? { choice: c, i } : acc),
       { choice: qChoices[0], i: 0 },
     );
+    const selectedLabel = labelFor(selectedIdx);
+    distribution[selectedLabel] = (distribution[selectedLabel] ?? 0) + 1;
+    answeredCount += 1;
     snapshot.push({
       question: question.questionText,
-      userAnswer: labelFor(selectedIdx),
+      userAnswer: selectedLabel,
       userAnswerText: choice.choiceText,
       expectedAnswer: labelFor(best.i),
       expectedAnswerText: best.choice?.choiceText ?? '',
@@ -240,7 +299,28 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
     });
   }
 
-  const { content, category, summary } = generateFreeReport(assessment, score);
+  // Category engine when the mentor configured result_categories; otherwise the
+  // existing exam-style score engine (unchanged).
+  let categoryResult: CategoryResult | null = null;
+  let content: string;
+  let category: string;
+  let summary: string;
+  if (categoryMode && resultCategories) {
+    const dominant = pickDominant(distribution);
+    categoryResult = {
+      distribution,
+      total: answeredCount,
+      dominant,
+      dominantName: resultCategories[dominant]?.name ?? `Result ${dominant}`,
+      categories: resultCategories,
+    };
+    ({ content, category, summary } = generateCategoryFreeReport(
+      assessment,
+      categoryResult,
+    ));
+  } else {
+    ({ content, category, summary } = generateFreeReport(assessment, score));
+  }
 
   const result = await db.transaction(async (tx) => {
     const [attempt] = await tx
@@ -251,6 +331,7 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
         guestEmail: input.guestEmail,
         totalScore: score,
         answersSnapshot: snapshot,
+        categoryResult,
       })
       .returning({ id: attempts.id });
 

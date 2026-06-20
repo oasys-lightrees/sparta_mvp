@@ -115,12 +115,16 @@ export type AIQuestionPreview = {
   correct_answer: string;
   explanation: string;
 };
+export type ResultCategory = { name: string; knowledge: string };
+export type ResultCategories = Record<string, ResultCategory>;
+
 export type MentorAssessmentDetail = {
   id: string;
   title: string;
   description: string | null;
   image_url: string | null;
   status: AssessmentStatus;
+  result_categories: ResultCategories | null;
   free_report_text: string | null;
   low_score_threshold: number | null;
   high_score_threshold: number | null;

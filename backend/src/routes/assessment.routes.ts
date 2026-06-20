@@ -20,6 +20,20 @@ const isNullableString = (value: unknown): boolean =>
 const isNullableInt = (value: unknown): boolean =>
   value === undefined || value === null || Number.isInteger(value);
 
+// result_categories: optional map of label -> { name, knowledge } (both strings).
+const isNullableResultCategories = (value: unknown): boolean => {
+  if (value === undefined || value === null) return true;
+  if (typeof value !== 'object' || Array.isArray(value)) return false;
+  for (const entry of Object.values(value as Record<string, unknown>)) {
+    if (typeof entry !== 'object' || entry === null) return false;
+    const e = entry as Record<string, unknown>;
+    if (typeof e.name !== 'string' || typeof e.knowledge !== 'string') {
+      return false;
+    }
+  }
+  return true;
+};
+
 /**
  * Validate the optional report-config + price fields shared by create/update.
  * Returns an error message, or null when valid.
@@ -71,6 +85,9 @@ const validateConfigFields = (body: Record<string, unknown>): string | null => {
   }
   if (body.ai_enabled !== undefined && typeof body.ai_enabled !== 'boolean') {
     return 'ai_enabled must be a boolean';
+  }
+  if (!isNullableResultCategories(body.result_categories)) {
+    return 'result_categories must be a map of { name, knowledge } strings';
   }
   return null;
 };
@@ -145,6 +162,7 @@ assessment.post('/', authMiddleware, requireRole('MENTOR'), async (c) => {
       email_template: body.email_template,
       base_knowledge: body.base_knowledge,
       ai_enabled: body.ai_enabled,
+      result_categories: body.result_categories,
     });
     return c.json(success(created), 201);
   } catch (err) {
@@ -187,6 +205,7 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
     'email_template',
     'base_knowledge',
     'ai_enabled',
+    'result_categories',
   ];
   if (!updatableKeys.some((k) => body[k] !== undefined)) {
     return c.json(error('Nothing to update'), 400);
@@ -207,6 +226,7 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
       email_template: body.email_template,
       base_knowledge: body.base_knowledge,
       ai_enabled: body.ai_enabled,
+      result_categories: body.result_categories,
     });
     return c.json(success(updated), 200);
   } catch (err) {

@@ -6,6 +6,7 @@ import type {
   AssessmentSummary,
   MentorChoice,
   MentorQuestion,
+  ResultCategories,
   SubmitResult,
 } from '@/types';
 
@@ -23,6 +24,7 @@ type AssessmentConfig = {
   email_template?: string | null;
   base_knowledge?: string | null;
   ai_enabled?: boolean;
+  result_categories?: ResultCategories | null;
 };
 
 export const assessmentApi = {
