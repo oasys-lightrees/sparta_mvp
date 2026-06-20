@@ -181,6 +181,7 @@ function DetailView({ id }: { id: string }) {
               initial={{
                 title: detail.title,
                 description: detail.description,
+                image_url: detail.image_url,
                 price: detail.price,
                 low_score_threshold: detail.low_score_threshold,
                 high_score_threshold: detail.high_score_threshold,

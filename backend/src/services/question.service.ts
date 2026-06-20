@@ -237,6 +237,7 @@ export const getMentorAssessmentDetail = async (
     id: assessment.id,
     title: assessment.title,
     description: assessment.description,
+    image_url: assessment.imageUrl,
     status: assessment.status,
     free_report_text: assessment.freeReportText,
     low_score_threshold: assessment.lowScoreThreshold,

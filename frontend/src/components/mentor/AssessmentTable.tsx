@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { AssessmentImage } from '@/components/assessment/AssessmentImage';
 import {
   Table,
   TableBody,
@@ -42,7 +43,14 @@ export function AssessmentTable({
           const busy = busyId === item.id;
           return (
             <TableRow key={item.id}>
-              <TableCell className="font-medium">{item.title}</TableCell>
+              <TableCell className="font-medium">
+                <div className="flex items-center gap-3">
+                  <div className="w-16 shrink-0 overflow-hidden rounded-md border">
+                    <AssessmentImage src={item.imageUrl} alt={item.title} />
+                  </div>
+                  <span>{item.title}</span>
+                </div>
+              </TableCell>
               <TableCell>
                 <Badge
                   variant={

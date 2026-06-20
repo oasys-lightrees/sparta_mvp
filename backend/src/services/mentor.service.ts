@@ -13,6 +13,7 @@ export const listMyAssessments = async (mentorId: string) => {
       title: assessments.title,
       status: assessments.status,
       price: assessments.price,
+      imageUrl: assessments.imageUrl,
       totalAttempts: count(attempts.id),
     })
     .from(assessments)

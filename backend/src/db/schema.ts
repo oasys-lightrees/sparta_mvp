@@ -60,6 +60,8 @@ export const assessments = pgTable('assessments', {
     .references(() => users.id, { onDelete: 'cascade' }),
   title: varchar('title', { length: 255 }).notNull(),
   description: text('description'),
+  // Optional cover image (URL-based for the MVP; no file upload yet).
+  imageUrl: text('image_url'),
   status: assessmentStatus('status').notNull().default('DRAFT'),
   freeReportText: text('free_report_text'),
   lowScoreThreshold: integer('low_score_threshold'),

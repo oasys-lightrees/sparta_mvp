@@ -6,10 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
+import { AssessmentImage } from '@/components/assessment/AssessmentImage';
 
 export type AssessmentPayload = {
   title: string;
   description: string | null;
+  image_url: string | null;
   price: number;
   low_score_threshold: number | null;
   high_score_threshold: number | null;
@@ -26,6 +28,7 @@ type Props = {
   initial?: Partial<{
     title: string;
     description: string | null;
+    image_url: string | null;
     price: number;
     low_score_threshold: number | null;
     high_score_threshold: number | null;
@@ -57,6 +60,7 @@ export function AssessmentForm({
 }: Props) {
   const [title, setTitle] = useState(str(initial?.title));
   const [description, setDescription] = useState(str(initial?.description));
+  const [imageUrl, setImageUrl] = useState(str(initial?.image_url));
   const [price, setPrice] = useState(numStr(initial?.price));
   const [premiumCost, setPremiumCost] = useState(
     numStr(initial?.premium_token_cost),
@@ -97,6 +101,7 @@ export function AssessmentForm({
     onSubmit({
       title: title.trim(),
       description: description.trim() === '' ? null : description,
+      image_url: imageUrl.trim() === '' ? null : imageUrl.trim(),
       price: price.trim() === '' ? 0 : Number(price),
       low_score_threshold: lowNum,
       high_score_threshold: highNum,
@@ -129,6 +134,36 @@ export function AssessmentForm({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="image_url">Cover image URL</Label>
+        <div className="flex gap-2">
+          <Input
+            id="image_url"
+            type="url"
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            placeholder="https://example.com/image.jpg"
+          />
+          {imageUrl.trim() !== '' ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setImageUrl('')}
+            >
+              Remove
+            </Button>
+          ) : null}
+        </div>
+        {imageUrl.trim() !== '' ? (
+          <div className="max-w-xs overflow-hidden rounded-md border">
+            <AssessmentImage src={imageUrl.trim()} alt={title || 'Cover preview'} />
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Optional. Paste an image URL to give your assessment a cover.
+          </p>
+        )}
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-2">

@@ -90,6 +90,7 @@ type MentorSeed = {
   assessment: {
     title: string;
     description: string;
+    imageUrl: string;
     price: number;
     premiumTokenCost: number;
     premiumReportDescription: string;
@@ -106,6 +107,8 @@ const MENTORS: MentorSeed[] = [
       title: 'AI Engineer Readiness Assessment',
       description:
         'Find out how ready you are for a professional AI/ML engineering role across modeling, MLOps, software craft and applied research.',
+      imageUrl:
+        'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&q=80',
       price: 49,
       premiumTokenCost: 50,
       premiumReportDescription:
@@ -133,6 +136,8 @@ const MENTORS: MentorSeed[] = [
       title: 'Leadership Potential Test',
       description:
         'Discover how your instincts, communication and decision-making shape your leadership potential.',
+      imageUrl:
+        'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80',
       price: 39,
       premiumTokenCost: 40,
       premiumReportDescription:
@@ -160,6 +165,8 @@ const MENTORS: MentorSeed[] = [
       title: 'Sales Personality Assessment',
       description:
         'Understand your natural sales strengths — from rapport and discovery to resilience and closing.',
+      imageUrl:
+        'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&q=80',
       price: 29,
       premiumTokenCost: 30,
       premiumReportDescription:
@@ -376,6 +383,7 @@ async function seed() {
           mentorId,
           title: a.title,
           description: a.description,
+          imageUrl: a.imageUrl,
           status: 'PUBLISHED',
           freeReportText: `Thank you for completing the ${a.title}.`,
           freeReportTemplate: FREE_TEMPLATE,

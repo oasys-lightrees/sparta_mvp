@@ -25,6 +25,9 @@ const isNullableInt = (value: unknown): boolean =>
  * Returns an error message, or null when valid.
  */
 const validateConfigFields = (body: Record<string, unknown>): string | null => {
+  if (!isNullableString(body.image_url)) {
+    return 'image_url must be a string';
+  }
   if (!isNullableString(body.free_report_text)) {
     return 'free_report_text must be a string';
   }
@@ -131,6 +134,7 @@ assessment.post('/', authMiddleware, requireRole('MENTOR'), async (c) => {
     const created = await assessmentService.create(c.get('user').id, {
       title: body.title,
       description: body.description,
+      image_url: body.image_url,
       free_report_text: body.free_report_text,
       low_score_threshold: body.low_score_threshold,
       high_score_threshold: body.high_score_threshold,
@@ -172,6 +176,7 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
   const updatableKeys = [
     'title',
     'description',
+    'image_url',
     'free_report_text',
     'low_score_threshold',
     'high_score_threshold',
@@ -191,6 +196,7 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
     const updated = await assessmentService.update(c.get('user').id, id, {
       title: body.title,
       description: body.description,
+      image_url: body.image_url,
       free_report_text: body.free_report_text,
       low_score_threshold: body.low_score_threshold,
       high_score_threshold: body.high_score_threshold,

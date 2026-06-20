@@ -21,6 +21,7 @@ export type AssessmentSummary = {
   id: string;
   title: string;
   description: string | null;
+  imageUrl?: string | null;
   price: number;
 };
 
@@ -93,6 +94,7 @@ export type MentorAssessmentListItem = {
   title: string;
   status: AssessmentStatus;
   price: number;
+  imageUrl?: string | null;
   totalAttempts: number;
 };
 
@@ -117,6 +119,7 @@ export type MentorAssessmentDetail = {
   id: string;
   title: string;
   description: string | null;
+  image_url: string | null;
   status: AssessmentStatus;
   free_report_text: string | null;
   low_score_threshold: number | null;
