@@ -1,4 +1,4 @@
-import { eq, inArray } from 'drizzle-orm';
+import { asc, eq, inArray } from 'drizzle-orm';
 import { db } from '../db/client';
 import { assessments, choices, questions } from '../db/schema';
 import { HttpError } from '../utils/http-error';
@@ -100,10 +100,11 @@ export const addQuestion = async (
     const insertedChoices = await tx
       .insert(choices)
       .values(
-        input.choices.map((ch) => ({
+        input.choices.map((ch, i) => ({
           questionId: question.id,
           choiceText: ch.choice_text.trim(),
           score: ch.score,
+          position: i,
         })),
       )
       .returning({
@@ -142,10 +143,11 @@ export const updateQuestion = async (
     if (input.choices !== undefined) {
       await tx.delete(choices).where(eq(choices.questionId, questionId));
       await tx.insert(choices).values(
-        input.choices.map((ch) => ({
+        input.choices.map((ch, i) => ({
           questionId,
           choiceText: ch.choice_text.trim(),
           score: ch.score,
+          position: i,
         })),
       );
     }
@@ -163,7 +165,8 @@ export const updateQuestion = async (
         score: choices.score,
       })
       .from(choices)
-      .where(eq(choices.questionId, questionId));
+      .where(eq(choices.questionId, questionId))
+      .orderBy(asc(choices.position), asc(choices.id));
 
     return {
       id: question.id,
@@ -224,6 +227,7 @@ export const getMentorAssessmentDetail = async (
         })
         .from(choices)
         .where(inArray(choices.questionId, questionIds))
+        .orderBy(asc(choices.position), asc(choices.id))
     : [];
 
   const choicesByQuestion = new Map<string, ChoiceView[]>();
@@ -249,6 +253,7 @@ export const getMentorAssessmentDetail = async (
     email_template: assessment.emailTemplate,
     base_knowledge: assessment.baseKnowledge,
     ai_enabled: assessment.aiEnabled,
+    result_categories: assessment.resultCategories,
     created_at: assessment.createdAt,
     updated_at: assessment.updatedAt,
     questions: questionRows.map((q) => ({

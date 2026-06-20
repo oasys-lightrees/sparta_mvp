@@ -2,6 +2,7 @@ import { relations } from 'drizzle-orm';
 import {
   boolean,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -74,6 +75,9 @@ export const assessments = pgTable('assessments', {
   // AI assistant (v2 sprint 3).
   baseKnowledge: text('base_knowledge'),
   aiEnabled: boolean('ai_enabled').notNull().default(false),
+  // Diagnostic/personality engine (v3): when set, each answer position maps to
+  // a result category. Null -> fall back to the exam-style score engine.
+  resultCategories: jsonb('result_categories').$type<ResultCategories>(),
   // Listed price for analytics only (no payment/checkout in MVP).
   price: integer('price').notNull().default(0),
   // Token cost to unlock this assessment's premium report (0 = no premium).
@@ -84,6 +88,15 @@ export const assessments = pgTable('assessments', {
     .defaultNow()
     .$onUpdate(() => new Date()),
 });
+
+/**
+ * Result categories (diagnostic / personality assessments). The mentor maps
+ * each answer position (A, B, C…) to a result type with explanatory knowledge.
+ * When set on an assessment, the category engine is used instead of the
+ * exam-style score engine.
+ */
+export type ResultCategory = { name: string; knowledge: string };
+export type ResultCategories = Record<string, ResultCategory>;
 
 /**
  * questions
@@ -113,7 +126,38 @@ export const choices = pgTable('choices', {
     .references(() => questions.id, { onDelete: 'cascade' }),
   choiceText: text('choice_text').notNull(),
   score: integer('score').notNull().default(0),
+  // Display/answer order within a question. Drives the A/B/C/D labels used by
+  // the category engine and answer snapshot. Legacy rows default to 0.
+  position: integer('position').notNull().default(0),
 });
+
+/**
+ * Per-question evaluation snapshot captured on an attempt at submit time.
+ * Stored as a self-contained snapshot (not just question IDs) so a report stays
+ * historically accurate even if the mentor later edits or deletes questions.
+ */
+export type AnswerSnapshotItem = {
+  question: string;
+  userAnswer: string; // synthesized choice label (A, B, C…)
+  userAnswerText: string;
+  expectedAnswer: string; // label of the highest-scoring choice
+  expectedAnswerText: string;
+  explanation: string | null;
+  score: number; // points earned for the selected choice
+};
+
+/**
+ * Category-engine result captured on an attempt at submit time. Self-contained
+ * (includes a snapshot of the category config) so the result stays accurate
+ * even if the mentor later edits the categories. Null for exam-style attempts.
+ */
+export type CategoryResult = {
+  distribution: Record<string, number>; // label -> times chosen
+  total: number; // answered questions counted
+  dominant: string; // winning label (A, B, …)
+  dominantName: string; // winning category name
+  categories: ResultCategories; // config snapshot
+};
 
 /**
  * attempts
@@ -129,6 +173,11 @@ export const attempts = pgTable('attempts', {
   userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
   guestEmail: varchar('guest_email', { length: 255 }),
   totalScore: integer('total_score').notNull().default(0),
+  // Additive (v3): per-question evaluation snapshot. Null for attempts created
+  // before this feature — those fall back to a score-only AI report.
+  answersSnapshot: jsonb('answers_snapshot').$type<AnswerSnapshotItem[]>(),
+  // Additive (v3): category-engine result. Null for exam-style attempts.
+  categoryResult: jsonb('category_result').$type<CategoryResult>(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 

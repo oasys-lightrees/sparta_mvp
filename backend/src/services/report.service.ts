@@ -39,6 +39,8 @@ export const unlockPremium = async (userId: string, reportId: string) => {
       userId: attempts.userId,
       assessmentId: attempts.assessmentId,
       totalScore: attempts.totalScore,
+      answersSnapshot: attempts.answersSnapshot,
+      categoryResult: attempts.categoryResult,
     })
     .from(attempts)
     .where(eq(attempts.id, report.attemptId))
@@ -58,6 +60,8 @@ export const unlockPremium = async (userId: string, reportId: string) => {
       title: assessments.title,
       baseKnowledge: assessments.baseKnowledge,
       aiEnabled: assessments.aiEnabled,
+      lowScoreThreshold: assessments.lowScoreThreshold,
+      highScoreThreshold: assessments.highScoreThreshold,
     })
     .from(assessments)
     .where(eq(assessments.id, attempt.assessmentId))
@@ -119,13 +123,60 @@ export const unlockPremium = async (userId: string, reportId: string) => {
         .from(questions)
         .where(eq(questions.assessmentId, assessment.id));
 
-      content = await aiService.generatePremiumReport({
-        title: assessment.title,
-        baseKnowledge: assessment.baseKnowledge,
-        score: attempt.totalScore,
-        freeReport: free?.content ?? '',
-        questions: questionRows.map((q) => q.text),
-      });
+      // Category (diagnostic/personality) engine: when the attempt captured a
+      // category result, build a personality-style report from it — no
+      // correct/wrong language.
+      const cr = attempt.categoryResult;
+      if (cr) {
+        const distribution = Object.keys(cr.categories)
+          .sort()
+          .map((label) => ({
+            label,
+            name: cr.categories[label]?.name ?? `Result ${label}`,
+            pct:
+              cr.total > 0
+                ? Math.round(((cr.distribution[label] ?? 0) / cr.total) * 100)
+                : 0,
+          }));
+        content = await aiService.generatePremiumReport({
+          title: assessment.title,
+          baseKnowledge: assessment.baseKnowledge,
+          score: attempt.totalScore,
+          freeReport: free?.content ?? '',
+          questions: questionRows.map((q) => q.text),
+          categoryContext: {
+            dominantName: cr.dominantName,
+            dominantKnowledge: cr.categories[cr.dominant]?.knowledge ?? '',
+            distribution,
+          },
+        });
+      } else {
+        // Exam engine: derive the level from the assessment's own thresholds.
+        const { low, high } = {
+          low: assessment.lowScoreThreshold,
+          high: assessment.highScoreThreshold,
+        };
+        const category =
+          low === null || high === null
+            ? null
+            : attempt.totalScore < low
+              ? 'Beginner'
+              : attempt.totalScore < high
+                ? 'Intermediate'
+                : 'Advanced';
+
+        content = await aiService.generatePremiumReport({
+          title: assessment.title,
+          baseKnowledge: assessment.baseKnowledge,
+          score: attempt.totalScore,
+          category,
+          freeReport: free?.content ?? '',
+          questions: questionRows.map((q) => q.text),
+          // Per-question evidence (null for attempts created before this feature
+          // -> AI falls back to a score-only report).
+          answers: attempt.answersSnapshot ?? null,
+        });
+      }
     } catch (err) {
       console.error('[ai] premium report generation failed, using fallback:', err);
       content = PREMIUM_CONTENT;

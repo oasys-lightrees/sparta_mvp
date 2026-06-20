@@ -1,6 +1,11 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, asc, eq, inArray } from 'drizzle-orm';
 import { db } from '../db/client';
-import { assessments, choices, questions } from '../db/schema';
+import {
+  assessments,
+  choices,
+  questions,
+  type ResultCategories,
+} from '../db/schema';
 import { HttpError } from '../utils/http-error';
 
 export type AssessmentStatus = 'DRAFT' | 'PUBLISHED';
@@ -19,6 +24,7 @@ export type CreateInput = {
   email_template?: string | null;
   base_knowledge?: string | null;
   ai_enabled?: boolean;
+  result_categories?: ResultCategories | null;
 };
 
 export type UpdateInput = {
@@ -35,6 +41,7 @@ export type UpdateInput = {
   email_template?: string | null;
   base_knowledge?: string | null;
   ai_enabled?: boolean;
+  result_categories?: ResultCategories | null;
 };
 
 const publicColumns = {
@@ -108,6 +115,7 @@ export const getPublishedById = async (id: string) => {
         })
         .from(choices)
         .where(inArray(choices.questionId, questionIds))
+        .orderBy(asc(choices.position), asc(choices.id))
     : [];
 
   const choicesByQuestion = new Map<string, { id: string; text: string }[]>();
@@ -148,6 +156,7 @@ export const create = async (mentorId: string, input: CreateInput) => {
       emailTemplate: input.email_template ?? null,
       baseKnowledge: input.base_knowledge ?? null,
       aiEnabled: input.ai_enabled ?? false,
+      resultCategories: input.result_categories ?? null,
     })
     .returning({ id: assessments.id, status: assessments.status });
 
@@ -178,6 +187,7 @@ export const update = async (
     emailTemplate: string | null;
     baseKnowledge: string | null;
     aiEnabled: boolean;
+    resultCategories: ResultCategories | null;
   }> = {};
   if (input.title !== undefined) values.title = input.title.trim();
   if (input.description !== undefined) values.description = input.description;
@@ -200,6 +210,8 @@ export const update = async (
   if (input.base_knowledge !== undefined)
     values.baseKnowledge = input.base_knowledge;
   if (input.ai_enabled !== undefined) values.aiEnabled = input.ai_enabled;
+  if (input.result_categories !== undefined)
+    values.resultCategories = input.result_categories;
 
   const [updated] = await db
     .update(assessments)
@@ -221,6 +233,7 @@ export const update = async (
       email_template: assessments.emailTemplate,
       base_knowledge: assessments.baseKnowledge,
       ai_enabled: assessments.aiEnabled,
+      result_categories: assessments.resultCategories,
     });
 
   return updated;

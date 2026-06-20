@@ -85,11 +85,19 @@ export const generateQuestionsFromText = async (
   rawText: string,
 ): Promise<GeneratedQuestion[]> => {
   const system =
-    'You convert raw assessment text into structured multiple-choice questions. ' +
+    'You convert raw assessment text into structured diagnostic ' +
+    'multiple-choice questions for a personality/category assessment. ' +
+    'Each question must offer distinct answer options that represent DIFFERENT ' +
+    'types, styles, or preferences — NOT one correct answer and others wrong. ' +
+    'Keep the options in a consistent order across questions so the first option ' +
+    'reflects the same type throughout, the second option the same type, and so ' +
+    'on (these positions map to result categories A, B, C, D). ' +
     'Respond ONLY with JSON of shape ' +
     '{"questions":[{"question":string,"choices":[{"text":string,"score":number}],' +
     '"correct_answer":string,"explanation":string}]}. ' +
-    'Scores are integers. Do not include any prose outside the JSON.';
+    'Use score 0 for every choice (diagnostic answers are not graded) and leave ' +
+    'correct_answer as an empty string. Use explanation to briefly note what the ' +
+    'question reveals. Do not include any prose outside the JSON.';
   const user = `Convert the following into questions JSON:\n\n${rawText}`;
 
   const content = await chat(
@@ -148,27 +156,153 @@ export const generateQuestionsFromText = async (
   return result;
 };
 
+// Per-question evidence used to ground the premium report. Mirrors the
+// AnswerSnapshotItem stored on the attempt.
+export type AnswerEvidence = {
+  question: string;
+  userAnswer: string;
+  userAnswerText: string;
+  expectedAnswer: string;
+  expectedAnswerText: string;
+  explanation: string | null;
+  score: number;
+};
+
+const REPORT_SECTIONS =
+  '## Overview, ## Strengths, ## Weaknesses, ## Recommendations, ' +
+  '## 30-Day Improvement Roadmap';
+
+const CATEGORY_SECTIONS =
+  '## Personality Overview, ## Strengths, ## Blind Spots, ' +
+  '## Growth Recommendations, ## Action Roadmap';
+
+// Category (diagnostic/personality) context for the premium report.
+export type CategoryReportContext = {
+  dominantName: string;
+  dominantKnowledge: string;
+  distribution: { label: string; name: string; pct: number }[];
+};
+
+/**
+ * Generate a premium report for a diagnostic/personality (category) assessment.
+ * The AI describes the taker's result TYPE — it must never talk about correct,
+ * wrong, or missed answers.
+ */
+const generateCategoryReport = async (ctx: {
+  title: string;
+  baseKnowledge: string | null;
+  freeReport: string;
+  category: CategoryReportContext;
+}): Promise<string> => {
+  const system = [
+    'You are a seasoned mentor writing a personalized diagnostic report.',
+    `Write EXACTLY these markdown sections, in order: ${CATEGORY_SECTIONS}.`,
+    'Write in a warm, professional, second-person voice.',
+    'This is a personality/diagnostic assessment, NOT an exam. The taker has a ' +
+      'result TYPE based on their answer pattern. NEVER mention correct, wrong, ' +
+      'incorrect, or missed answers, and never imply any answer was a mistake.',
+    'Describe what their dominant result type means, where they naturally excel, ' +
+      'their blind spots, and how to grow — grounded in the category knowledge ' +
+      'and the assessment guidance.',
+  ].join(' ');
+
+  const patternBlock = ctx.category.distribution
+    .map((d) => `- ${d.name} (${d.label}): ${d.pct}%`)
+    .join('\n');
+
+  const user = [
+    `Assessment: ${ctx.title}`,
+    ctx.baseKnowledge ? `Assessment knowledge: ${ctx.baseKnowledge}` : '',
+    `Dominant result: ${ctx.category.dominantName}`,
+    ctx.category.dominantKnowledge
+      ? `What this result means: ${ctx.category.dominantKnowledge}`
+      : '',
+    `Answer pattern (how often each type was chosen):\n${patternBlock}`,
+    `Free report:\n${ctx.freeReport}`,
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+
+  return chat([
+    { role: 'system', content: system },
+    { role: 'user', content: user },
+  ]);
+};
+
 /**
  * Generate a premium report (markdown sections) from assessment context.
+ *
+ * - When `category` context is provided, a diagnostic/personality report is
+ *   produced (no correct/wrong language).
+ * - Otherwise, when `answers` (the per-question evaluation snapshot) is
+ *   provided, the report is grounded in the actual choices vs. expected answers.
+ * - Otherwise it falls back to a score-only report (older attempts).
  */
 export const generatePremiumReport = async (ctx: {
   title: string;
   baseKnowledge: string | null;
   score: number;
+  category?: string | null;
   freeReport: string;
   questions: string[];
+  answers?: AnswerEvidence[] | null;
+  categoryContext?: CategoryReportContext | null;
 }): Promise<string> => {
-  const system =
-    'You are an expert assessment analyst. Write a clear, encouraging premium ' +
-    'report using EXACTLY these markdown sections, in order: ' +
-    '## Overview, ## Strengths, ## Weaknesses, ## Recommendations, ' +
-    '## 30-Day Improvement Roadmap.';
+  // Category engine takes precedence when configured.
+  if (ctx.categoryContext) {
+    return generateCategoryReport({
+      title: ctx.title,
+      baseKnowledge: ctx.baseKnowledge,
+      freeReport: ctx.freeReport,
+      category: ctx.categoryContext,
+    });
+  }
+
+  const hasEvidence = Array.isArray(ctx.answers) && ctx.answers.length > 0;
+
+  const system = [
+    'You are a seasoned mentor writing a personalized premium assessment report.',
+    `Write EXACTLY these markdown sections, in order: ${REPORT_SECTIONS}.`,
+    'Write in a warm, professional, second-person voice ("your responses show…").',
+    hasEvidence
+      ? 'Ground every claim in the evidence below: cite specific questions, ' +
+        'compare the choice the taker made against the expected answer, and use ' +
+        'the explanations. Identify strengths from questions answered well and ' +
+        'weaknesses from questions where the answer fell short of the expected ' +
+        'one. Base recommendations on the assessment scoring guidance.'
+      : 'Base your analysis on the score and assessment context provided.',
+    'Do NOT just restate the numeric score (avoid "you scored X"); describe ' +
+      'what the responses reveal about ability and where to improve.',
+  ].join(' ');
+
+  const evidenceBlock = hasEvidence
+    ? 'Per-question evidence (the taker\'s answer vs. the expected best answer):\n' +
+      ctx
+        .answers!.map((a, i) => {
+          const matched =
+            a.userAnswer === a.expectedAnswer ? 'MATCH' : 'MISSED';
+          return [
+            `Q${i + 1}. ${a.question}`,
+            `  - Their answer (${a.userAnswer}): ${a.userAnswerText} [${matched}, earned ${a.score}]`,
+            `  - Expected best answer (${a.expectedAnswer}): ${a.expectedAnswerText}`,
+            a.explanation ? `  - Explanation: ${a.explanation}` : '',
+          ]
+            .filter(Boolean)
+            .join('\n');
+        })
+        .join('\n')
+    : '';
+
   const user = [
     `Assessment: ${ctx.title}`,
     ctx.baseKnowledge ? `Scoring guidance: ${ctx.baseKnowledge}` : '',
-    `Score: ${ctx.score}`,
+    `Total score: ${ctx.score}${ctx.category ? ` (level: ${ctx.category})` : ''}`,
     `Free report:\n${ctx.freeReport}`,
-    ctx.questions.length ? `Questions:\n- ${ctx.questions.join('\n- ')}` : '',
+    evidenceBlock,
+    // Fallback context when no per-answer evidence is available.
+    !hasEvidence && ctx.questions.length
+      ? `Questions:\n- ${ctx.questions.join('\n- ')}`
+      : '',
   ]
     .filter(Boolean)
     .join('\n\n');
