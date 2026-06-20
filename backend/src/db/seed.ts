@@ -84,108 +84,99 @@ const renderPremium = (title: string, score: number): string => {
   ].join('\n\n');
 };
 
-type MentorSeed = {
-  name: string;
-  email: string;
-  assessment: {
-    title: string;
-    description: string;
-    imageUrl: string;
-    price: number;
-    premiumTokenCost: number;
-    premiumReportDescription: string;
-    baseKnowledge: string;
-    questions: string[];
-  };
+// The demo mentor persona — owns all three assessments so logging in as the
+// mentor immediately shows a full dashboard (assessments, revenue, analytics).
+const MENTOR = {
+  name: 'Sarah Chen — AI Career Coach',
+  email: 'mentor@sparta.demo',
 };
 
-const MENTORS: MentorSeed[] = [
+type AssessmentSeed = {
+  title: string;
+  description: string;
+  imageUrl: string;
+  price: number;
+  premiumTokenCost: number;
+  premiumReportDescription: string;
+  baseKnowledge: string;
+  questions: string[];
+};
+
+const ASSESSMENTS: AssessmentSeed[] = [
   {
-    name: 'AI Career Coach',
-    email: 'mentor@sparta.demo',
-    assessment: {
-      title: 'AI Engineer Readiness Assessment',
-      description:
-        'Find out how ready you are for a professional AI/ML engineering role across modeling, MLOps, software craft and applied research.',
-      imageUrl:
-        'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&q=80',
-      price: 49,
-      premiumTokenCost: 50,
-      premiumReportDescription:
-        'A personalized deep-dive into your AI engineering readiness: your strongest competencies, the specific gaps holding you back, recommended resources, and a 30-day roadmap to become production-ready.',
-      baseKnowledge:
-        'This assessment measures readiness for a professional AI/ML engineering role across modeling, MLOps, software engineering and applied research. Higher scores indicate production-grade competency. Beginners should focus on Python and ML fundamentals; intermediates on deployment and evaluation; advanced engineers on research and system design.',
-      questions: [
-        'I can design and train machine learning models for production use.',
-        'I understand how transformer architectures and attention work.',
-        'I can build, deploy and monitor ML services in production.',
-        'I write clean, well-tested Python for data and ML workloads.',
-        'I understand vector databases and retrieval-augmented generation.',
-        'I can evaluate model quality with the right offline and online metrics.',
-        'I am comfortable working with cloud infrastructure and GPUs.',
-        'I keep up with current AI research and apply it pragmatically.',
-        'I can debug data pipelines and reason about data quality.',
-        'I can translate ambiguous business problems into ML solutions.',
-      ],
-    },
+    title: 'AI Engineer Readiness Assessment',
+    description:
+      'Find out how ready you are for a professional AI/ML engineering role across modeling, MLOps, software craft and applied research.',
+    imageUrl:
+      'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&q=80',
+    price: 49,
+    premiumTokenCost: 50,
+    premiumReportDescription:
+      'A personalized deep-dive into your AI engineering readiness: your strongest competencies, the specific gaps holding you back, recommended resources, and a 30-day roadmap to become production-ready.',
+    baseKnowledge:
+      'This assessment measures readiness for a professional AI/ML engineering role across modeling, MLOps, software engineering and applied research. Higher scores indicate production-grade competency. Beginners should focus on Python and ML fundamentals; intermediates on deployment and evaluation; advanced engineers on research and system design.',
+    questions: [
+      'I can design and train machine learning models for production use.',
+      'I understand how transformer architectures and attention work.',
+      'I can build, deploy and monitor ML services in production.',
+      'I write clean, well-tested Python for data and ML workloads.',
+      'I understand vector databases and retrieval-augmented generation.',
+      'I can evaluate model quality with the right offline and online metrics.',
+      'I am comfortable working with cloud infrastructure and GPUs.',
+      'I keep up with current AI research and apply it pragmatically.',
+      'I can debug data pipelines and reason about data quality.',
+      'I can translate ambiguous business problems into ML solutions.',
+    ],
   },
   {
-    name: 'Leadership Coach',
-    email: 'leadership@sparta.demo',
-    assessment: {
-      title: 'Leadership Potential Test',
-      description:
-        'Discover how your instincts, communication and decision-making shape your leadership potential.',
-      imageUrl:
-        'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80',
-      price: 39,
-      premiumTokenCost: 40,
-      premiumReportDescription:
-        'An in-depth look at your leadership style: where you naturally lead, the blind spots that hold teams back, and a focused 30-day plan to grow your influence.',
-      baseKnowledge:
-        'This assessment measures leadership potential across initiative, composure, communication, accountability, decisiveness and people development. Higher scores indicate stronger leadership instincts. Beginners should focus on self-management and communication; intermediates on coaching and conflict; advanced leaders on vision and organizational influence.',
-      questions: [
-        'I naturally take initiative when no one else steps up.',
-        'I stay calm and focused when the pressure is high.',
-        'I communicate goals and expectations clearly to others.',
-        'I give credit to my team and openly own my mistakes.',
-        'I make timely decisions even with incomplete information.',
-        'I actively develop and coach the people around me.',
-        'I can align a group around a shared vision.',
-        'I handle conflict directly and constructively.',
-        'I adapt my style to what each situation needs.',
-        'I hold myself and others accountable to high standards.',
-      ],
-    },
+    title: 'Leadership Potential Assessment',
+    description:
+      'Discover how your instincts, communication and decision-making shape your leadership potential.',
+    imageUrl:
+      'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80',
+    price: 39,
+    premiumTokenCost: 40,
+    premiumReportDescription:
+      'An in-depth look at your leadership style: where you naturally lead, the blind spots that hold teams back, and a focused 30-day plan to grow your influence.',
+    baseKnowledge:
+      'This assessment measures leadership potential across initiative, composure, communication, accountability, decisiveness and people development. Higher scores indicate stronger leadership instincts. Beginners should focus on self-management and communication; intermediates on coaching and conflict; advanced leaders on vision and organizational influence.',
+    questions: [
+      'I naturally take initiative when no one else steps up.',
+      'I stay calm and focused when the pressure is high.',
+      'I communicate goals and expectations clearly to others.',
+      'I give credit to my team and openly own my mistakes.',
+      'I make timely decisions even with incomplete information.',
+      'I actively develop and coach the people around me.',
+      'I can align a group around a shared vision.',
+      'I handle conflict directly and constructively.',
+      'I adapt my style to what each situation needs.',
+      'I hold myself and others accountable to high standards.',
+    ],
   },
   {
-    name: 'Sales Coach',
-    email: 'sales@sparta.demo',
-    assessment: {
-      title: 'Sales Personality Assessment',
-      description:
-        'Understand your natural sales strengths — from rapport and discovery to resilience and closing.',
-      imageUrl:
-        'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&q=80',
-      price: 29,
-      premiumTokenCost: 30,
-      premiumReportDescription:
-        'A tailored breakdown of your sales personality: the instincts that win deals, the habits that cost you, and a 30-day plan to sharpen your pipeline and close rate.',
-      baseKnowledge:
-        'This assessment measures sales aptitude across rapport, discovery, resilience, tailoring, closing, follow-up, product mastery, qualification, negotiation and drive. Higher scores indicate stronger natural selling ability. Beginners should focus on listening and follow-up; intermediates on qualification and objection handling; advanced sellers on negotiation and strategic accounts.',
-      questions: [
-        'I build rapport with new people quickly and naturally.',
-        'I listen more than I talk during a discovery conversation.',
-        'I stay resilient and positive after hearing "no".',
-        'I tailor my message to each prospect’s real needs.',
-        'I am comfortable asking directly for the sale.',
-        'I follow up consistently without being pushy.',
-        'I understand my product deeply enough to handle objections.',
-        'I qualify opportunities instead of chasing every lead.',
-        'I negotiate confidently while protecting the relationship.',
-        'I am driven by clear targets and measurable goals.',
-      ],
-    },
+    title: 'Sales Skill Assessment',
+    description:
+      'Understand your natural sales strengths — from rapport and discovery to resilience and closing.',
+    imageUrl:
+      'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&q=80',
+    price: 29,
+    premiumTokenCost: 30,
+    premiumReportDescription:
+      'A tailored breakdown of your sales skills: the instincts that win deals, the habits that cost you, and a 30-day plan to sharpen your pipeline and close rate.',
+    baseKnowledge:
+      'This assessment measures sales aptitude across rapport, discovery, resilience, tailoring, closing, follow-up, product mastery, qualification, negotiation and drive. Higher scores indicate stronger natural selling ability. Beginners should focus on listening and follow-up; intermediates on qualification and objection handling; advanced sellers on negotiation and strategic accounts.',
+    questions: [
+      'I build rapport with new people quickly and naturally.',
+      'I listen more than I talk during a discovery conversation.',
+      'I stay resilient and positive after hearing "no".',
+      'I tailor my message to each prospect’s real needs.',
+      'I am comfortable asking directly for the sale.',
+      'I follow up consistently without being pushy.',
+      'I understand my product deeply enough to handle objections.',
+      'I qualify opportunities instead of chasing every lead.',
+      'I negotiate confidently while protecting the relationship.',
+      'I am driven by clear targets and measurable goals.',
+    ],
   },
 ];
 
@@ -242,7 +233,7 @@ const BLOGS = [
 
 const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000);
 
-// Attempt plan per assessment (index aligns with MENTORS/assessment order).
+// Attempt plan per assessment (index aligns with the ASSESSMENTS order).
 // who: index into USERS, or 'guest:N' for a guest taker. premium = unlocked.
 type AttemptSpec = {
   who: number | string;
@@ -294,7 +285,7 @@ const ATTEMPTS: AttemptSpec[][] = [
 async function seed() {
   const allDemoEmails = [
     'admin@sparta.demo',
-    ...MENTORS.map((m) => m.email),
+    MENTOR.email,
     ...USERS.map((u) => u.email),
   ];
 
@@ -324,19 +315,17 @@ async function seed() {
       })
       .returning({ id: users.id });
 
-    // --- Mentors ---
-    const mentorRows = await tx
+    // --- Mentor (Sarah Chen — owns every demo assessment) ---
+    const [mentor] = await tx
       .insert(users)
-      .values(
-        MENTORS.map((m) => ({
-          name: m.name,
-          email: m.email,
-          passwordHash,
-          role: 'MENTOR' as const,
-        })),
-      )
-      .returning({ id: users.id, email: users.email });
-    const mentorIdByEmail = new Map(mentorRows.map((m) => [m.email, m.id]));
+      .values({
+        name: MENTOR.name,
+        email: MENTOR.email,
+        passwordHash,
+        role: 'MENTOR',
+      })
+      .returning({ id: users.id });
+    const mentorId = mentor.id;
 
     // --- Registered users ---
     const userRows = await tx
@@ -372,10 +361,8 @@ async function seed() {
     let premiumUnlocks = 0;
     let totalAttempts = 0;
 
-    for (let ai = 0; ai < MENTORS.length; ai++) {
-      const m = MENTORS[ai];
-      const a = m.assessment;
-      const mentorId = mentorIdByEmail.get(m.email)!;
+    for (let ai = 0; ai < ASSESSMENTS.length; ai++) {
+      const a = ASSESSMENTS[ai];
 
       const [assessment] = await tx
         .insert(assessments)
@@ -507,13 +494,12 @@ async function seed() {
 
   console.log('✅ Demo seed complete.');
   console.log('   Password for all accounts: %s', DEMO_PASSWORD);
-  console.log('   ADMIN   -> admin@sparta.demo');
-  console.log('   MENTORS -> mentor@sparta.demo (AI Career Coach)');
-  console.log('              leadership@sparta.demo (Leadership Coach)');
-  console.log('              sales@sparta.demo (Sales Coach)');
-  console.log('   USERS   -> user@sparta.demo (+ 5 named users)');
+  console.log('   ADMIN  -> admin@sparta.demo');
+  console.log('   MENTOR -> mentor@sparta.demo (Sarah Chen — AI Career Coach)');
+  console.log('   USER   -> user@sparta.demo (+ 5 named users)');
   console.log('   3 published assessments (10 questions each, AI enabled)');
-  console.log('   Historical attempts + premium unlocks + mentor revenue');
+  console.log('   Historical attempts across beginner/intermediate/advanced');
+  console.log('   Premium unlocks + token transactions + mentor revenue');
 }
 
 seed()

@@ -4,6 +4,12 @@
 > AI-powered assessments with personalized reports and token-based
 > monetization.**
 
+|  |  |
+|---|---|
+| **What** | An AI assessment **monetization platform** |
+| **Who** | For **mentors, educators, and coaches** |
+| **Why** | To **turn knowledge into scalable digital products** that earn revenue |
+
 SPARTA is a full-stack AI SaaS MVP: a multi-role platform where mentors build
 assessments (optionally with AI-generated questions), users take them and
 receive an instant free report, and a deeper **AI-personalized premium report**
@@ -190,11 +196,11 @@ Full schema and relationships: [`DATABASE_SCHEMA.md`](DATABASE_SCHEMA.md).
 | View | Image |
 |---|---|
 | Landing page | `![Landing Page](docs/images/landing.png)` |
-| Dashboard | `![Dashboard](docs/images/dashboard.png)` |
+| Mentor dashboard | `![Mentor Dashboard](docs/images/mentor-dashboard.png)` |
 | Assessment builder | `![Assessment Builder](docs/images/assessment-builder.png)` |
 | AI question generation | `![AI Generation](docs/images/ai-generation.png)` |
-| Reports | `![Reports](docs/images/reports.png)` |
-| Analytics | `![Analytics](docs/images/analytics.png)` |
+| User report | `![User Report](docs/images/user-report.png)` |
+| Admin dashboard | `![Admin Dashboard](docs/images/admin-dashboard.png)` |
 
 ---
 
@@ -203,15 +209,16 @@ Full schema and relationships: [`DATABASE_SCHEMA.md`](DATABASE_SCHEMA.md).
 The demo seed creates ready-to-use accounts. **Password for all demo accounts is
 set by the seed script** (`password123` — demo only, not a production secret).
 
-| Role | Email |
-|---|---|
-| Admin | `admin@sparta.demo` |
-| Mentor | `mentor@sparta.demo` |
-| User | `user@sparta.demo` |
+| Role | Email | Persona |
+|---|---|---|
+| Admin | `admin@sparta.demo` | Platform admin |
+| Mentor | `mentor@sparta.demo` | **Sarah Chen — AI Career Coach** |
+| User | `user@sparta.demo` | Assessment taker |
 
-> The seed also adds two more mentors (`leadership@sparta.demo`,
-> `sales@sparta.demo`) and several named users with assessment history, premium
-> unlocks, and revenue so the dashboards never look empty.
+> Sarah Chen owns all three demo assessments (AI Engineer Readiness, Leadership
+> Potential, Sales Skill). The seed also adds several named users with
+> assessment history, premium unlocks, token transactions, and revenue so the
+> mentor and admin dashboards **never look empty**.
 
 ---
 
@@ -276,6 +283,7 @@ Cloudflare, with an HTTPS reverse proxy and a security checklist):
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — system design & technical decisions
 - [`docs/API.md`](docs/API.md) — high-level REST API overview
 - [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md) — 10-minute live demo walkthrough
+- [`docs/DEMO_CHECKLIST.md`](docs/DEMO_CHECKLIST.md) — pre-flight demo checklist & recovery plan
 - [`DEPLOYMENT.md`](DEPLOYMENT.md) — production deployment guide
 - [`DATABASE_SCHEMA.md`](DATABASE_SCHEMA.md) — data model
 - [`API_SPEC.md`](API_SPEC.md) — detailed endpoint contract

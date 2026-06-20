@@ -10,7 +10,7 @@ report, and the mentor sees revenue and analytics update.
   `docker compose exec backend npm run db:seed`
 - Have three logins ready (password set by the seed — `password123`):
   - Admin — `admin@sparta.demo`
-  - Mentor — `mentor@sparta.demo` (AI Career Coach)
+  - Mentor — `mentor@sparta.demo` (Sarah Chen — AI Career Coach)
   - User — `user@sparta.demo`
 - For a true end-to-end AI moment, set `OPENAI_API_KEY` on the backend. Without
   it, AI steps still demo gracefully (clear message / placeholder report) — call

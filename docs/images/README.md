@@ -6,10 +6,12 @@ root [`README.md`](../../README.md). Use these exact filenames:
 | Filename | View |
 |---|---|
 | `landing.png` | Landing page |
-| `dashboard.png` | User / mentor dashboard |
+| `mentor-dashboard.png` | Mentor dashboard (assessments, revenue, analytics) |
 | `assessment-builder.png` | Assessment builder |
 | `ai-generation.png` | AI question generation |
-| `reports.png` | Free + premium reports |
-| `analytics.png` | Analytics dashboard |
+| `user-report.png` | Free + premium user report |
+| `admin-dashboard.png` | Admin dashboard (users, analytics) |
 
 Recommended: 1280×800 PNG, light theme, no real user data or secrets visible.
+Run `npm run db:seed` first so the dashboards are fully populated before
+capturing.
