@@ -145,7 +145,7 @@ function DashboardHome() {
     <div className="container space-y-10 py-10">
       <div className="space-y-1">
         <h1 className="text-3xl font-bold tracking-tight">
-          Welcome back{user?.email ? `, ${user.email}` : ''}
+          Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''}
         </h1>
         <p className="text-muted-foreground">
           Here&apos;s an overview of your assessments and reports.
@@ -154,15 +154,17 @@ function DashboardHome() {
 
       {/* Wallet + statistics */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card>
+        <Card className="border-primary/30 bg-accent/40">
           <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium text-accent-foreground">
               Token Balance
             </CardTitle>
-            <Coins className="h-4 w-4 text-muted-foreground" />
+            <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <Coins className="h-4 w-4" />
+            </span>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-3xl font-bold tracking-tight">
+            <p className="text-3xl font-bold tracking-tight text-primary">
               {balance === null ? '—' : `${balance} Tokens`}
             </p>
             <Button size="sm" onClick={topUp} disabled={busy === 'topup'}>

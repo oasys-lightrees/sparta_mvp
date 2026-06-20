@@ -7,8 +7,9 @@ import { Navbar } from '@/components/common/Navbar';
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: 'SPARTA — Self Assessment Platform',
-  description: 'Take and create self-assessments.',
+  title: 'SPARTA — AI-Powered Assessment Platform',
+  description:
+    'Create tests, generate questions with AI, deliver personalized reports, and monetize your expertise.',
 };
 
 export default function RootLayout({
@@ -23,10 +24,18 @@ export default function RootLayout({
           <div className="flex min-h-screen flex-col">
             <Navbar />
             <main className="flex-1">{children}</main>
-            <footer className="border-t">
-              <div className="container flex h-16 items-center justify-between text-sm text-muted-foreground">
+            <footer className="border-t bg-muted/30">
+              <div className="container flex flex-col items-center justify-between gap-3 py-6 text-sm text-muted-foreground sm:flex-row">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
+                    S
+                  </span>
+                  <span className="font-medium text-foreground">SPARTA</span>
+                  <span className="hidden sm:inline">
+                    · AI-Powered Assessment Platform
+                  </span>
+                </div>
                 <span>© {new Date().getFullYear()} SPARTA</span>
-                <span>Self Assessment Platform</span>
               </div>
             </footer>
           </div>

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -38,7 +39,10 @@ export function AssessmentCard({
       <CardContent className="flex-1" />
       <CardFooter>
         <Button asChild className="w-full">
-          <Link href={`/assessments/${assessment.id}`}>Start Assessment</Link>
+          <Link href={`/assessments/${assessment.id}`}>
+            Start Assessment
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </Button>
       </CardFooter>
     </Card>
