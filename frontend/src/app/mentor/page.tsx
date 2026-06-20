@@ -6,6 +6,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { mentorApi } from '@/services/mentor.api';
 import { assessmentApi } from '@/services/assessment.api';
 import { AssessmentTable } from '@/components/mentor/AssessmentTable';
+import { MentorAnalytics } from '@/components/mentor/MentorAnalytics';
 import { RevenueSection } from '@/components/mentor/RevenueSection';
 import {
   AssessmentForm,
@@ -205,6 +206,10 @@ function MentorHome() {
             </CardContent>
           </Card>
         )}
+      </div>
+
+      <div className="mt-10">
+        <MentorAnalytics />
       </div>
 
       <div className="mt-10">

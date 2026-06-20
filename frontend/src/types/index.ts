@@ -148,6 +148,22 @@ export type MentorRevenue = {
   transactions: MentorRevenueTxn[];
 };
 
+// --- Analytics (charts) ---
+export type ChartPoint = { name: string; value: number };
+
+export type MentorAnalytics = {
+  assessmentPerformance: { name: string; attempts: number }[];
+  revenueByDate: { date: string; tokens: number }[];
+  scoreDistribution: ChartPoint[];
+  conversionFunnel: { stage: string; value: number }[];
+};
+
+export type AdminAnalytics = {
+  platformGrowth: ChartPoint[];
+  revenueOverview: ChartPoint[];
+  activityOverTime: { date: string; submissions: number }[];
+};
+
 // --- Admin ---
 export type AdminUser = {
   id: string;

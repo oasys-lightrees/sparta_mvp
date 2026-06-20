@@ -38,6 +38,16 @@ mentor.get('/revenue', authMiddleware, requireRole('MENTOR'), async (c) => {
   }
 });
 
+// GET /api/mentor/analytics — chart data for the mentor dashboard
+mentor.get('/analytics', authMiddleware, requireRole('MENTOR'), async (c) => {
+  try {
+    const analytics = await mentorService.getAnalytics(c.get('user').id);
+    return c.json(success(analytics), 200);
+  } catch (err) {
+    return handleError(c, err);
+  }
+});
+
 // GET /api/mentor/assessments — the current mentor's assessments + attempt count
 mentor.get('/assessments', authMiddleware, requireRole('MENTOR'), async (c) => {
   try {
