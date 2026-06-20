@@ -26,9 +26,9 @@ export type AssessmentPayload = {
   result_categories: ResultCategories | null;
 };
 
-// Result-category editor rows (diagnostic/personality assessments).
-const CATEGORY_LABELS = ['A', 'B', 'C', 'D'] as const;
-type CategoryRow = { name: string; knowledge: string };
+// Result-category editor rows (diagnostic/personality assessments). Codes are
+// mentor-defined (e.g. PB, PO, GR) — not limited to A/B/C/D.
+type CategoryRow = { code: string; name: string; knowledge: string };
 
 type Props = {
   initial?: Partial<{
@@ -88,31 +88,38 @@ export function AssessmentForm({
     str(initial?.base_knowledge),
   );
   const [aiEnabled, setAiEnabled] = useState(Boolean(initial?.ai_enabled));
-  const [categories, setCategories] = useState<CategoryRow[]>(() =>
-    CATEGORY_LABELS.map((label) => ({
-      name: initial?.result_categories?.[label]?.name ?? '',
-      knowledge: initial?.result_categories?.[label]?.knowledge ?? '',
-    })),
-  );
+  const [categories, setCategories] = useState<CategoryRow[]>(() => {
+    const rc = initial?.result_categories;
+    if (rc && Object.keys(rc).length > 0) {
+      return Object.entries(rc).map(([code, c]) => ({
+        code,
+        name: c.name,
+        knowledge: c.knowledge,
+      }));
+    }
+    return [];
+  });
   const [localError, setLocalError] = useState('');
 
   const setCategory = (i: number, patch: Partial<CategoryRow>) =>
     setCategories((prev) =>
       prev.map((c, idx) => (idx === i ? { ...c, ...patch } : c)),
     );
+  const addCategory = () =>
+    setCategories((prev) => [...prev, { code: '', name: '', knowledge: '' }]);
+  const removeCategory = (i: number) =>
+    setCategories((prev) => prev.filter((_, idx) => idx !== i));
 
-  // Build the result_categories map from rows that have a name. Null when the
-  // mentor left them all blank (-> exam-style assessment).
+  // Build the result_categories map keyed by code. Null when no category has a
+  // code+name (-> exam-style assessment).
   const buildResultCategories = (): ResultCategories | null => {
     const out: ResultCategories = {};
-    categories.forEach((c, i) => {
-      if (c.name.trim() !== '') {
-        out[CATEGORY_LABELS[i]] = {
-          name: c.name.trim(),
-          knowledge: c.knowledge.trim(),
-        };
+    for (const c of categories) {
+      const code = c.code.trim();
+      if (code !== '' && c.name.trim() !== '') {
+        out[code] = { name: c.name.trim(), knowledge: c.knowledge.trim() };
       }
-    });
+    }
     return Object.keys(out).length > 0 ? out : null;
   };
 
@@ -319,30 +326,48 @@ export function AssessmentForm({
         <div className="space-y-1">
           <Label>Result categories (diagnostic / personality)</Label>
           <p className="text-xs text-muted-foreground">
-            Optional. Map each answer position (A, B, C, D) to a result type. When
-            set, results are based on the taker&apos;s answer pattern instead of a
-            score. Leave blank for an exam-style assessment.
+            Optional. Define result types with a short code (e.g. PB, PO), a name
+            and knowledge. When set, results are based on each answer&apos;s
+            category mapping instead of a score. Leave empty for an exam-style
+            assessment.
           </p>
         </div>
         {categories.map((c, i) => (
-          <div key={CATEGORY_LABELS[i]} className="space-y-2">
-            <Label htmlFor={`cat_name_${i}`} className="text-sm">
-              {CATEGORY_LABELS[i]} result name
-            </Label>
-            <Input
-              id={`cat_name_${i}`}
-              value={c.name}
-              onChange={(e) => setCategory(i, { name: e.target.value })}
-              placeholder={`e.g. ${['Technical Builder', 'Strategic Leader', 'Research Expert', 'Communicator'][i]}`}
-            />
+          <div key={i} className="space-y-2 rounded-md border p-3">
+            <div className="flex gap-2">
+              <Input
+                value={c.code}
+                onChange={(e) => setCategory(i, { code: e.target.value })}
+                placeholder="Code (e.g. PB)"
+                className="w-32"
+                aria-label="Category code"
+              />
+              <Input
+                value={c.name}
+                onChange={(e) => setCategory(i, { name: e.target.value })}
+                placeholder="Name (e.g. Power Builder)"
+                className="flex-1"
+                aria-label="Category name"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => removeCategory(i)}
+              >
+                Remove
+              </Button>
+            </div>
             <Textarea
-              id={`cat_knowledge_${i}`}
               value={c.knowledge}
               onChange={(e) => setCategory(i, { knowledge: e.target.value })}
-              placeholder={`${CATEGORY_LABELS[i]} knowledge — what this result type means`}
+              placeholder="Knowledge — what people with this result are like"
             />
           </div>
         ))}
+        <Button type="button" variant="outline" size="sm" onClick={addCategory}>
+          + Add Category
+        </Button>
       </div>
 
       <ErrorMessage message={localError || error || ''} />

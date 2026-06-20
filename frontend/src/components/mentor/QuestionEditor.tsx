@@ -15,12 +15,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
-import type { AIQuestionPreview, MentorQuestion } from '@/types';
+import type {
+  AIQuestionPreview,
+  MentorQuestion,
+  ResultCategories,
+} from '@/types';
 
-type ChoiceDraft = { choice_text: string; score: string };
+type ChoiceDraft = {
+  choice_text: string;
+  score: string;
+  categories: string[];
+};
 type QuestionPayload = {
   question_text: string;
-  choices: { choice_text: string; score: number }[];
+  choices: { choice_text: string; score: number; categories?: string[] }[];
 };
 
 // --- Add/Edit form (multiple choice only) ---------------------------------
@@ -28,12 +36,14 @@ function QuestionForm({
   initial,
   submitLabel,
   submitting,
+  categoryCodes,
   onSubmit,
   onCancel,
 }: {
   initial?: { question_text: string; choices: ChoiceDraft[] };
   submitLabel: string;
   submitting: boolean;
+  categoryCodes: string[];
   onSubmit: (payload: QuestionPayload) => void;
   onCancel: () => void;
 }) {
@@ -42,16 +52,30 @@ function QuestionForm({
   );
   const [choices, setChoices] = useState<ChoiceDraft[]>(
     initial?.choices ?? [
-      { choice_text: '', score: '0' },
-      { choice_text: '', score: '0' },
+      { choice_text: '', score: '0', categories: [] },
+      { choice_text: '', score: '0', categories: [] },
     ],
   );
   const [error, setError] = useState('');
+  const hasCategories = categoryCodes.length > 0;
 
   const updateChoice = (i: number, patch: Partial<ChoiceDraft>) =>
     setChoices((cs) => cs.map((c, idx) => (idx === i ? { ...c, ...patch } : c)));
+  const toggleCategory = (i: number, code: string) =>
+    setChoices((cs) =>
+      cs.map((c, idx) =>
+        idx === i
+          ? {
+              ...c,
+              categories: c.categories.includes(code)
+                ? c.categories.filter((x) => x !== code)
+                : [...c.categories, code],
+            }
+          : c,
+      ),
+    );
   const addChoice = () =>
-    setChoices((cs) => [...cs, { choice_text: '', score: '0' }]);
+    setChoices((cs) => [...cs, { choice_text: '', score: '0', categories: [] }]);
   const removeChoice = (i: number) =>
     setChoices((cs) => cs.filter((_, idx) => idx !== i));
 
@@ -81,6 +105,7 @@ function QuestionForm({
       choices: choices.map((c) => ({
         choice_text: c.choice_text.trim(),
         score: Number(c.score),
+        categories: c.categories,
       })),
     });
   };
@@ -97,29 +122,53 @@ function QuestionForm({
       <div className="space-y-2">
         <Label>Choices</Label>
         {choices.map((c, i) => (
-          <div key={i} className="flex gap-2">
-            <Input
-              placeholder={`Choice ${i + 1}`}
-              value={c.choice_text}
-              onChange={(e) => updateChoice(i, { choice_text: e.target.value })}
-              className="flex-1"
-            />
-            <Input
-              type="number"
-              value={c.score}
-              onChange={(e) => updateChoice(i, { score: e.target.value })}
-              className="w-24"
-              aria-label="Score"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => removeChoice(i)}
-              disabled={choices.length <= 1}
-            >
-              Remove
-            </Button>
+          <div key={i} className="space-y-2 rounded-md border p-2">
+            <div className="flex gap-2">
+              <Input
+                placeholder={`Choice ${i + 1}`}
+                value={c.choice_text}
+                onChange={(e) =>
+                  updateChoice(i, { choice_text: e.target.value })
+                }
+                className="flex-1"
+              />
+              <Input
+                type="number"
+                value={c.score}
+                onChange={(e) => updateChoice(i, { score: e.target.value })}
+                className="w-20"
+                aria-label="Score"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => removeChoice(i)}
+                disabled={choices.length <= 1}
+              >
+                Remove
+              </Button>
+            </div>
+            {hasCategories ? (
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-xs text-muted-foreground">Maps to:</span>
+                {categoryCodes.map((code) => {
+                  const active = c.categories.includes(code);
+                  return (
+                    <Button
+                      key={code}
+                      type="button"
+                      size="sm"
+                      variant={active ? 'default' : 'outline'}
+                      className="h-7 px-2 text-xs"
+                      onClick={() => toggleCategory(i, code)}
+                    >
+                      {code}
+                    </Button>
+                  );
+                })}
+              </div>
+            ) : null}
           </div>
         ))}
         <Button type="button" variant="outline" size="sm" onClick={addChoice}>
@@ -149,12 +198,15 @@ function QuestionForm({
 export function QuestionEditor({
   assessmentId,
   questions,
+  categories,
   onChanged,
 }: {
   assessmentId: string;
   questions: MentorQuestion[];
+  categories?: ResultCategories | null;
   onChanged: () => void | Promise<void>;
 }) {
+  const categoryCodes = categories ? Object.keys(categories) : [];
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -206,6 +258,7 @@ export function QuestionEditor({
           choices: q.choices.map((c) => ({
             choice_text: c.text,
             score: c.score,
+            categories: c.categories ?? [],
           })),
           correct_answer: q.correct_answer || null,
           explanation: q.explanation || null,
@@ -294,10 +347,15 @@ export function QuestionEditor({
                       {q.choices.map((c, j) => (
                         <li
                           key={j}
-                          className="flex items-center justify-between text-sm"
+                          className="flex items-center justify-between gap-2 text-sm"
                         >
                           <span>{c.text}</span>
-                          <Badge variant="secondary">score {c.score}</Badge>
+                          <span className="flex shrink-0 items-center gap-1">
+                            {c.categories?.map((code) => (
+                              <Badge key={code}>{code}</Badge>
+                            ))}
+                            <Badge variant="secondary">score {c.score}</Badge>
+                          </span>
                         </li>
                       ))}
                     </ul>
@@ -320,6 +378,7 @@ export function QuestionEditor({
           <QuestionForm
             submitLabel="Add question"
             submitting={busy}
+            categoryCodes={categoryCodes}
             onCancel={() => setAdding(false)}
             onSubmit={(payload) =>
               run(() => assessmentApi.addQuestion(assessmentId, payload))
@@ -337,11 +396,13 @@ export function QuestionEditor({
               key={q.id}
               submitLabel="Save question"
               submitting={busy}
+              categoryCodes={categoryCodes}
               initial={{
                 question_text: q.question_text,
                 choices: q.choices.map((c) => ({
                   choice_text: c.choice_text,
                   score: String(c.score),
+                  categories: c.categories ?? [],
                 })),
               }}
               onCancel={() => setEditingId(null)}
@@ -378,10 +439,15 @@ export function QuestionEditor({
                 {q.choices.map((c) => (
                   <li
                     key={c.id}
-                    className="flex items-center justify-between text-sm"
+                    className="flex items-center justify-between gap-2 text-sm"
                   >
                     <span>{c.choice_text}</span>
-                    <Badge variant="secondary">score {c.score}</Badge>
+                    <span className="flex shrink-0 items-center gap-1">
+                      {c.categories?.map((code) => (
+                        <Badge key={code}>{code}</Badge>
+                      ))}
+                      <Badge variant="secondary">score {c.score}</Badge>
+                    </span>
                   </li>
                 ))}
               </ul>

@@ -35,7 +35,20 @@ const validateChoices = (raw: unknown): ChoiceValidation => {
     if (!Number.isInteger(ch.score)) {
       return { ok: false, message: 'Each choice needs an integer score' };
     }
-    value.push({ choice_text: ch.choice_text, score: ch.score });
+    let categories: string[] | undefined;
+    if (ch.categories !== undefined) {
+      if (
+        !Array.isArray(ch.categories) ||
+        !ch.categories.every((x: unknown) => typeof x === 'string')
+      ) {
+        return {
+          ok: false,
+          message: 'Each choice categories must be an array of strings',
+        };
+      }
+      categories = ch.categories;
+    }
+    value.push({ choice_text: ch.choice_text, score: ch.score, categories });
   }
   return { ok: true, value };
 };
