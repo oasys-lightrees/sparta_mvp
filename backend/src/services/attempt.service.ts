@@ -4,6 +4,21 @@ import { assessments, attempts, reports } from '../db/schema';
 import { HttpError } from '../utils/http-error';
 
 /**
+ * Map a score to a human level using the assessment's own thresholds, mirroring
+ * the categories used when the FREE report is generated (submission.service).
+ */
+const levelFor = (
+  score: number,
+  low: number | null,
+  high: number | null,
+): string => {
+  if (low === null || high === null) return 'Completed';
+  if (score < low) return 'Beginner';
+  if (score < high) return 'Intermediate';
+  return 'Advanced';
+};
+
+/**
  * Return the FREE report for an attempt (only if it belongs to the current
  * user), plus premium availability/status. Guest (unclaimed) attempts have a
  * null user_id and are denied until claimed.
@@ -41,8 +56,11 @@ export const getReport = async (userId: string, attemptId: string) => {
 
   const [assessment] = await db
     .select({
+      title: assessments.title,
       cost: assessments.premiumTokenCost,
       description: assessments.premiumReportDescription,
+      low: assessments.lowScoreThreshold,
+      high: assessments.highScoreThreshold,
     })
     .from(assessments)
     .where(eq(assessments.id, attempt.assessmentId))
@@ -59,6 +77,12 @@ export const getReport = async (userId: string, attemptId: string) => {
   return {
     attempt_id: attempt.id,
     score: attempt.totalScore,
+    level: levelFor(
+      attempt.totalScore,
+      assessment?.low ?? null,
+      assessment?.high ?? null,
+    ),
+    assessment_title: assessment?.title ?? null,
     report_id: freeReport.id,
     report: { type: 'FREE' as const, content: freeReport.content },
     premium: {

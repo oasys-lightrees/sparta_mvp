@@ -12,6 +12,7 @@ import type {
 type AssessmentConfig = {
   title?: string;
   description?: string | null;
+  image_url?: string | null;
   free_report_text?: string | null;
   low_score_threshold?: number | null;
   high_score_threshold?: number | null;

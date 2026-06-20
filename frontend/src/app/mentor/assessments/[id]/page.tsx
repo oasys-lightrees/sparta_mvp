@@ -12,6 +12,7 @@ import {
 } from '@/components/mentor/AssessmentForm';
 import { QuestionEditor } from '@/components/mentor/QuestionEditor';
 import { ResultsTable } from '@/components/mentor/ResultsTable';
+import { ShareAssessment } from '@/components/mentor/ShareAssessment';
 import { Loading } from '@/components/common/Loading';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { Badge } from '@/components/ui/badge';
@@ -41,6 +42,7 @@ function DetailView({ id }: { id: string }) {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [statusBusy, setStatusBusy] = useState(false);
+  const [notice, setNotice] = useState('');
 
   const loadDetail = useCallback(async () => {
     setDetail(await mentorApi.getEditingDetail(id));
@@ -78,6 +80,7 @@ function DetailView({ id }: { id: string }) {
       await assessmentApi.update(id, payload);
       await loadDetail();
       setEditing(false);
+      setNotice('Changes saved.');
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Failed to save');
     } finally {
@@ -89,12 +92,16 @@ function DetailView({ id }: { id: string }) {
     if (!detail) return;
     setStatusBusy(true);
     setError('');
+    setNotice('');
     try {
-      await assessmentApi.setStatus(
-        id,
-        detail.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED',
-      );
+      const next = detail.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED';
+      await assessmentApi.setStatus(id, next);
       await loadDetail();
+      setNotice(
+        next === 'PUBLISHED'
+          ? 'Assessment published — your share link is now live.'
+          : 'Assessment unpublished.',
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update status');
     } finally {
@@ -140,6 +147,11 @@ function DetailView({ id }: { id: string }) {
       </div>
 
       <ErrorMessage message={error} />
+      {notice ? (
+        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+          {notice}
+        </p>
+      ) : null}
 
       <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0">
@@ -169,6 +181,7 @@ function DetailView({ id }: { id: string }) {
               initial={{
                 title: detail.title,
                 description: detail.description,
+                image_url: detail.image_url,
                 price: detail.price,
                 low_score_threshold: detail.low_score_threshold,
                 high_score_threshold: detail.high_score_threshold,
@@ -214,6 +227,11 @@ function DetailView({ id }: { id: string }) {
           )}
         </CardContent>
       </Card>
+
+      <ShareAssessment
+        assessmentId={id}
+        isPublished={detail.status === 'PUBLISHED'}
+      />
 
       <QuestionEditor
         assessmentId={id}

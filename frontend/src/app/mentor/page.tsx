@@ -6,6 +6,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { mentorApi } from '@/services/mentor.api';
 import { assessmentApi } from '@/services/assessment.api';
 import { AssessmentTable } from '@/components/mentor/AssessmentTable';
+import { MentorAnalytics } from '@/components/mentor/MentorAnalytics';
 import { RevenueSection } from '@/components/mentor/RevenueSection';
 import {
   AssessmentForm,
@@ -183,8 +184,8 @@ function MentorHome() {
           <Loading />
         ) : items.length === 0 ? (
           <EmptyState
-            title="No assessments yet"
-            description="Create your first assessment to start collecting responses."
+            title="Create your first AI assessment"
+            description="Build a test, generate questions with AI, and start collecting responses and revenue."
             action={
               !showCreate ? (
                 <Button onClick={() => setShowCreate(true)}>
@@ -205,6 +206,10 @@ function MentorHome() {
             </CardContent>
           </Card>
         )}
+      </div>
+
+      <div className="mt-10">
+        <MentorAnalytics />
       </div>
 
       <div className="mt-10">

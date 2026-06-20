@@ -8,6 +8,7 @@ export type AssessmentStatus = 'DRAFT' | 'PUBLISHED';
 export type CreateInput = {
   title: string;
   description?: string | null;
+  image_url?: string | null;
   free_report_text?: string | null;
   low_score_threshold?: number | null;
   high_score_threshold?: number | null;
@@ -23,6 +24,7 @@ export type CreateInput = {
 export type UpdateInput = {
   title?: string;
   description?: string | null;
+  image_url?: string | null;
   free_report_text?: string | null;
   low_score_threshold?: number | null;
   high_score_threshold?: number | null;
@@ -39,6 +41,7 @@ const publicColumns = {
   id: assessments.id,
   title: assessments.title,
   description: assessments.description,
+  imageUrl: assessments.imageUrl,
   price: assessments.price,
 };
 
@@ -134,6 +137,7 @@ export const create = async (mentorId: string, input: CreateInput) => {
       mentorId,
       title: input.title.trim(),
       description: input.description ?? null,
+      imageUrl: input.image_url ?? null,
       freeReportText: input.free_report_text ?? null,
       lowScoreThreshold: input.low_score_threshold ?? null,
       highScoreThreshold: input.high_score_threshold ?? null,
@@ -163,6 +167,7 @@ export const update = async (
   const values: Partial<{
     title: string;
     description: string | null;
+    imageUrl: string | null;
     freeReportText: string | null;
     lowScoreThreshold: number | null;
     highScoreThreshold: number | null;
@@ -176,6 +181,7 @@ export const update = async (
   }> = {};
   if (input.title !== undefined) values.title = input.title.trim();
   if (input.description !== undefined) values.description = input.description;
+  if (input.image_url !== undefined) values.imageUrl = input.image_url;
   if (input.free_report_text !== undefined)
     values.freeReportText = input.free_report_text;
   if (input.low_score_threshold !== undefined)
@@ -203,6 +209,7 @@ export const update = async (
       id: assessments.id,
       title: assessments.title,
       description: assessments.description,
+      image_url: assessments.imageUrl,
       status: assessments.status,
       free_report_text: assessments.freeReportText,
       low_score_threshold: assessments.lowScoreThreshold,

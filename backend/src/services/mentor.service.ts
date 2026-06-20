@@ -13,6 +13,7 @@ export const listMyAssessments = async (mentorId: string) => {
       title: assessments.title,
       status: assessments.status,
       price: assessments.price,
+      imageUrl: assessments.imageUrl,
       totalAttempts: count(attempts.id),
     })
     .from(assessments)
@@ -98,6 +99,101 @@ export const getRevenue = async (mentorId: string) => {
     totalRevenue: Number(agg?.total ?? 0),
     premiumUnlocks: Number(agg?.unlocks ?? 0),
     transactions: rows,
+  };
+};
+
+/**
+ * Visual analytics for the mentor dashboard charts.
+ *
+ *  - assessmentPerformance: attempts per assessment (bar)
+ *  - revenueByDate:         tokens earned per day from premium unlocks (line)
+ *  - scoreDistribution:     attempts bucketed Beginner/Intermediate/Advanced (pie)
+ *  - conversionFunnel:      submissions -> premium unlocks (bar)
+ *
+ * Page views are not tracked, so the funnel starts at submissions.
+ */
+export const getAnalytics = async (mentorId: string) => {
+  // 1. Attempts per assessment.
+  const perfRows = await db
+    .select({
+      name: assessments.title,
+      attempts: count(attempts.id),
+    })
+    .from(assessments)
+    .leftJoin(attempts, eq(attempts.assessmentId, assessments.id))
+    .where(eq(assessments.mentorId, mentorId))
+    .groupBy(assessments.id)
+    .orderBy(desc(count(attempts.id)));
+
+  const assessmentPerformance = perfRows.map((r) => ({
+    name: r.name,
+    attempts: Number(r.attempts),
+  }));
+
+  // 2. Token revenue per day (premium unlocks crediting this mentor).
+  const dateExpr = sql<string>`to_char(${transactions.createdAt}, 'YYYY-MM-DD')`;
+  const revRows = await db
+    .select({
+      date: dateExpr,
+      tokens: sql<string>`coalesce(sum(${transactions.amount}), 0)`,
+    })
+    .from(transactions)
+    .where(
+      and(
+        eq(transactions.mentorId, mentorId),
+        eq(transactions.type, 'PREMIUM_UNLOCK'),
+      ),
+    )
+    .groupBy(dateExpr)
+    .orderBy(dateExpr);
+
+  const revenueByDate = revRows.map((r) => ({
+    date: r.date,
+    tokens: Number(r.tokens),
+  }));
+
+  // 3. Score distribution by each assessment's own thresholds.
+  const bandExpr = sql<string>`case
+    when ${assessments.lowScoreThreshold} is not null and ${attempts.totalScore} <= ${assessments.lowScoreThreshold} then 'Beginner'
+    when ${assessments.highScoreThreshold} is not null and ${attempts.totalScore} >= ${assessments.highScoreThreshold} then 'Advanced'
+    else 'Intermediate' end`;
+  const bandRows = await db
+    .select({ band: bandExpr, value: count() })
+    .from(attempts)
+    .innerJoin(assessments, eq(attempts.assessmentId, assessments.id))
+    .where(eq(assessments.mentorId, mentorId))
+    .groupBy(bandExpr);
+
+  const bandCounts: Record<string, number> = {};
+  for (const row of bandRows) bandCounts[row.band] = Number(row.value);
+  const scoreDistribution = ['Beginner', 'Intermediate', 'Advanced'].map(
+    (name) => ({ name, value: bandCounts[name] ?? 0 }),
+  );
+
+  // 4. Conversion funnel: submissions -> premium unlocks.
+  const submissions = assessmentPerformance.reduce(
+    (sum, a) => sum + a.attempts,
+    0,
+  );
+  const [unlockAgg] = await db
+    .select({ value: count() })
+    .from(transactions)
+    .where(
+      and(
+        eq(transactions.mentorId, mentorId),
+        eq(transactions.type, 'PREMIUM_UNLOCK'),
+      ),
+    );
+  const conversionFunnel = [
+    { stage: 'Submissions', value: submissions },
+    { stage: 'Premium Unlocks', value: Number(unlockAgg?.value ?? 0) },
+  ];
+
+  return {
+    assessmentPerformance,
+    revenueByDate,
+    scoreDistribution,
+    conversionFunnel,
   };
 };
 

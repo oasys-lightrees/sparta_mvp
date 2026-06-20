@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { StatsCards } from '@/components/admin/StatsCards';
+import { AdminAnalytics } from '@/components/admin/AdminAnalytics';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { AssessmentManagement } from '@/components/admin/AssessmentManagement';
 import { ContentManagement } from '@/components/admin/ContentManagement';
@@ -71,7 +72,12 @@ function AdminHome() {
         ))}
       </div>
 
-      {tab === 'Overview' ? <StatsCards /> : null}
+      {tab === 'Overview' ? (
+        <div className="space-y-8">
+          <StatsCards />
+          <AdminAnalytics />
+        </div>
+      ) : null}
       {tab === 'Users' ? (
         <Section title="User Management">
           <UserManagement />

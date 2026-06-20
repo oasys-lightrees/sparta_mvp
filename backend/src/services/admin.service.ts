@@ -91,6 +91,55 @@ export const getStats = async () => {
 };
 
 /**
+ * Visual analytics for the admin dashboard charts.
+ *
+ *  - platformGrowth:   total users, mentors and assessments (bar)
+ *  - revenueOverview:  total token transactions vs premium unlock volume (bar)
+ *  - activityOverTime: submissions per day (line)
+ */
+export const getAnalytics = async () => {
+  const [
+    [userCount],
+    [mentorCount],
+    [assessmentCount],
+    [txnCount],
+    [premiumCount],
+  ] = await Promise.all([
+    db.select({ value: count() }).from(users),
+    db.select({ value: count() }).from(users).where(eq(users.role, 'MENTOR')),
+    db.select({ value: count() }).from(assessments),
+    db.select({ value: count() }).from(transactions),
+    db
+      .select({ value: count() })
+      .from(transactions)
+      .where(eq(transactions.type, 'PREMIUM_UNLOCK')),
+  ]);
+
+  const dateExpr = sql<string>`to_char(${attempts.createdAt}, 'YYYY-MM-DD')`;
+  const activityRows = await db
+    .select({ date: dateExpr, submissions: count() })
+    .from(attempts)
+    .groupBy(dateExpr)
+    .orderBy(dateExpr);
+
+  return {
+    platformGrowth: [
+      { name: 'Users', value: Number(userCount.value) },
+      { name: 'Mentors', value: Number(mentorCount.value) },
+      { name: 'Assessments', value: Number(assessmentCount.value) },
+    ],
+    revenueOverview: [
+      { name: 'Token Transactions', value: Number(txnCount.value) },
+      { name: 'Premium Unlocks', value: Number(premiumCount.value) },
+    ],
+    activityOverTime: activityRows.map((r) => ({
+      date: r.date,
+      submissions: Number(r.submissions),
+    })),
+  };
+};
+
+/**
  * List every assessment (admin moderation view) with mentor email, status,
  * price and attempt count.
  */

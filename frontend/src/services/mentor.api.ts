@@ -1,5 +1,6 @@
 import { apiClient } from '@/services/api';
 import type {
+  MentorAnalytics,
   MentorAssessmentDetail,
   MentorAssessmentListItem,
   MentorResult,
@@ -11,6 +12,8 @@ export const mentorApi = {
   getStats: () => apiClient.get<MentorStats>('/api/mentor/stats'),
 
   getRevenue: () => apiClient.get<MentorRevenue>('/api/mentor/revenue'),
+
+  getAnalytics: () => apiClient.get<MentorAnalytics>('/api/mentor/analytics'),
 
   listMyAssessments: () =>
     apiClient.get<MentorAssessmentListItem[]>('/api/mentor/assessments'),

@@ -21,6 +21,7 @@ export type AssessmentSummary = {
   id: string;
   title: string;
   description: string | null;
+  imageUrl?: string | null;
   price: number;
 };
 
@@ -48,6 +49,8 @@ export type PremiumInfo = {
 export type AttemptReport = {
   attempt_id: string;
   score: number;
+  level: string;
+  assessment_title: string | null;
   report_id: string;
   report: Report;
   premium: PremiumInfo;
@@ -91,6 +94,7 @@ export type MentorAssessmentListItem = {
   title: string;
   status: AssessmentStatus;
   price: number;
+  imageUrl?: string | null;
   totalAttempts: number;
 };
 
@@ -115,6 +119,7 @@ export type MentorAssessmentDetail = {
   id: string;
   title: string;
   description: string | null;
+  image_url: string | null;
   status: AssessmentStatus;
   free_report_text: string | null;
   low_score_threshold: number | null;
@@ -146,6 +151,22 @@ export type MentorRevenue = {
   totalRevenue: number;
   premiumUnlocks: number;
   transactions: MentorRevenueTxn[];
+};
+
+// --- Analytics (charts) ---
+export type ChartPoint = { name: string; value: number };
+
+export type MentorAnalytics = {
+  assessmentPerformance: { name: string; attempts: number }[];
+  revenueByDate: { date: string; tokens: number }[];
+  scoreDistribution: ChartPoint[];
+  conversionFunnel: { stage: string; value: number }[];
+};
+
+export type AdminAnalytics = {
+  platformGrowth: ChartPoint[];
+  revenueOverview: ChartPoint[];
+  activityOverTime: { date: string; submissions: number }[];
 };
 
 // --- Admin ---

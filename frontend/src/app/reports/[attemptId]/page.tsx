@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { Lock, Sparkles } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { attemptApi } from '@/services/attempt.api';
 import { clearPendingAttempt } from '@/lib/storage';
 import { ReportView } from '@/components/assessment/ReportView';
+import { PremiumReportView } from '@/components/assessment/PremiumReportView';
 import { Loading } from '@/components/common/Loading';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +28,7 @@ function ReportContent({ attemptId }: { attemptId: string }) {
   const [loading, setLoading] = useState(true);
   const [unlocking, setUnlocking] = useState(false);
   const [premiumError, setPremiumError] = useState('');
+  const [unlockedJustNow, setUnlockedJustNow] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -59,6 +62,7 @@ function ReportContent({ attemptId }: { attemptId: string }) {
       await attemptApi.unlockPremium(report.report_id);
       const fresh = await attemptApi.getReport(attemptId);
       setReport(fresh);
+      setUnlockedJustNow(true);
     } catch (err) {
       setPremiumError(err instanceof Error ? err.message : 'Unlock failed');
     } finally {
@@ -88,40 +92,35 @@ function ReportContent({ attemptId }: { attemptId: string }) {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Premium Report</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                Premium Report
+              </CardTitle>
               <Badge>PREMIUM</Badge>
             </div>
+            {unlockedJustNow ? (
+              <CardDescription className="font-medium text-emerald-600">
+                ✓ Unlocked — here is your personalized analysis.
+              </CardDescription>
+            ) : null}
           </CardHeader>
-          <CardContent className="space-y-3 text-sm leading-relaxed">
-            {(report.premium.content ?? '')
-              .split('\n')
-              .map((line, i) => {
-                const heading = line.match(/^#{1,6}\s+(.*)$/);
-                if (heading) {
-                  return (
-                    <h3 key={i} className="pt-2 font-semibold">
-                      {heading[1]}
-                    </h3>
-                  );
-                }
-                if (line.trim() === '') return null;
-                return (
-                  <p key={i} className="text-muted-foreground">
-                    {line}
-                  </p>
-                );
-              })}
+          <CardContent>
+            <PremiumReportView content={report.premium.content ?? ''} />
           </CardContent>
         </Card>
       ) : report.premium.cost > 0 ? (
-        <Card className="border-dashed">
+        <Card className="border-2 border-dashed border-primary/30 bg-accent/30">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Premium Report 🔒</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Lock className="h-5 w-5 text-primary" />
+                Premium Report
+              </CardTitle>
               <Badge variant="outline">{report.premium.cost} Tokens</Badge>
             </div>
             <CardDescription>
-              Unlock a deeper, personalized analysis.
+              Go deeper with an AI-personalized breakdown of your strengths,
+              gaps, and a 30-day plan.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -131,10 +130,15 @@ function ReportContent({ attemptId }: { attemptId: string }) {
               </p>
             ) : null}
             <ErrorMessage message={premiumError} />
-            <Button onClick={unlock} disabled={unlocking}>
-              {unlocking
-                ? 'Unlocking…'
-                : `Unlock Premium (${report.premium.cost} tokens)`}
+            <Button onClick={unlock} disabled={unlocking} size="lg">
+              {unlocking ? (
+                'Unlocking…'
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  Unlock Premium ({report.premium.cost} tokens)
+                </>
+              )}
             </Button>
           </CardContent>
         </Card>

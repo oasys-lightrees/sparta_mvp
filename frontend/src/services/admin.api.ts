@@ -1,5 +1,6 @@
 import { apiClient } from '@/services/api';
 import type {
+  AdminAnalytics,
   AdminAssessment,
   AdminContact,
   AdminStats,
@@ -27,6 +28,8 @@ export const adminApi = {
 
   // Stats
   getStats: () => apiClient.get<AdminStats>('/api/admin/stats'),
+
+  getAnalytics: () => apiClient.get<AdminAnalytics>('/api/admin/analytics'),
 
   // Assessments (moderation)
   listAssessments: () =>

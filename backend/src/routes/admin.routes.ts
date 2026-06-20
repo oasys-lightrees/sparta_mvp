@@ -89,6 +89,16 @@ admin.get('/stats', authMiddleware, requireRole('ADMIN'), async (c) => {
   }
 });
 
+// GET /api/admin/analytics — chart data for the admin dashboard
+admin.get('/analytics', authMiddleware, requireRole('ADMIN'), async (c) => {
+  try {
+    const analytics = await adminService.getAnalytics();
+    return c.json(success(analytics), 200);
+  } catch (err) {
+    return handleError(c, err);
+  }
+});
+
 // GET /api/admin/assessments — all assessments (moderation view)
 admin.get('/assessments', authMiddleware, requireRole('ADMIN'), async (c) => {
   try {
