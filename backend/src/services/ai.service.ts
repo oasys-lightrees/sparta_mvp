@@ -148,27 +148,84 @@ export const generateQuestionsFromText = async (
   return result;
 };
 
+// Per-question evidence used to ground the premium report. Mirrors the
+// AnswerSnapshotItem stored on the attempt.
+export type AnswerEvidence = {
+  question: string;
+  userAnswer: string;
+  userAnswerText: string;
+  expectedAnswer: string;
+  expectedAnswerText: string;
+  explanation: string | null;
+  score: number;
+};
+
+const REPORT_SECTIONS =
+  '## Overview, ## Strengths, ## Weaknesses, ## Recommendations, ' +
+  '## 30-Day Improvement Roadmap';
+
 /**
  * Generate a premium report (markdown sections) from assessment context.
+ *
+ * When `answers` (the per-question evaluation snapshot) is provided, the report
+ * is grounded in the actual choices the user made vs. the expected answers —
+ * producing specific, evidence-based feedback. When it is absent (older
+ * attempts), it falls back to a score-only report.
  */
 export const generatePremiumReport = async (ctx: {
   title: string;
   baseKnowledge: string | null;
   score: number;
+  category?: string | null;
   freeReport: string;
   questions: string[];
+  answers?: AnswerEvidence[] | null;
 }): Promise<string> => {
-  const system =
-    'You are an expert assessment analyst. Write a clear, encouraging premium ' +
-    'report using EXACTLY these markdown sections, in order: ' +
-    '## Overview, ## Strengths, ## Weaknesses, ## Recommendations, ' +
-    '## 30-Day Improvement Roadmap.';
+  const hasEvidence = Array.isArray(ctx.answers) && ctx.answers.length > 0;
+
+  const system = [
+    'You are a seasoned mentor writing a personalized premium assessment report.',
+    `Write EXACTLY these markdown sections, in order: ${REPORT_SECTIONS}.`,
+    'Write in a warm, professional, second-person voice ("your responses show…").',
+    hasEvidence
+      ? 'Ground every claim in the evidence below: cite specific questions, ' +
+        'compare the choice the taker made against the expected answer, and use ' +
+        'the explanations. Identify strengths from questions answered well and ' +
+        'weaknesses from questions where the answer fell short of the expected ' +
+        'one. Base recommendations on the assessment scoring guidance.'
+      : 'Base your analysis on the score and assessment context provided.',
+    'Do NOT just restate the numeric score (avoid "you scored X"); describe ' +
+      'what the responses reveal about ability and where to improve.',
+  ].join(' ');
+
+  const evidenceBlock = hasEvidence
+    ? 'Per-question evidence (the taker\'s answer vs. the expected best answer):\n' +
+      ctx
+        .answers!.map((a, i) => {
+          const matched =
+            a.userAnswer === a.expectedAnswer ? 'MATCH' : 'MISSED';
+          return [
+            `Q${i + 1}. ${a.question}`,
+            `  - Their answer (${a.userAnswer}): ${a.userAnswerText} [${matched}, earned ${a.score}]`,
+            `  - Expected best answer (${a.expectedAnswer}): ${a.expectedAnswerText}`,
+            a.explanation ? `  - Explanation: ${a.explanation}` : '',
+          ]
+            .filter(Boolean)
+            .join('\n');
+        })
+        .join('\n')
+    : '';
+
   const user = [
     `Assessment: ${ctx.title}`,
     ctx.baseKnowledge ? `Scoring guidance: ${ctx.baseKnowledge}` : '',
-    `Score: ${ctx.score}`,
+    `Total score: ${ctx.score}${ctx.category ? ` (level: ${ctx.category})` : ''}`,
     `Free report:\n${ctx.freeReport}`,
-    ctx.questions.length ? `Questions:\n- ${ctx.questions.join('\n- ')}` : '',
+    evidenceBlock,
+    // Fallback context when no per-answer evidence is available.
+    !hasEvidence && ctx.questions.length
+      ? `Questions:\n- ${ctx.questions.join('\n- ')}`
+      : '',
   ]
     .filter(Boolean)
     .join('\n\n');

@@ -7,9 +7,15 @@ import {
   questions,
   reports,
   users,
+  type AnswerSnapshotItem,
 } from '../db/schema';
 import { HttpError } from '../utils/http-error';
 import { sendEmail } from './email.service';
+
+// Synthesize choice labels (A, B, C…) for the answer snapshot.
+const LABELS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const labelFor = (index: number) =>
+  index < LABELS.length ? LABELS[index] : `#${index + 1}`;
 
 export type SubmitAnswer = {
   question_id: string;
@@ -168,25 +174,43 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
   }
 
   const questionRows = await db
-    .select({ id: questions.id })
+    .select({
+      id: questions.id,
+      questionText: questions.questionText,
+      explanation: questions.explanation,
+    })
     .from(questions)
-    .where(eq(questions.assessmentId, assessmentId));
-  const questionIds = new Set(questionRows.map((q) => q.id));
+    .where(eq(questions.assessmentId, assessmentId))
+    .orderBy(questions.createdAt);
+  const questionById = new Map(questionRows.map((q) => [q.id, q]));
 
   const choiceRows = await db
     .select({
       id: choices.id,
       questionId: choices.questionId,
+      choiceText: choices.choiceText,
       score: choices.score,
     })
     .from(choices)
     .innerJoin(questions, eq(choices.questionId, questions.id))
-    .where(eq(questions.assessmentId, assessmentId));
+    .where(eq(questions.assessmentId, assessmentId))
+    .orderBy(choices.id);
   const choiceMap = new Map(choiceRows.map((c) => [c.id, c]));
 
+  // Group each question's choices (ordered) so we can label them and find the
+  // highest-scoring "expected" answer for the evaluation snapshot.
+  const choicesByQuestion = new Map<string, typeof choiceRows>();
+  for (const c of choiceRows) {
+    const list = choicesByQuestion.get(c.questionId) ?? [];
+    list.push(c);
+    choicesByQuestion.set(c.questionId, list);
+  }
+
   let score = 0;
+  const snapshot: AnswerSnapshotItem[] = [];
   for (const ans of input.answers) {
-    if (!questionIds.has(ans.question_id)) {
+    const question = questionById.get(ans.question_id);
+    if (!question) {
       throw new HttpError(
         400,
         'An answer references a question not in this assessment',
@@ -197,6 +221,23 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
       throw new HttpError(400, 'An answer references an invalid choice');
     }
     score += choice.score;
+
+    // Build the per-question evaluation snapshot.
+    const qChoices = choicesByQuestion.get(ans.question_id) ?? [];
+    const selectedIdx = qChoices.findIndex((c) => c.id === ans.choice_id);
+    const best = qChoices.reduce(
+      (acc, c, i) => (c.score > acc.choice.score ? { choice: c, i } : acc),
+      { choice: qChoices[0], i: 0 },
+    );
+    snapshot.push({
+      question: question.questionText,
+      userAnswer: labelFor(selectedIdx),
+      userAnswerText: choice.choiceText,
+      expectedAnswer: labelFor(best.i),
+      expectedAnswerText: best.choice?.choiceText ?? '',
+      explanation: question.explanation,
+      score: choice.score,
+    });
   }
 
   const { content, category, summary } = generateFreeReport(assessment, score);
@@ -209,6 +250,7 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
         userId: input.userId,
         guestEmail: input.guestEmail,
         totalScore: score,
+        answersSnapshot: snapshot,
       })
       .returning({ id: attempts.id });
 

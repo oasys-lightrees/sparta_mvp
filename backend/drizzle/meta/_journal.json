@@ -50,6 +50,13 @@
       "when": 1781935629224,
       "tag": "0006_peaceful_joshua_kane",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781944257835,
+      "tag": "0007_breezy_galactus",
+      "breakpoints": true
     }
   ]
 }

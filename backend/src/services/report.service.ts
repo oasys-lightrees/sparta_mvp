@@ -39,6 +39,7 @@ export const unlockPremium = async (userId: string, reportId: string) => {
       userId: attempts.userId,
       assessmentId: attempts.assessmentId,
       totalScore: attempts.totalScore,
+      answersSnapshot: attempts.answersSnapshot,
     })
     .from(attempts)
     .where(eq(attempts.id, report.attemptId))
@@ -58,6 +59,8 @@ export const unlockPremium = async (userId: string, reportId: string) => {
       title: assessments.title,
       baseKnowledge: assessments.baseKnowledge,
       aiEnabled: assessments.aiEnabled,
+      lowScoreThreshold: assessments.lowScoreThreshold,
+      highScoreThreshold: assessments.highScoreThreshold,
     })
     .from(assessments)
     .where(eq(assessments.id, attempt.assessmentId))
@@ -119,12 +122,31 @@ export const unlockPremium = async (userId: string, reportId: string) => {
         .from(questions)
         .where(eq(questions.assessmentId, assessment.id));
 
+      // Derive the level from the assessment's own thresholds (mirrors the
+      // FREE report category) to give the AI a richer signal than raw score.
+      const { low, high } = {
+        low: assessment.lowScoreThreshold,
+        high: assessment.highScoreThreshold,
+      };
+      const category =
+        low === null || high === null
+          ? null
+          : attempt.totalScore < low
+            ? 'Beginner'
+            : attempt.totalScore < high
+              ? 'Intermediate'
+              : 'Advanced';
+
       content = await aiService.generatePremiumReport({
         title: assessment.title,
         baseKnowledge: assessment.baseKnowledge,
         score: attempt.totalScore,
+        category,
         freeReport: free?.content ?? '',
         questions: questionRows.map((q) => q.text),
+        // Per-question evidence (null for attempts created before this feature
+        // -> AI falls back to a score-only report).
+        answers: attempt.answersSnapshot ?? null,
       });
     } catch (err) {
       console.error('[ai] premium report generation failed, using fallback:', err);

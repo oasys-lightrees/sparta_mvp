@@ -2,6 +2,7 @@ import { relations } from 'drizzle-orm';
 import {
   boolean,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -116,6 +117,21 @@ export const choices = pgTable('choices', {
 });
 
 /**
+ * Per-question evaluation snapshot captured on an attempt at submit time.
+ * Stored as a self-contained snapshot (not just question IDs) so a report stays
+ * historically accurate even if the mentor later edits or deletes questions.
+ */
+export type AnswerSnapshotItem = {
+  question: string;
+  userAnswer: string; // synthesized choice label (A, B, C…)
+  userAnswerText: string;
+  expectedAnswer: string; // label of the highest-scoring choice
+  expectedAnswerText: string;
+  explanation: string | null;
+  score: number; // points earned for the selected choice
+};
+
+/**
  * attempts
  * A submitted assessment. Login is NOT required:
  *  - logged-in users  -> user_id is set
@@ -129,6 +145,9 @@ export const attempts = pgTable('attempts', {
   userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
   guestEmail: varchar('guest_email', { length: 255 }),
   totalScore: integer('total_score').notNull().default(0),
+  // Additive (v3): per-question evaluation snapshot. Null for attempts created
+  // before this feature — those fall back to a score-only AI report.
+  answersSnapshot: jsonb('answers_snapshot').$type<AnswerSnapshotItem[]>(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 

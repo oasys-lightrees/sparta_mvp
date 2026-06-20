@@ -1,0 +1,1 @@
+ALTER TABLE "attempts" ADD COLUMN "answers_snapshot" jsonb;
