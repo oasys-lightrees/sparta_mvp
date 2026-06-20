@@ -7,7 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { AssessmentImage } from '@/components/assessment/AssessmentImage';
+import { cn } from '@/lib/utils';
 import type { ResultCategories } from '@/types';
+
+type AssessmentMode = 'SKILL' | 'PERSONALITY';
 
 export type AssessmentPayload = {
   title: string;
@@ -99,7 +102,24 @@ export function AssessmentForm({
     }
     return [];
   });
+  // Mode is derived from whether the assessment has result categories. UI-only
+  // state: it decides which fields are shown, not the data shape.
+  const [mode, setMode] = useState<AssessmentMode>(() =>
+    initial?.result_categories &&
+    Object.keys(initial.result_categories).length > 0
+      ? 'PERSONALITY'
+      : 'SKILL',
+  );
+  const isPersonality = mode === 'PERSONALITY';
   const [localError, setLocalError] = useState('');
+
+  const selectMode = (next: AssessmentMode) => {
+    setMode(next);
+    // Seed one empty category row so the editor is ready in personality mode.
+    if (next === 'PERSONALITY' && categories.length === 0) {
+      setCategories([{ code: '', name: '', knowledge: '' }]);
+    }
+  };
 
   const setCategory = (i: number, patch: Partial<CategoryRow>) =>
     setCategories((prev) =>
@@ -132,8 +152,9 @@ export function AssessmentForm({
       setLocalError('Title is required');
       return;
     }
-    const lowNum = toNum(low);
-    const highNum = toNum(high);
+    // Thresholds only apply to skill mode.
+    const lowNum = isPersonality ? null : toNum(low);
+    const highNum = isPersonality ? null : toNum(high);
     if (lowNum !== null && highNum !== null && lowNum > highNum) {
       setLocalError('Low score threshold must be <= high score threshold');
       return;
@@ -147,18 +168,59 @@ export function AssessmentForm({
       high_score_threshold: highNum,
       free_report_text: freeText.trim() === '' ? null : freeText,
       premium_token_cost: premiumCost.trim() === '' ? 0 : Number(premiumCost),
-      free_report_template: freeTemplate.trim() === '' ? null : freeTemplate,
+      // Score template is a skill-mode field.
+      free_report_template:
+        isPersonality || freeTemplate.trim() === '' ? null : freeTemplate,
       premium_report_description:
         premiumDesc.trim() === '' ? null : premiumDesc,
       email_template: emailTemplate.trim() === '' ? null : emailTemplate,
       base_knowledge: baseKnowledge.trim() === '' ? null : baseKnowledge,
       ai_enabled: aiEnabled,
-      result_categories: buildResultCategories(),
+      // Categories only apply to personality mode.
+      result_categories: isPersonality ? buildResultCategories() : null,
     });
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label>Assessment Type</Label>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {(
+            [
+              {
+                value: 'SKILL' as const,
+                title: 'Skill Assessment',
+                description:
+                  'Evaluate knowledge with correct answers and scoring.',
+              },
+              {
+                value: 'PERSONALITY' as const,
+                title: 'Personality Assessment',
+                description: 'Categorize users based on answer patterns.',
+              },
+            ]
+          ).map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => selectMode(opt.value)}
+              aria-pressed={mode === opt.value}
+              className={cn(
+                'rounded-md border p-3 text-left transition-colors',
+                mode === opt.value
+                  ? 'border-primary bg-accent/40 ring-1 ring-primary'
+                  : 'hover:bg-accent/30',
+              )}
+            >
+              <span className="block text-sm font-medium">{opt.title}</span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                {opt.description}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="space-y-2">
         <Label htmlFor="title">Title</Label>
         <Input
@@ -206,7 +268,8 @@ export function AssessmentForm({
           </p>
         )}
       </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Price + premium cost apply to BOTH modes (both use premium reports). */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="price">Price</Label>
           <Input
@@ -227,46 +290,63 @@ export function AssessmentForm({
             onChange={(e) => setPremiumCost(e.target.value)}
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="low">Low threshold</Label>
-          <Input
-            id="low"
-            type="number"
-            value={low}
-            onChange={(e) => setLow(e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="high">High threshold</Label>
-          <Input
-            id="high"
-            type="number"
-            value={high}
-            onChange={(e) => setHigh(e.target.value)}
-          />
-        </div>
       </div>
+
+      {/* Score thresholds — skill mode only. */}
+      {!isPersonality ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="low">Low threshold</Label>
+            <Input
+              id="low"
+              type="number"
+              value={low}
+              onChange={(e) => setLow(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="high">High threshold</Label>
+            <Input
+              id="high"
+              type="number"
+              value={high}
+              onChange={(e) => setHigh(e.target.value)}
+            />
+          </div>
+        </div>
+      ) : null}
+
       <div className="space-y-2">
-        <Label htmlFor="free_report_text">Free report text</Label>
+        <Label htmlFor="free_report_text">
+          {isPersonality ? 'Free result introduction' : 'Free report text'}
+        </Label>
         <Textarea
           id="free_report_text"
           value={freeText}
           onChange={(e) => setFreeText(e.target.value)}
-          placeholder="Intro shown above the score band (legacy fallback)"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="free_report_template">Free report template</Label>
-        <Textarea
-          id="free_report_template"
-          value={freeTemplate}
-          onChange={(e) => setFreeTemplate(e.target.value)}
-          className="min-h-[120px] font-mono text-xs"
           placeholder={
-            'Variables: {{assessment_title}}, {{score}}, {{category}}, {{summary}}'
+            isPersonality
+              ? 'Intro shown above the user’s result type'
+              : 'Intro shown above the score band (legacy fallback)'
           }
         />
       </div>
+
+      {/* Score-based free report template — skill mode only. */}
+      {!isPersonality ? (
+        <div className="space-y-2">
+          <Label htmlFor="free_report_template">Free score report template</Label>
+          <Textarea
+            id="free_report_template"
+            value={freeTemplate}
+            onChange={(e) => setFreeTemplate(e.target.value)}
+            className="min-h-[120px] font-mono text-xs"
+            placeholder={
+              'Variables: {{assessment_title}}, {{score}}, {{category}}, {{summary}}'
+            }
+          />
+        </div>
+      ) : null}
       <div className="space-y-2">
         <Label htmlFor="premium_report_description">
           Premium report description
@@ -313,23 +393,23 @@ export function AssessmentForm({
             </Button>
           </div>
         </div>
-        <Label htmlFor="base_knowledge">Base knowledge</Label>
+        <Label htmlFor="base_knowledge">Assessment Knowledge</Label>
         <Textarea
           id="base_knowledge"
           value={baseKnowledge}
           onChange={(e) => setBaseKnowledge(e.target.value)}
-          placeholder="e.g. High score means advanced leadership. Low score means needs communication improvement."
+          placeholder="Explain your framework, scoring logic, and how AI should interpret results."
         />
       </div>
 
+      {isPersonality ? (
       <div className="space-y-3 rounded-md border p-4">
         <div className="space-y-1">
-          <Label>Result categories (diagnostic / personality)</Label>
+          <Label>Personality Result Categories</Label>
           <p className="text-xs text-muted-foreground">
-            Optional. Define result types with a short code (e.g. PB, PO), a name
-            and knowledge. When set, results are based on each answer&apos;s
-            category mapping instead of a score. Leave empty for an exam-style
-            assessment.
+            Define result types with a short code (e.g. PB, PO), a name and
+            knowledge. Results are based on each answer&apos;s category mapping
+            (set per choice in the question editor) instead of a score.
           </p>
         </div>
         {categories.map((c, i) => (
@@ -369,6 +449,7 @@ export function AssessmentForm({
           + Add Category
         </Button>
       </div>
+      ) : null}
 
       <ErrorMessage message={localError || error || ''} />
 
