@@ -2,12 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { blogApi } from '@/services/blog.api';
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { BlogCard } from '@/components/blog/BlogCard';
 import type { BlogSummary } from '@/types';
 
 export function BlogSection() {
@@ -42,16 +37,7 @@ export function BlogSection() {
         </div>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((b) => (
-            <Card key={b.id} className="transition-shadow hover:shadow-md">
-              <CardHeader>
-                <CardTitle className="text-lg">{b.title}</CardTitle>
-                {b.excerpt ? (
-                  <CardDescription className="line-clamp-3">
-                    {b.excerpt}
-                  </CardDescription>
-                ) : null}
-              </CardHeader>
-            </Card>
+            <BlogCard key={b.id} blog={b} />
           ))}
         </div>
       </div>
