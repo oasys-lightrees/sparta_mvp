@@ -4,6 +4,7 @@ import './globals.css';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import { LanguageProvider } from '@/lib/i18n/LanguageProvider';
 import { Navbar } from '@/components/common/Navbar';
+import { ShieldMark } from '@/components/brand/ShieldMark';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 // Spartan "academy" display voice for headings, hero, stats, report ranks.
@@ -35,12 +36,12 @@ export default function RootLayout({
             <footer className="border-t bg-muted/30">
               <div className="container flex flex-col items-center justify-between gap-3 py-6 text-sm text-muted-foreground sm:flex-row">
                 <div className="flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
-                    S
+                  <ShieldMark className="h-5 w-5 text-primary" />
+                  <span className="font-display font-semibold tracking-[0.18em] text-foreground">
+                    SPARTA
                   </span>
-                  <span className="font-medium text-foreground">SPARTA</span>
                   <span className="hidden sm:inline">
-                    · AI-Powered Assessment Platform
+                    · The Growth Academy
                   </span>
                 </div>
                 <span>© {new Date().getFullYear()} SPARTA</span>

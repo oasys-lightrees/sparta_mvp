@@ -6,9 +6,12 @@ import { AssessmentCard } from '@/components/assessment/AssessmentCard';
 import { Loading } from '@/components/common/Loading';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
+import { ShieldMark } from '@/components/brand/ShieldMark';
+import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import type { AssessmentSummary } from '@/types';
 
 export function PublishedAssessments() {
+  const { t } = useLanguage();
   const [items, setItems] = useState<AssessmentSummary[] | null>(null);
   const [error, setError] = useState('');
 
@@ -32,13 +35,17 @@ export function PublishedAssessments() {
 
   return (
     <section className="container py-16">
-      <div className="mb-8 space-y-1">
-        <h2 className="text-3xl font-bold tracking-tight">
-          Available Assessments
-        </h2>
-        <p className="text-muted-foreground">
-          Pick a test and start right away — no sign-up needed to take it.
-        </p>
+      <div className="mb-8 flex items-center gap-2.5">
+        <ShieldMark className="h-6 w-6 text-bronze" withGlyph={false} />
+        <div className="space-y-1">
+          <h2 className="text-3xl font-bold tracking-tight">
+            {t('assessment.availableTitle')}
+          </h2>
+          <p className="text-muted-foreground">
+            Accept a challenge and start right away — no sign-up needed to take
+            it.
+          </p>
+        </div>
       </div>
       {error ? (
         <ErrorMessage message={error} />

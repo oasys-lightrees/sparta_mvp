@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { roleHome } from '@/lib/roles';
 import { Button } from '@/components/ui/button';
+import { ShieldMark } from '@/components/brand/ShieldMark';
 import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import { cn } from '@/lib/utils';
 
@@ -46,10 +47,10 @@ export function Navbar() {
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground">
-            S
+          <ShieldMark className="h-7 w-7 text-primary" />
+          <span className="font-display text-lg font-bold tracking-[0.18em]">
+            SPARTA
           </span>
-          <span className="text-lg font-semibold tracking-tight">SPARTA</span>
         </Link>
         <nav className="flex items-center gap-2">
           <LanguageSwitcher />

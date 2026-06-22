@@ -28,6 +28,11 @@
     --bronze: 30 48% 48%;
     --bronze-foreground: 40 33% 98%;
 
+    /* Crimson — courage / action. Used ONLY for small highlights, badges and
+       key moments — never as a background. */
+    --crimson: 350 60% 42%;
+    --crimson-foreground: 40 33% 98%;
+
     /* Disciplined growth green */
     --success: 150 42% 34%;
     --success-foreground: 40 33% 98%;

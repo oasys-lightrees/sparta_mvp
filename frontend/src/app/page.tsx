@@ -23,6 +23,8 @@ import {
 } from '@/components/ui/card';
 import { PublishedAssessments } from '@/components/assessment/PublishedAssessments';
 import { BlogSection } from '@/components/blog/BlogSection';
+import { ShieldMark } from '@/components/brand/ShieldMark';
+import { StrengthBar } from '@/components/brand/StrengthBar';
 
 const FEATURES = [
   {
@@ -109,30 +111,76 @@ export default function HomePage() {
           aria-hidden
           className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(60%_60%_at_50%_0%,hsl(var(--primary)/0.12),transparent)]"
         />
-        <div className="container relative flex flex-col items-center gap-6 py-24 text-center md:py-32">
-          <Badge variant="secondary" className="gap-1.5 px-3 py-1">
-            <Sparkles className="h-3.5 w-3.5" />
-            {t('landing.badge')}
-          </Badge>
-          <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-            {t('landing.heroTitlePrefix')}{' '}
-            <span className="text-primary">
-              {t('landing.heroTitleHighlight')}
-            </span>
-          </h1>
-          <p className="max-w-xl text-lg text-muted-foreground">
-            {t('landing.heroSubtitle')}
-          </p>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Button asChild variant="bronze" size="lg">
-              <Link href="/register">
-                {t('landing.ctaCreate')}
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link href="#how">{t('landing.ctaDemo')}</Link>
-            </Button>
+        <div className="container relative grid items-center gap-12 py-20 md:py-28 lg:grid-cols-2">
+          {/* Message */}
+          <div className="space-y-6 text-center lg:text-left">
+            <div className="flex items-center justify-center gap-2 lg:justify-start">
+              <ShieldMark className="h-6 w-6 text-primary" />
+              <span className="font-display text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                {t('landing.badge')}
+              </span>
+            </div>
+            <h1 className="text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl md:text-6xl">
+              {t('landing.heroTitlePrefix')}{' '}
+              <span className="text-bronze">
+                {t('landing.heroTitleHighlight')}
+              </span>
+            </h1>
+            <p className="mx-auto max-w-xl text-lg text-muted-foreground lg:mx-0">
+              {t('landing.heroSubtitle')}
+            </p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
+              <Button asChild variant="bronze" size="lg">
+                <Link href="/register">
+                  {t('landing.ctaCreate')}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link href="#how">{t('landing.ctaDemo')}</Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* AI Growth Blueprint preview — "this platform builds my profile" */}
+          <div className="relative mx-auto w-full max-w-md">
+            <div className="absolute -inset-3 -z-10 rounded-3xl bg-primary/5 blur-xl" />
+            <div className="overflow-hidden rounded-2xl border bg-card shadow-lg shadow-primary/10">
+              <div className="flex items-center justify-between bg-primary px-5 py-4 text-primary-foreground">
+                <div className="flex items-center gap-2">
+                  <ShieldMark className="h-5 w-5 text-primary-foreground" />
+                  <span className="font-display text-sm font-semibold tracking-wide">
+                    {t('landing.blueprintTitle')}
+                  </span>
+                </div>
+                <Sparkles className="h-4 w-4 text-bronze" />
+              </div>
+              <div className="space-y-5 p-6">
+                <StrengthBar
+                  label={t('landing.metricStrength')}
+                  value={85}
+                  accent="primary"
+                />
+                <StrengthBar
+                  label={t('landing.metricDiscipline')}
+                  value={72}
+                  accent="bronze"
+                />
+                <StrengthBar
+                  label={t('landing.metricPotential')}
+                  value={91}
+                  accent="success"
+                />
+                <div className="flex items-center justify-between border-t pt-4">
+                  <span className="text-sm text-muted-foreground">
+                    {t('report.totalScore')}
+                  </span>
+                  <span className="tnum font-display text-2xl font-bold text-primary">
+                    83
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -353,16 +401,17 @@ export default function HomePage() {
 
       <BlogSection />
 
-      {/* Final CTA */}
+      {/* Final CTA — the courage/action moment (crimson) */}
       <section className="border-t bg-primary text-primary-foreground">
         <div className="container flex flex-col items-center gap-5 py-20 text-center">
+          <ShieldMark className="h-10 w-10 text-bronze" />
           <h2 className="max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
             {t('landing.finalCtaTitle')}
           </h2>
           <p className="max-w-lg text-primary-foreground/80">
             {t('landing.finalCtaSubtitle')}
           </p>
-          <Button asChild size="lg" variant="secondary">
+          <Button asChild size="lg" variant="crimson">
             <Link href="/register">
               {t('landing.getStarted')}
               <ArrowRight className="h-4 w-4" />

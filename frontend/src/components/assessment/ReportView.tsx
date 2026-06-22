@@ -1,9 +1,9 @@
 'use client';
 
-import { Award, Sparkles } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { ShieldMark } from '@/components/brand/ShieldMark';
 import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import type { TranslationKey } from '@/lib/i18n';
 import type { AttemptReport } from '@/types';
@@ -25,37 +25,41 @@ export function ReportView({ data }: { data: AttemptReport }) {
 
   return (
     <Card className="overflow-hidden">
-      {/* Score hero — your earned rank */}
+      {/* Blueprint hero — a personal training scroll, not an exam result */}
       <div className="relative bg-gradient-to-br from-primary to-[hsl(222,47%,16%)] px-6 py-8 text-primary-foreground">
-        <div className="flex items-center justify-between">
-          <Badge
-            variant="secondary"
-            className="bg-white/15 text-primary-foreground hover:bg-white/15"
-          >
-            {data.report.type} {t('report.reportType')}
-          </Badge>
-          <Award className="h-5 w-5 opacity-80" />
+        <div className="flex items-center gap-2 text-bronze">
+          <ShieldMark className="h-5 w-5" withGlyph={false} />
+          <span className="font-display text-xs font-semibold uppercase tracking-[0.22em]">
+            {data.report.type === 'PREMIUM'
+              ? t('report.premiumReport')
+              : t('report.blueprintEyebrow')}
+          </span>
         </div>
-        <div className="mt-4 flex items-end justify-between gap-4">
+        <p className="mt-3 text-sm text-primary-foreground/70">
+          {data.assessment_title ?? t('report.yourResult')}
+        </p>
+        <div className="mt-2 flex items-end justify-between gap-4">
           <div>
-            <p className="text-sm text-primary-foreground/70">
-              {data.assessment_title ?? t('report.yourResult')}
-            </p>
-            <p className="tnum mt-1 font-display text-6xl font-bold leading-none tracking-tight">
+            <p className="tnum font-display text-6xl font-bold leading-none tracking-tight">
               {data.score}
             </p>
             <p className="mt-1 text-sm text-primary-foreground/70">
               {t('report.totalScore')}
             </p>
           </div>
-          <span
-            className={cn(
-              'rounded-full px-4 py-1.5 text-sm font-semibold',
-              levelClass,
-            )}
-          >
-            {levelLabel}
-          </span>
+          <div className="text-right">
+            <p className="text-xs uppercase tracking-[0.18em] text-primary-foreground/60">
+              {t('report.rank')}
+            </p>
+            <span
+              className={cn(
+                'mt-1 inline-block rounded-full px-4 py-1.5 text-sm font-semibold',
+                levelClass,
+              )}
+            >
+              {levelLabel}
+            </span>
+          </div>
         </div>
       </div>
 
