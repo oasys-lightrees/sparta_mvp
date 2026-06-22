@@ -9,6 +9,7 @@ import {
   users,
   type AnswerSnapshotItem,
   type CategoryResult,
+  type Language,
   type ResultCategories,
 } from '../db/schema';
 import { HttpError } from '../utils/http-error';
@@ -29,6 +30,7 @@ export type SubmitInput = {
   userId: string | null;
   guestEmail: string | null;
   answers: SubmitAnswer[];
+  language: Language;
 };
 
 type AssessmentForReport = {
@@ -50,7 +52,9 @@ type AssessmentForReport = {
 const generateCategoryFreeReport = (
   assessment: AssessmentForReport,
   result: CategoryResult,
+  language: Language,
 ): { content: string; category: string; summary: string } => {
+  // Category NAMES are mentor-authored content — never translated.
   const category = result.dominantName;
   const summary = result.categories[result.dominant]?.knowledge ?? '';
 
@@ -76,10 +80,11 @@ const generateCategoryFreeReport = (
     };
   }
 
+  const t = STRINGS[language];
   const content = [
-    `Your result: ${category}`,
+    `${t.yourResult}: ${category}`,
     summary,
-    `Your pattern:\n${lines.join('\n')}`,
+    `${t.yourPattern}:\n${lines.join('\n')}`,
   ]
     .filter(Boolean)
     .join('\n\n');
@@ -87,21 +92,70 @@ const generateCategoryFreeReport = (
 };
 
 type ReportBand = 'LOW' | 'MEDIUM' | 'HIGH';
-const BAND_LABEL: Record<ReportBand, string> = {
-  LOW: 'Needs improvement',
-  MEDIUM: 'Average',
-  HIGH: 'Strong',
-};
 
-const CATEGORY: Record<ReportBand, string> = {
-  LOW: 'Beginner',
-  MEDIUM: 'Intermediate',
-  HIGH: 'Advanced',
+// Built-in (system-generated) report wording, per language. Mentor-authored
+// templates/content are NOT translated here — only the canned fallback text.
+const BAND_LABEL: Record<Language, Record<ReportBand, string>> = {
+  en: { LOW: 'Needs improvement', MEDIUM: 'Average', HIGH: 'Strong' },
+  id: { LOW: 'Perlu peningkatan', MEDIUM: 'Rata-rata', HIGH: 'Kuat' },
 };
-const SUMMARY: Record<ReportBand, string> = {
-  LOW: 'You are getting started — focus on building the fundamentals.',
-  MEDIUM: 'You have a solid foundation with clear room to grow.',
-  HIGH: 'You show strong proficiency in this area.',
+const CATEGORY: Record<Language, Record<ReportBand, string>> = {
+  en: { LOW: 'Beginner', MEDIUM: 'Intermediate', HIGH: 'Advanced' },
+  id: { LOW: 'Pemula', MEDIUM: 'Menengah', HIGH: 'Mahir' },
+};
+const SUMMARY: Record<Language, Record<ReportBand, string>> = {
+  en: {
+    LOW: 'You are getting started — focus on building the fundamentals.',
+    MEDIUM: 'You have a solid foundation with clear room to grow.',
+    HIGH: 'You show strong proficiency in this area.',
+  },
+  id: {
+    LOW: 'Anda baru memulai — fokuslah membangun dasar-dasarnya.',
+    MEDIUM: 'Anda memiliki fondasi yang kuat dengan ruang untuk berkembang.',
+    HIGH: 'Anda menunjukkan kemahiran yang kuat di bidang ini.',
+  },
+};
+const STRINGS: Record<
+  Language,
+  {
+    completedCategory: string;
+    completedSummary: string;
+    youScored: (s: number) => string;
+    yourResult: string;
+    yourPattern: string;
+    defaultUpsell: string;
+    thankYou: (title: string) => string;
+    yourResultLabel: string;
+    premiumLabel: string;
+    emailSubject: string;
+  }
+> = {
+  en: {
+    completedCategory: 'Completed',
+    completedSummary: 'Thanks for completing the assessment.',
+    youScored: (s) => `You scored ${s}.`,
+    yourResult: 'Your result',
+    yourPattern: 'Your pattern',
+    defaultUpsell:
+      'Unlock the premium report for a deeper, personalized analysis.',
+    thankYou: (title) => `Thank you for completing "${title}".`,
+    yourResultLabel: 'Your result',
+    premiumLabel: 'Premium report',
+    emailSubject: 'Your SPARTA Assessment Result',
+  },
+  id: {
+    completedCategory: 'Selesai',
+    completedSummary: 'Terima kasih telah menyelesaikan asesmen ini.',
+    youScored: (s) => `Skor Anda ${s}.`,
+    yourResult: 'Hasil asesmen Anda',
+    yourPattern: 'Pola jawaban Anda',
+    defaultUpsell:
+      'Buka laporan premium untuk analisis yang lebih mendalam dan personal.',
+    thankYou: (title) => `Terima kasih telah menyelesaikan "${title}".`,
+    yourResultLabel: 'Hasil Anda',
+    premiumLabel: 'Laporan premium',
+    emailSubject: 'Hasil Asesmen SPARTA Anda',
+  },
 };
 
 const bandFor = (
@@ -139,14 +193,17 @@ const renderTemplate = (
 const generateFreeReport = (
   assessment: AssessmentForReport,
   score: number,
+  language: Language,
 ): { content: string; category: string; summary: string } => {
   const band = bandFor(
     score,
     assessment.lowScoreThreshold,
     assessment.highScoreThreshold,
   );
-  const category = band ? CATEGORY[band] : 'Completed';
-  const summary = band ? SUMMARY[band] : 'Thanks for completing the assessment.';
+  const category = band ? CATEGORY[language][band] : STRINGS[language].completedCategory;
+  const summary = band
+    ? SUMMARY[language][band]
+    : STRINGS[language].completedSummary;
 
   if (assessment.freeReportTemplate) {
     return {
@@ -161,11 +218,12 @@ const generateFreeReport = (
     };
   }
 
-  // Legacy fallback (unchanged behaviour).
+  // Legacy fallback (mentor free_report_text is left as-authored; only the
+  // built-in band label + score line are localized).
   const parts: string[] = [];
   if (assessment.freeReportText) parts.push(assessment.freeReportText);
-  if (band) parts.push(BAND_LABEL[band]);
-  if (parts.length === 0) parts.push(`You scored ${score}.`);
+  if (band) parts.push(BAND_LABEL[language][band]);
+  if (parts.length === 0) parts.push(STRINGS[language].youScored(score));
   return { content: parts.join('\n\n'), category, summary };
 };
 
@@ -175,6 +233,7 @@ const buildEmailBody = (
   category: string,
   summary: string,
   freeReport: string,
+  language: Language,
 ): string => {
   if (assessment.emailTemplate) {
     return renderTemplate(assessment.emailTemplate, {
@@ -185,13 +244,12 @@ const buildEmailBody = (
       free_report: freeReport,
     });
   }
-  const upsell =
-    assessment.premiumReportDescription ??
-    'Unlock the premium report for a deeper, personalized analysis.';
+  const t = STRINGS[language];
+  const upsell = assessment.premiumReportDescription ?? t.defaultUpsell;
   return [
-    `Thank you for completing "${assessment.title}".`,
-    `Your result:\n${freeReport}`,
-    `Premium report:\n${upsell}`,
+    t.thankYou(assessment.title),
+    `${t.yourResultLabel}:\n${freeReport}`,
+    `${t.premiumLabel}:\n${upsell}`,
   ].join('\n\n');
 };
 
@@ -341,6 +399,7 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
     ({ content, category, summary } = generateCategoryFreeReport(
       assessment,
       categoryResult,
+      input.language,
     ));
   } else if (categoryMode && resultCategories) {
     // Legacy A/B/C/D position-counting category mode (unchanged).
@@ -355,9 +414,14 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
     ({ content, category, summary } = generateCategoryFreeReport(
       assessment,
       categoryResult,
+      input.language,
     ));
   } else {
-    ({ content, category, summary } = generateFreeReport(assessment, score));
+    ({ content, category, summary } = generateFreeReport(
+      assessment,
+      score,
+      input.language,
+    ));
   }
 
   const result = await db.transaction(async (tx) => {
@@ -370,6 +434,7 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
         totalScore: score,
         answersSnapshot: snapshot,
         categoryResult,
+        reportLanguage: input.language,
       })
       .returning({ id: attempts.id });
 
@@ -397,8 +462,15 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
     if (!recipient) return;
     await sendEmail({
       to: recipient,
-      subject: 'Your SPARTA Assessment Result',
-      body: buildEmailBody(assessment, score, category, summary, content),
+      subject: STRINGS[input.language].emailSubject,
+      body: buildEmailBody(
+        assessment,
+        score,
+        category,
+        summary,
+        content,
+        input.language,
+      ),
     });
   })().catch((err) => console.error('[email] post-submit send error:', err));
 

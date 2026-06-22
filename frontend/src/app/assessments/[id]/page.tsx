@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { assessmentApi } from '@/services/assessment.api';
 import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import { setPendingAttempt } from '@/lib/storage';
 import { QuestionStep } from '@/components/assessment/QuestionStep';
 import { Loading } from '@/components/common/Loading';
@@ -20,6 +21,7 @@ export default function TakeAssessmentPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
+  const { lang } = useLanguage();
 
   const [assessment, setAssessment] = useState<AssessmentDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -99,6 +101,7 @@ export default function TakeAssessmentPage() {
           question_id: q.id,
           choice_id: answers[q.id],
         })),
+        language: lang,
       });
       setPendingAttempt(attempt_id);
       // Logged in -> straight to report (claim happens there). Otherwise the

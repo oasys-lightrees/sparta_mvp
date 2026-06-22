@@ -34,8 +34,10 @@ export const assessmentApi = {
   getPublic: (id: string) =>
     apiClient.get<AssessmentDetail>(`/api/assessments/${id}`),
 
-  submit: (id: string, input: { guest_email?: string; answers: Answer[] }) =>
-    apiClient.post<SubmitResult>(`/api/assessments/${id}/submit`, input),
+  submit: (
+    id: string,
+    input: { guest_email?: string; answers: Answer[]; language?: 'en' | 'id' },
+  ) => apiClient.post<SubmitResult>(`/api/assessments/${id}/submit`, input),
 
   // Mentor (owner)
   create: (input: AssessmentConfig & { title: string }) =>

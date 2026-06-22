@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { attemptApi } from '@/services/attempt.api';
 import { assessmentApi } from '@/services/assessment.api';
 import { tokenApi } from '@/services/token.api';
+import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import { AssessmentCard } from '@/components/assessment/AssessmentCard';
 import { Loading } from '@/components/common/Loading';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -56,6 +57,7 @@ function StatCard({
 
 function DashboardHome() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [attempts, setAttempts] = useState<MyAttempt[] | null>(null);
   const [attemptsError, setAttemptsError] = useState('');
   const [explore, setExplore] = useState<AssessmentSummary[] | null>(null);
@@ -150,11 +152,10 @@ function DashboardHome() {
     <div className="container space-y-10 py-10">
       <div className="space-y-1">
         <h1 className="text-3xl font-bold tracking-tight">
-          Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''}
+          {t('dashboard.welcome')}
+          {user?.email ? `, ${user.email.split('@')[0]}` : ''}
         </h1>
-        <p className="text-muted-foreground">
-          Here&apos;s an overview of your assessments and reports.
-        </p>
+        <p className="text-muted-foreground">{t('dashboard.overview')}</p>
       </div>
 
       {/* Wallet + statistics */}
@@ -162,7 +163,7 @@ function DashboardHome() {
         <Card className="border-primary/30 bg-accent/40">
           <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-accent-foreground">
-              Token Balance
+              {t('dashboard.tokenBalance')}
             </CardTitle>
             <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
               <Coins className="h-4 w-4" />
@@ -173,17 +174,17 @@ function DashboardHome() {
               {balance === null ? '—' : `${balance} Tokens`}
             </p>
             <Button size="sm" onClick={topUp} disabled={busy === 'topup'}>
-              {busy === 'topup' ? 'Topping up…' : 'Top Up Tokens'}
+              {busy === 'topup' ? t('dashboard.toppingUp') : t('dashboard.topUp')}
             </Button>
           </CardContent>
         </Card>
         <StatCard
-          label="Assessments taken"
+          label={t('dashboard.assessmentsTaken')}
           value={attempts === null ? '—' : total}
           icon={ClipboardList}
         />
         <StatCard
-          label="Reports available"
+          label={t('dashboard.reportsAvailable')}
           value={attempts === null ? '—' : reportsAvailable}
           icon={FileText}
         />
@@ -191,7 +192,9 @@ function DashboardHome() {
 
       {/* My Assessments */}
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold tracking-tight">My Assessments</h2>
+        <h2 className="text-xl font-semibold tracking-tight">
+          {t('dashboard.myAssessments')}
+        </h2>
         <ErrorMessage message={actionError} />
         {actionNotice ? (
           <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
@@ -213,11 +216,13 @@ function DashboardHome() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Assessment</TableHead>
-                    <TableHead>Score</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Premium</TableHead>
-                    <TableHead className="text-right">Report</TableHead>
+                    <TableHead>{t('dashboard.colAssessment')}</TableHead>
+                    <TableHead>{t('dashboard.colScore')}</TableHead>
+                    <TableHead>{t('dashboard.colDate')}</TableHead>
+                    <TableHead>{t('dashboard.colPremium')}</TableHead>
+                    <TableHead className="text-right">
+                      {t('dashboard.colReport')}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -232,7 +237,9 @@ function DashboardHome() {
                       </TableCell>
                       <TableCell>
                         {a.premium_unlocked ? (
-                          <Badge variant="secondary">✓ Unlocked</Badge>
+                          <Badge variant="secondary">
+                            {t('dashboard.unlocked')}
+                          </Badge>
                         ) : a.premium_token_cost > 0 && a.report_id ? (
                           <Button
                             size="sm"
@@ -249,7 +256,7 @@ function DashboardHome() {
                       <TableCell className="text-right">
                         <Button asChild size="sm" variant="outline">
                           <Link href={`/reports/${a.attempt_id}`}>
-                            View Report
+                            {t('dashboard.viewReport')}
                           </Link>
                         </Button>
                       </TableCell>
@@ -265,7 +272,7 @@ function DashboardHome() {
       {/* Explore Assessments */}
       <section className="space-y-4">
         <h2 className="text-xl font-semibold tracking-tight">
-          Explore Assessments
+          {t('dashboard.exploreAssessments')}
         </h2>
         {exploreError ? (
           <ErrorMessage message={exploreError} />

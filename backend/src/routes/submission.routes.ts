@@ -85,6 +85,9 @@ submission.post('/:id/submit', async (c) => {
   try {
     const userId = await getOptionalUserId(c);
 
+    // Optional report language (defaults to English).
+    const language = body.language === 'id' ? 'id' : 'en';
+
     const { attemptId } = await submissionService.submit(id, {
       userId,
       // Authenticated users are recorded by user_id; guest_email is ignored.
@@ -93,6 +96,7 @@ submission.post('/:id/submit', async (c) => {
         question_id: a.question_id,
         choice_id: a.choice_id,
       })),
+      language,
     });
 
     // The report is stored but gated: the user must authenticate (and claim a

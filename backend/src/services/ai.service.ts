@@ -1,5 +1,20 @@
 import 'dotenv/config';
 import { HttpError } from '../utils/http-error';
+import type { Language } from '../db/schema';
+
+/**
+ * Language instruction appended to report system prompts. Translates UI/system
+ * wording (section titles, explanations, recommendations) but preserves
+ * category names / proper nouns and unavoidable technical terms.
+ */
+const languageInstruction = (language: Language): string =>
+  language === 'id'
+    ? 'Write the ENTIRE report in professional Bahasa Indonesia. Translate the ' +
+      'section titles, explanations and recommendations into Indonesian (e.g. ' +
+      '"Strengths" -> "Kekuatan", "Weaknesses" -> "Kelemahan"). Do NOT translate ' +
+      'category names or proper nouns (e.g. keep "Power Builder" as-is), and keep ' +
+      'widely-used technical terms in English when translating would be unnatural.'
+    : 'Write the entire report in clear, professional English.';
 
 /**
  * The ONLY place that talks to OpenAI. Backend-only — the API key is never
@@ -212,10 +227,12 @@ const generateCategoryReport = async (ctx: {
   baseKnowledge: string | null;
   freeReport: string;
   category: CategoryReportContext;
+  language: Language;
 }): Promise<string> => {
   const system = [
     'You are a seasoned mentor writing a personalized diagnostic report.',
-    `Write EXACTLY these markdown sections, in order: ${CATEGORY_SECTIONS}.`,
+    `Write the markdown sections in this order: ${CATEGORY_SECTIONS} (translate ` +
+      'the section titles to the requested language).',
     'Write in a warm, professional, second-person voice.',
     'This is a personality/diagnostic assessment, NOT an exam. The taker has a ' +
       'result TYPE based on their answer pattern. NEVER mention correct, wrong, ' +
@@ -223,6 +240,7 @@ const generateCategoryReport = async (ctx: {
     'Describe what their dominant result type means, where they naturally excel, ' +
       'their blind spots, and how to grow — grounded in the category knowledge ' +
       'and the assessment guidance.',
+    languageInstruction(ctx.language),
   ].join(' ');
 
   const patternBlock = ctx.category.distribution
@@ -266,7 +284,10 @@ export const generatePremiumReport = async (ctx: {
   questions: string[];
   answers?: AnswerEvidence[] | null;
   categoryContext?: CategoryReportContext | null;
+  language?: Language;
 }): Promise<string> => {
+  const language: Language = ctx.language ?? 'en';
+
   // Category engine takes precedence when configured.
   if (ctx.categoryContext) {
     return generateCategoryReport({
@@ -274,6 +295,7 @@ export const generatePremiumReport = async (ctx: {
       baseKnowledge: ctx.baseKnowledge,
       freeReport: ctx.freeReport,
       category: ctx.categoryContext,
+      language,
     });
   }
 
@@ -281,7 +303,8 @@ export const generatePremiumReport = async (ctx: {
 
   const system = [
     'You are a seasoned mentor writing a personalized premium assessment report.',
-    `Write EXACTLY these markdown sections, in order: ${REPORT_SECTIONS}.`,
+    `Write the markdown sections in this order: ${REPORT_SECTIONS} (translate ` +
+      'the section titles to the requested language).',
     'Write in a warm, professional, second-person voice ("your responses show…").',
     hasEvidence
       ? 'Ground every claim in the evidence below: cite specific questions, ' +
@@ -292,6 +315,7 @@ export const generatePremiumReport = async (ctx: {
       : 'Base your analysis on the score and assessment context provided.',
     'Do NOT just restate the numeric score (avoid "you scored X"); describe ' +
       'what the responses reveal about ability and where to improve.',
+    languageInstruction(language),
   ].join(' ');
 
   const evidenceBlock = hasEvidence

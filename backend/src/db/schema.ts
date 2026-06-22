@@ -98,6 +98,9 @@ export const assessments = pgTable('assessments', {
 export type ResultCategory = { name: string; knowledge: string };
 export type ResultCategories = Record<string, ResultCategory>;
 
+// Supported report/UI languages (i18n).
+export type Language = 'en' | 'id';
+
 /**
  * questions
  * Multiple-choice questions belonging to an assessment.
@@ -185,6 +188,9 @@ export const attempts = pgTable('attempts', {
   answersSnapshot: jsonb('answers_snapshot').$type<AnswerSnapshotItem[]>(),
   // Additive (v3): category-engine result. Null for exam-style attempts.
   categoryResult: jsonb('category_result').$type<CategoryResult>(),
+  // Additive (i18n): language the free + premium reports are generated in, so
+  // an attempt's reports stay consistent. Legacy rows default to 'en'.
+  reportLanguage: text('report_language').notNull().default('en'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
