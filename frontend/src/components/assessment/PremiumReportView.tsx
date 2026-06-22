@@ -15,7 +15,7 @@ const SECTION_META: { match: RegExp; icon: LucideIcon; accent: string }[] = [
   { match: /strength/i, icon: CheckCircle2, accent: 'text-emerald-600' },
   { match: /weakness|gap/i, icon: TriangleAlert, accent: 'text-amber-600' },
   { match: /recommend/i, icon: ListChecks, accent: 'text-sky-600' },
-  { match: /roadmap|plan/i, icon: Map, accent: 'text-violet-600' },
+  { match: /roadmap|plan/i, icon: Map, accent: 'text-bronze' },
 ];
 
 const metaFor = (heading: string) =>
@@ -96,14 +96,16 @@ export function PremiumReportView({ content }: { content: string }) {
         }
         const { icon: Icon, accent } = metaFor(section.heading);
         return (
-          <div key={i} className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Icon className={`h-4 w-4 ${accent}`} />
-              <h3 className="font-semibold tracking-tight">
+          <div key={i} className="space-y-3">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-accent">
+                <Icon className={`h-4 w-4 ${accent}`} />
+              </span>
+              <h3 className="font-display text-base font-semibold tracking-tight">
                 {section.heading}
               </h3>
             </div>
-            <div className="border-l-2 border-muted pl-4">
+            <div className="border-l-2 border-bronze/30 pl-4 leading-relaxed">
               <SectionBody lines={section.lines} />
             </div>
           </div>

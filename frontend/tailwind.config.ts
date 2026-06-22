@@ -17,6 +17,13 @@ const config: Config = {
           'system-ui',
           'sans-serif',
         ],
+        display: [
+          'var(--font-display)',
+          'var(--font-sans)',
+          'ui-sans-serif',
+          'system-ui',
+          'sans-serif',
+        ],
       },
       colors: {
         border: 'hsl(var(--border))',
@@ -43,6 +50,18 @@ const config: Config = {
         accent: {
           DEFAULT: 'hsl(var(--accent))',
           foreground: 'hsl(var(--accent-foreground))',
+        },
+        bronze: {
+          DEFAULT: 'hsl(var(--bronze))',
+          foreground: 'hsl(var(--bronze-foreground))',
+        },
+        success: {
+          DEFAULT: 'hsl(var(--success))',
+          foreground: 'hsl(var(--success-foreground))',
+        },
+        warning: {
+          DEFAULT: 'hsl(var(--warning))',
+          foreground: 'hsl(var(--warning-foreground))',
         },
         card: {
           DEFAULT: 'hsl(var(--card))',

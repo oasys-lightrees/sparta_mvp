@@ -129,7 +129,12 @@ function ReportContent({ attemptId }: { attemptId: string }) {
               </p>
             ) : null}
             <ErrorMessage message={premiumError} />
-            <Button onClick={unlock} disabled={unlocking} size="lg">
+            <Button
+              onClick={unlock}
+              disabled={unlocking}
+              size="lg"
+              variant="bronze"
+            >
               {unlocking ? (
                 t('report.unlocking')
               ) : (

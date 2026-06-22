@@ -42,7 +42,9 @@ function StatCard({
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <p className="text-3xl font-bold tracking-tight">{value}</p>
+        <p className="tnum font-display text-3xl font-bold tracking-tight">
+          {value}
+        </p>
       </CardContent>
     </Card>
   );
@@ -132,7 +134,9 @@ function MentorHome() {
           </p>
         </div>
         {!showCreate ? (
-          <Button onClick={() => setShowCreate(true)}>Create assessment</Button>
+          <Button variant="bronze" onClick={() => setShowCreate(true)}>
+            Create assessment
+          </Button>
         ) : null}
       </div>
 
@@ -188,7 +192,7 @@ function MentorHome() {
             description="Build a test, generate questions with AI, and start collecting responses and revenue."
             action={
               !showCreate ? (
-                <Button onClick={() => setShowCreate(true)}>
+                <Button variant="bronze" onClick={() => setShowCreate(true)}>
                   Create assessment
                 </Button>
               ) : undefined

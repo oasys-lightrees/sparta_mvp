@@ -315,6 +315,7 @@ export function QuestionEditor({
             <div className="flex gap-2">
               <Button
                 size="sm"
+                variant="bronze"
                 onClick={generatePreview}
                 disabled={aiBusy || rawText.trim() === ''}
               >

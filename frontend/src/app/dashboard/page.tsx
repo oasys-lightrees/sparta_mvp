@@ -49,7 +49,9 @@ function StatCard({
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <p className="text-3xl font-bold tracking-tight">{value}</p>
+        <p className="tnum font-display text-3xl font-bold tracking-tight">
+          {value}
+        </p>
       </CardContent>
     </Card>
   );
@@ -170,10 +172,15 @@ function DashboardHome() {
             </span>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-3xl font-bold tracking-tight text-primary">
+            <p className="tnum font-display text-3xl font-bold tracking-tight text-primary">
               {balance === null ? '—' : `${balance} Tokens`}
             </p>
-            <Button size="sm" onClick={topUp} disabled={busy === 'topup'}>
+            <Button
+              size="sm"
+              variant="bronze"
+              onClick={topUp}
+              disabled={busy === 'topup'}
+            >
               {busy === 'topup' ? t('dashboard.toppingUp') : t('dashboard.topUp')}
             </Button>
           </CardContent>
@@ -243,7 +250,7 @@ function DashboardHome() {
                         ) : a.premium_token_cost > 0 && a.report_id ? (
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant="bronze"
                             onClick={() => unlock(a.report_id as string)}
                             disabled={busy === a.report_id}
                           >

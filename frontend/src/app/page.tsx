@@ -124,15 +124,35 @@ export default function HomePage() {
             {t('landing.heroSubtitle')}
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Button asChild size="lg">
+            <Button asChild variant="bronze" size="lg">
               <Link href="/register">
                 {t('landing.ctaCreate')}
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link href="#assessments">{t('landing.ctaDemo')}</Link>
+              <Link href="#how">{t('landing.ctaDemo')}</Link>
             </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Problem → Solution */}
+      <section className="border-b">
+        <div className="container grid gap-8 py-16 md:grid-cols-2 md:py-20">
+          <div className="space-y-3">
+            <Badge variant="outline">The problem</Badge>
+            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              {t('landing.problemTitle')}
+            </h2>
+            <p className="text-muted-foreground">{t('landing.problemBody')}</p>
+          </div>
+          <div className="space-y-3 rounded-lg border bg-accent/40 p-6">
+            <Badge variant="bronze">The SPARTA way</Badge>
+            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              {t('landing.solutionTitle')}
+            </h2>
+            <p className="text-muted-foreground">{t('landing.solutionBody')}</p>
           </div>
         </div>
       </section>
@@ -167,7 +187,7 @@ export default function HomePage() {
       </section>
 
       {/* How It Works */}
-      <section className="border-b bg-muted/30">
+      <section id="how" className="scroll-mt-20 border-b bg-muted/30">
         <div className="container py-20 md:py-24">
           <div className="mx-auto mb-12 max-w-2xl space-y-3 text-center">
             <Badge variant="outline">How it works</Badge>
@@ -298,6 +318,39 @@ export default function HomePage() {
       <div id="assessments" className="scroll-mt-20 border-b">
         <PublishedAssessments />
       </div>
+
+      {/* AI Growth Report highlight */}
+      <section className="border-b bg-primary text-primary-foreground">
+        <div className="container grid items-center gap-8 py-20 md:grid-cols-2">
+          <div className="space-y-4">
+            <Badge variant="bronze" className="gap-1.5">
+              <Sparkles className="h-3.5 w-3.5" />
+              {t('landing.aiReportTitle')}
+            </Badge>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              {t('landing.aiReportTitle')}
+            </h2>
+            <p className="max-w-md text-primary-foreground/80">
+              {t('landing.aiReportBody')}
+            </p>
+          </div>
+          <div className="rounded-xl border border-white/15 bg-white/5 p-6">
+            <div className="space-y-4">
+              {['Overview', 'Strengths', 'Recommendations', '30-Day Roadmap'].map(
+                (s, i) => (
+                  <div key={s} className="flex items-center gap-3">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-bronze text-sm font-semibold text-bronze-foreground">
+                      {i + 1}
+                    </span>
+                    <span className="font-medium">{s}</span>
+                  </div>
+                ),
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
       <BlogSection />
 
       {/* Final CTA */}

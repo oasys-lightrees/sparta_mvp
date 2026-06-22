@@ -1,11 +1,17 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Sora } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import { LanguageProvider } from '@/lib/i18n/LanguageProvider';
 import { Navbar } from '@/components/common/Navbar';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
+// Spartan "academy" display voice for headings, hero, stats, report ranks.
+const sora = Sora({
+  subsets: ['latin'],
+  variable: '--font-display',
+  weight: ['500', '600', '700'],
+});
 
 export const metadata: Metadata = {
   title: 'SPARTA — AI-Powered Assessment Platform',
@@ -19,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${inter.variable} ${sora.variable}`}>
       <body className="min-h-screen bg-background text-foreground antialiased">
         <AuthProvider>
           <LanguageProvider>
