@@ -55,6 +55,10 @@ const config: Config = {
           DEFAULT: 'hsl(var(--bronze))',
           foreground: 'hsl(var(--bronze-foreground))',
         },
+        crimson: {
+          DEFAULT: 'hsl(var(--crimson))',
+          foreground: 'hsl(var(--crimson-foreground))',
+        },
         success: {
           DEFAULT: 'hsl(var(--success))',
           foreground: 'hsl(var(--success-foreground))',

@@ -13,6 +13,10 @@ const buttonVariants = cva(
         // generate, create) so progress moments feel earned and premium.
         bronze:
           'bg-bronze text-bronze-foreground shadow-sm hover:bg-bronze/90',
+        // Crimson — courage/action. Reserved for the single most important
+        // "take action now" moment (final CTA), never for routine actions.
+        crimson:
+          'bg-crimson text-crimson-foreground shadow-sm hover:bg-crimson/90',
         success: 'bg-success text-success-foreground hover:bg-success/90',
         destructive:
           'bg-destructive text-destructive-foreground hover:bg-destructive/90',

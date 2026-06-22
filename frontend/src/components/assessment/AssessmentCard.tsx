@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { AssessmentImage } from '@/components/assessment/AssessmentImage';
+import { ShieldMark } from '@/components/brand/ShieldMark';
 import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import type { AssessmentSummary } from '@/types';
 
@@ -42,6 +43,10 @@ export function AssessmentCard({
         </span>
       </div>
       <CardHeader>
+        <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-bronze">
+          <ShieldMark className="h-3.5 w-3.5" withGlyph={false} />
+          {t('assessment.challengeTag')}
+        </div>
         <CardTitle className="text-xl leading-snug">
           {assessment.title}
         </CardTitle>
