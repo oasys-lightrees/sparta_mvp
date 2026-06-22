@@ -25,8 +25,8 @@ export function ReportView({ data }: { data: AttemptReport }) {
 
   return (
     <Card className="overflow-hidden">
-      {/* Score hero */}
-      <div className="relative bg-gradient-to-br from-primary to-indigo-700 px-6 py-8 text-primary-foreground">
+      {/* Score hero — your earned rank */}
+      <div className="relative bg-gradient-to-br from-primary to-[hsl(222,47%,16%)] px-6 py-8 text-primary-foreground">
         <div className="flex items-center justify-between">
           <Badge
             variant="secondary"
@@ -41,7 +41,7 @@ export function ReportView({ data }: { data: AttemptReport }) {
             <p className="text-sm text-primary-foreground/70">
               {data.assessment_title ?? t('report.yourResult')}
             </p>
-            <p className="mt-1 text-6xl font-bold leading-none tracking-tight">
+            <p className="tnum mt-1 font-display text-6xl font-bold leading-none tracking-tight">
               {data.score}
             </p>
             <p className="mt-1 text-sm text-primary-foreground/70">

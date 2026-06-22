@@ -12,20 +12,29 @@ export const en = {
   'nav.logout': 'Logout',
 
   // Landing page
-  'landing.badge': 'AI-powered assessment platform',
-  'landing.heroTitlePrefix': 'Turn your knowledge into',
-  'landing.heroTitleHighlight': 'AI-powered assessments',
+  'landing.badge': 'A personal growth platform',
+  'landing.heroTitlePrefix': 'Train your skills. Measure your growth.',
+  'landing.heroTitleHighlight': 'Become stronger.',
   'landing.heroSubtitle':
-    'Create tests, generate questions with AI, deliver personalized reports, and monetize your expertise — all in one platform for mentors, educators, and coaches.',
-  'landing.ctaCreate': 'Create Assessment',
-  'landing.ctaDemo': 'Try Demo Assessment',
-  'landing.featuresTitle': 'Everything you need to assess and monetize',
-  'landing.howTitle': 'Built for both sides of the assessment',
+    'SPARTA turns an honest assessment into an AI growth report and a plan — for individuals, professionals, sales teams, and the coaches who train them.',
+  'landing.ctaCreate': 'Discover your level',
+  'landing.ctaDemo': 'See how it works',
+  'landing.problemTitle': 'Most people guess at where they stand.',
+  'landing.problemBody':
+    'Without honest feedback and a clear plan, growth stalls. Generic courses never tell you your real strengths — or the gaps holding you back.',
+  'landing.solutionTitle': 'SPARTA measures it — then gives you a plan.',
+  'landing.solutionBody':
+    'Take a focused assessment, get an objective read on where you stand, and receive an AI growth report that turns your results into concrete next steps.',
+  'landing.featuresTitle': 'Everything you need to train and grow',
+  'landing.howTitle': 'Train. Measure. Improve.',
+  'landing.aiReportTitle': 'Your AI Growth Report',
+  'landing.aiReportBody':
+    'More than a score — a personalized blueprint: your strengths, your gaps, clear recommendations, and a 30-day roadmap to get stronger.',
   'landing.pricingTitle': 'Free to start, premium when it matters',
-  'landing.finalCtaTitle': 'Start creating AI assessments today',
+  'landing.finalCtaTitle': 'Find out how strong you are today',
   'landing.finalCtaSubtitle':
-    'Join mentors, educators, and coaches turning their expertise into interactive, AI-powered assessments.',
-  'landing.getStarted': 'Get started free',
+    'Take your first assessment, get your AI growth report, and start training with purpose.',
+  'landing.getStarted': 'Discover your level',
 
   // Assessment cards
   'assessment.free': 'Free',

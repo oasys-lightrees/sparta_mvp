@@ -4,23 +4,45 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Warm "academy stone" surface — calmer than sterile white */
+    --background: 40 30% 98%;
+    --foreground: 222 47% 14%; /* strong ink heading/body base */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --primary: 243 75% 59%;
+    --card-foreground: 222 47% 14%;
+
+    /* Deep Spartan Ink Blue — trust, intelligence, discipline */
+    --primary: 222 47% 28%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 243 75% 96%;
-    --accent-foreground: 243 60% 30%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 243 75% 59%;
+
+    /* Warm stone secondary surfaces */
+    --secondary: 40 16% 93%;
+    --secondary-foreground: 222 40% 20%;
+    --muted: 40 16% 95%;
+    --muted-foreground: 220 12% 45%;
+
+    /* Soft bronze/stone tint for subtle fills (NOT the strong accent) */
+    --accent: 36 44% 92%;
+    --accent-foreground: 30 52% 28%;
+
+    /* Forged Bronze — achievement, premium, progress (strong accent) */
+    --bronze: 30 48% 48%;
+    --bronze-foreground: 40 33% 98%;
+
+    /* Disciplined growth green */
+    --success: 150 42% 34%;
+    --success-foreground: 40 33% 98%;
+
+    /* Functional amber (kept distinct from the bronze brand metal) */
+    --warning: 38 92% 48%;
+    --warning-foreground: 222 47% 14%;
+
+    /* The only red — minimal, muted brick */
+    --destructive: 2 62% 47%;
+    --destructive-foreground: 40 33% 98%;
+
+    --border: 40 14% 88%;
+    --input: 40 14% 88%;
+    --ring: 222 47% 28%;
     --radius: 0.625rem;
   }
 }
@@ -31,5 +53,21 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  /* Headings carry the Spartan "academy" display voice */
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display), var(--font-sans), ui-sans-serif, system-ui,
+      sans-serif;
+    @apply tracking-tight;
+  }
+}
+
+@layer utilities {
+  /* Precise, aligned figures for stats/metrics */
+  .tnum {
+    font-variant-numeric: tabular-nums;
   }
 }

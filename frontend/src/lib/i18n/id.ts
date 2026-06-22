@@ -13,20 +13,29 @@ export const id: Record<TranslationKey, string> = {
   'nav.logout': 'Keluar',
 
   // Landing page
-  'landing.badge': 'Platform asesmen bertenaga AI',
-  'landing.heroTitlePrefix': 'Ubah pengetahuan Anda menjadi',
-  'landing.heroTitleHighlight': 'asesmen bertenaga AI',
+  'landing.badge': 'Platform pengembangan diri',
+  'landing.heroTitlePrefix': 'Latih kemampuan. Ukur kemajuan.',
+  'landing.heroTitleHighlight': 'Jadi lebih kuat.',
   'landing.heroSubtitle':
-    'Buat tes, hasilkan pertanyaan dengan AI, sajikan laporan yang dipersonalisasi, dan monetisasi keahlian Anda — semuanya dalam satu platform untuk mentor, pendidik, dan pelatih.',
-  'landing.ctaCreate': 'Buat Asesmen',
-  'landing.ctaDemo': 'Coba Asesmen Demo',
-  'landing.featuresTitle': 'Semua yang Anda butuhkan untuk menilai dan memonetisasi',
-  'landing.howTitle': 'Dirancang untuk kedua sisi asesmen',
+    'SPARTA mengubah asesmen yang jujur menjadi laporan pertumbuhan AI dan rencana nyata — untuk individu, profesional, tim sales, dan para pelatih.',
+  'landing.ctaCreate': 'Temukan level Anda',
+  'landing.ctaDemo': 'Lihat cara kerjanya',
+  'landing.problemTitle': 'Banyak orang hanya menebak posisi mereka.',
+  'landing.problemBody':
+    'Tanpa umpan balik yang jujur dan rencana yang jelas, pertumbuhan terhenti. Kursus umum tidak pernah menunjukkan kekuatan asli Anda — atau celah yang menghambat.',
+  'landing.solutionTitle': 'SPARTA mengukurnya — lalu memberi Anda rencana.',
+  'landing.solutionBody':
+    'Kerjakan asesmen yang fokus, dapatkan gambaran objektif tentang posisi Anda, dan terima laporan pertumbuhan AI yang mengubah hasil menjadi langkah nyata.',
+  'landing.featuresTitle': 'Semua yang Anda butuhkan untuk berlatih dan berkembang',
+  'landing.howTitle': 'Latih. Ukur. Tingkatkan.',
+  'landing.aiReportTitle': 'Laporan Pertumbuhan AI Anda',
+  'landing.aiReportBody':
+    'Lebih dari sekadar skor — cetak biru yang dipersonalisasi: kekuatan, celah, rekomendasi yang jelas, dan peta jalan 30 hari untuk menjadi lebih kuat.',
   'landing.pricingTitle': 'Gratis untuk memulai, premium saat dibutuhkan',
-  'landing.finalCtaTitle': 'Mulai buat asesmen AI hari ini',
+  'landing.finalCtaTitle': 'Cari tahu seberapa kuat Anda hari ini',
   'landing.finalCtaSubtitle':
-    'Bergabunglah dengan para mentor, pendidik, dan pelatih yang mengubah keahlian mereka menjadi asesmen interaktif bertenaga AI.',
-  'landing.getStarted': 'Mulai gratis',
+    'Kerjakan asesmen pertama Anda, dapatkan laporan pertumbuhan AI, dan mulailah berlatih dengan tujuan.',
+  'landing.getStarted': 'Temukan level Anda',
 
   // Assessment cards
   'assessment.free': 'Gratis',

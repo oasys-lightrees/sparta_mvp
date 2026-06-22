@@ -64,7 +64,9 @@ export function StatsCards() {
               <Icon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold tracking-tight">{c.value}</p>
+              <p className="tnum font-display text-3xl font-bold tracking-tight">
+                {c.value}
+              </p>
             </CardContent>
           </Card>
         );
