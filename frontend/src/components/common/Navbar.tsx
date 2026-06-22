@@ -5,9 +5,36 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { roleHome } from '@/lib/roles';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/lib/i18n/LanguageProvider';
+import { cn } from '@/lib/utils';
+
+function LanguageSwitcher() {
+  const { lang, setLang } = useLanguage();
+  return (
+    <div className="flex items-center rounded-md border text-xs">
+      {(['en', 'id'] as const).map((l) => (
+        <button
+          key={l}
+          type="button"
+          onClick={() => setLang(l)}
+          aria-pressed={lang === l}
+          className={cn(
+            'px-2 py-1 font-medium uppercase transition-colors',
+            lang === l
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:text-foreground',
+          )}
+        >
+          {l}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export function Navbar() {
   const { user, loading, logout } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
 
   const onLogout = () => {
@@ -25,6 +52,7 @@ export function Navbar() {
           <span className="text-lg font-semibold tracking-tight">SPARTA</span>
         </Link>
         <nav className="flex items-center gap-2">
+          <LanguageSwitcher />
           {loading ? null : user ? (
             <>
               <Link
@@ -34,16 +62,16 @@ export function Navbar() {
                 {user.email}
               </Link>
               <Button variant="outline" size="sm" onClick={onLogout}>
-                Logout
+                {t('nav.logout')}
               </Button>
             </>
           ) : (
             <>
               <Button asChild variant="ghost" size="sm">
-                <Link href="/login">Login</Link>
+                <Link href="/login">{t('nav.login')}</Link>
               </Button>
               <Button asChild size="sm">
-                <Link href="/register">Register</Link>
+                <Link href="/register">{t('nav.register')}</Link>
               </Button>
             </>
           )}

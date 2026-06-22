@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/auth/AuthProvider';
+import { LanguageProvider } from '@/lib/i18n/LanguageProvider';
 import { Navbar } from '@/components/common/Navbar';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
@@ -21,6 +22,7 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <body className="min-h-screen bg-background text-foreground antialiased">
         <AuthProvider>
+          <LanguageProvider>
           <div className="flex min-h-screen flex-col">
             <Navbar />
             <main className="flex-1">{children}</main>
@@ -39,6 +41,7 @@ export default function RootLayout({
               </div>
             </footer>
           </div>
+          </LanguageProvider>
         </AuthProvider>
       </body>
     </html>

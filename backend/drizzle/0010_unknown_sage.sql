@@ -1,0 +1,1 @@
+ALTER TABLE "attempts" ADD COLUMN "report_language" text DEFAULT 'en' NOT NULL;

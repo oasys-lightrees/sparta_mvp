@@ -41,6 +41,7 @@ export const unlockPremium = async (userId: string, reportId: string) => {
       totalScore: attempts.totalScore,
       answersSnapshot: attempts.answersSnapshot,
       categoryResult: attempts.categoryResult,
+      reportLanguage: attempts.reportLanguage,
     })
     .from(attempts)
     .where(eq(attempts.id, report.attemptId))
@@ -126,6 +127,7 @@ export const unlockPremium = async (userId: string, reportId: string) => {
       // Category (diagnostic/personality) engine: when the attempt captured a
       // category result, build a personality-style report from it — no
       // correct/wrong language.
+      const language = (attempt.reportLanguage as 'en' | 'id') ?? 'en';
       const cr = attempt.categoryResult;
       if (cr) {
         const distribution = Object.keys(cr.categories)
@@ -144,6 +146,7 @@ export const unlockPremium = async (userId: string, reportId: string) => {
           score: attempt.totalScore,
           freeReport: free?.content ?? '',
           questions: questionRows.map((q) => q.text),
+          language,
           categoryContext: {
             dominantName: cr.dominantName,
             dominantKnowledge: cr.categories[cr.dominant]?.knowledge ?? '',
@@ -172,6 +175,7 @@ export const unlockPremium = async (userId: string, reportId: string) => {
           category,
           freeReport: free?.content ?? '',
           questions: questionRows.map((q) => q.text),
+          language,
           // Per-question evidence (null for attempts created before this feature
           // -> AI falls back to a score-only report).
           answers: attempt.answersSnapshot ?? null,

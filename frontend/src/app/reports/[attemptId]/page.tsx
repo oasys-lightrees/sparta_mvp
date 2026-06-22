@@ -9,6 +9,7 @@ import { attemptApi } from '@/services/attempt.api';
 import { clearPendingAttempt } from '@/lib/storage';
 import { ReportView } from '@/components/assessment/ReportView';
 import { PremiumReportView } from '@/components/assessment/PremiumReportView';
+import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import { Loading } from '@/components/common/Loading';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +24,7 @@ import {
 import type { AttemptReport } from '@/types';
 
 function ReportContent({ attemptId }: { attemptId: string }) {
+  const { t } = useLanguage();
   const [report, setReport] = useState<AttemptReport | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -70,13 +72,13 @@ function ReportContent({ attemptId }: { attemptId: string }) {
     }
   };
 
-  if (loading) return <Loading label="Preparing your report…" />;
+  if (loading) return <Loading label={t('report.preparing')} />;
   if (error) {
     return (
       <div className="space-y-4">
         <ErrorMessage message={error} />
         <Button asChild variant="outline">
-          <Link href="/">Back to home</Link>
+          <Link href="/">{t('report.backHome')}</Link>
         </Button>
       </div>
     );
@@ -94,13 +96,13 @@ function ReportContent({ attemptId }: { attemptId: string }) {
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" />
-                Premium Report
+                {t('report.premiumReport')}
               </CardTitle>
               <Badge>PREMIUM</Badge>
             </div>
             {unlockedJustNow ? (
               <CardDescription className="font-medium text-emerald-600">
-                ✓ Unlocked — here is your personalized analysis.
+                {t('report.premiumUnlockedNote')}
               </CardDescription>
             ) : null}
           </CardHeader>
@@ -114,14 +116,11 @@ function ReportContent({ attemptId }: { attemptId: string }) {
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Lock className="h-5 w-5 text-primary" />
-                Premium Report
+                {t('report.premiumReport')}
               </CardTitle>
               <Badge variant="outline">{report.premium.cost} Tokens</Badge>
             </div>
-            <CardDescription>
-              Go deeper with an AI-personalized breakdown of your strengths,
-              gaps, and a 30-day plan.
-            </CardDescription>
+            <CardDescription>{t('report.premiumDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {report.premium.description ? (
@@ -132,11 +131,11 @@ function ReportContent({ attemptId }: { attemptId: string }) {
             <ErrorMessage message={premiumError} />
             <Button onClick={unlock} disabled={unlocking} size="lg">
               {unlocking ? (
-                'Unlocking…'
+                t('report.unlocking')
               ) : (
                 <>
                   <Sparkles className="h-4 w-4" />
-                  Unlock Premium ({report.premium.cost} tokens)
+                  {t('report.unlockCta')} ({report.premium.cost} tokens)
                 </>
               )}
             </Button>
@@ -145,7 +144,7 @@ function ReportContent({ attemptId }: { attemptId: string }) {
       ) : null}
 
       <Button asChild variant="outline">
-        <Link href="/dashboard">Go to dashboard</Link>
+        <Link href="/dashboard">{t('report.goDashboard')}</Link>
       </Button>
     </div>
   );

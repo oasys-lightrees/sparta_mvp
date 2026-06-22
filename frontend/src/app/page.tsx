@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -9,6 +11,7 @@ import {
   TrendingUp,
   Wand2,
 } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -97,6 +100,7 @@ const USER_STEPS = [
 ];
 
 export default function HomePage() {
+  const { t } = useLanguage();
   return (
     <div>
       {/* Hero */}
@@ -108,26 +112,26 @@ export default function HomePage() {
         <div className="container relative flex flex-col items-center gap-6 py-24 text-center md:py-32">
           <Badge variant="secondary" className="gap-1.5 px-3 py-1">
             <Sparkles className="h-3.5 w-3.5" />
-            AI-powered assessment platform
+            {t('landing.badge')}
           </Badge>
           <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-            Turn your knowledge into{' '}
-            <span className="text-primary">AI-powered assessments</span>
+            {t('landing.heroTitlePrefix')}{' '}
+            <span className="text-primary">
+              {t('landing.heroTitleHighlight')}
+            </span>
           </h1>
           <p className="max-w-xl text-lg text-muted-foreground">
-            Create tests, generate questions with AI, deliver personalized
-            reports, and monetize your expertise — all in one platform for
-            mentors, educators, and coaches.
+            {t('landing.heroSubtitle')}
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button asChild size="lg">
               <Link href="/register">
-                Create Assessment
+                {t('landing.ctaCreate')}
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link href="#assessments">Try Demo Assessment</Link>
+              <Link href="#assessments">{t('landing.ctaDemo')}</Link>
             </Button>
           </div>
         </div>
@@ -139,7 +143,7 @@ export default function HomePage() {
           <div className="mx-auto mb-12 max-w-2xl space-y-3 text-center">
             <Badge variant="outline">Features</Badge>
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              Everything you need to assess and monetize
+              {t('landing.featuresTitle')}
             </h2>
             <p className="text-muted-foreground">
               From AI-assisted authoring to revenue tracking, SPARTA handles the
@@ -168,7 +172,7 @@ export default function HomePage() {
           <div className="mx-auto mb-12 max-w-2xl space-y-3 text-center">
             <Badge variant="outline">How it works</Badge>
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              Built for both sides of the assessment
+              {t('landing.howTitle')}
             </h2>
             <p className="text-muted-foreground">
               Mentors create and earn. Users learn and grow. Everyone gets a
@@ -234,7 +238,7 @@ export default function HomePage() {
           <div className="mx-auto mb-12 max-w-2xl space-y-3 text-center">
             <Badge variant="outline">Pricing</Badge>
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              Free to start, premium when it matters
+              {t('landing.pricingTitle')}
             </h2>
             <p className="text-muted-foreground">
               Taking assessments is always free. Deeper, AI-personalized reports
@@ -300,15 +304,14 @@ export default function HomePage() {
       <section className="border-t bg-primary text-primary-foreground">
         <div className="container flex flex-col items-center gap-5 py-20 text-center">
           <h2 className="max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
-            Start creating AI assessments today
+            {t('landing.finalCtaTitle')}
           </h2>
           <p className="max-w-lg text-primary-foreground/80">
-            Join mentors, educators, and coaches turning their expertise into
-            interactive, AI-powered assessments.
+            {t('landing.finalCtaSubtitle')}
           </p>
           <Button asChild size="lg" variant="secondary">
             <Link href="/register">
-              Get started free
+              {t('landing.getStarted')}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
