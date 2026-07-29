@@ -1,0 +1,79 @@
+# Production overlay — layers TLS (nginx + certbot) on top of docker-compose.yml
+# and hardens exposure. Use it together with the base file:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# or set COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml in .env so the
+# plain `docker compose ...` commands (and scripts/init-letsencrypt.sh) apply
+# both automatically. See DEPLOYMENT.md.
+#
+# Requires DOMAIN and CERTBOT_EMAIL in .env. First-time cert issuance is done by
+# scripts/init-letsencrypt.sh (run it once instead of a bare `up`).
+services:
+  database:
+    # Localhost-only: reachable for host-side drizzle tooling, never public.
+    # !override replaces the base list (otherwise compose appends and the
+    # public 0.0.0.0:5433 binding would remain).
+    ports: !override
+      - "127.0.0.1:5433:5432"
+
+  backend:
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: 3001
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://${DOMAIN}}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+    # Not published to the host — reached only through nginx at /api/.
+    ports: !reset []
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Same-origin API base via nginx. Rebuild the image if you change this.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://${DOMAIN}}
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://${DOMAIN}}
+    # Not published to the host — reached only through nginx.
+    ports: !reset []
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Substituted into nginx/default.conf.template by the image's envsubst step.
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - certbot_www:/var/www/certbot:ro
+      - letsencrypt:/etc/letsencrypt:ro
+    # Reload every 6h so renewed certificates are picked up without a restart.
+    command: /bin/sh -c "while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g 'daemon off;'"
+
+  certbot:
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    volumes:
+      - certbot_www:/var/www/certbot
+      - letsencrypt:/etc/letsencrypt
+    # Attempt renewal twice a day (no-op until within 30 days of expiry). First
+    # issuance is handled by scripts/init-letsencrypt.sh.
+    entrypoint: /bin/sh -c "trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done"
+
+volumes:
+  certbot_www:
+  letsencrypt:

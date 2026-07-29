@@ -1,3 +1,11 @@
+# Base stack — used as-is for LOCAL DEVELOPMENT (frontend/backend published on
+# the host; no TLS). For PRODUCTION, layer the nginx + certbot + hardening
+# overlay on top:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# (or set COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml in .env so the
+# plain `docker compose ...` commands pick up both — see DEPLOYMENT.md).
 services:
   database:
     image: postgres:16-alpine
@@ -30,10 +38,16 @@ services:
         condition: service_healthy
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        # NEXT_PUBLIC_* is inlined at BUILD time by Next.js, so the API base URL
+        # must be a build arg (not just a runtime env var). Defaults to the
+        # local dev API; the prod overlay overrides it to https://${DOMAIN}.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
     restart: unless-stopped
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
     ports:
       - "3000:3000"
     depends_on:
