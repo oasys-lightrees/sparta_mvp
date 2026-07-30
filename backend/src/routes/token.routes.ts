@@ -1,6 +1,7 @@
 import { Hono, type Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { authMiddleware, type AppEnv } from '../middleware/auth.middleware';
+import * as paymentService from '../services/payment.service';
 import * as tokenService from '../services/token.service';
 import { HttpError } from '../utils/http-error';
 import { error, success } from '../utils/response';
@@ -24,7 +25,59 @@ token.get('/me', authMiddleware, async (c) => {
   }
 });
 
-// POST /api/tokens/topup-demo — dummy top-up (no payment gateway)
+// POST /api/tokens/purchase — start a real (Midtrans) token purchase. Returns a
+// Snap redirect URL/token, or falls back to an immediate demo credit when the
+// gateway is not configured (see payment.service).
+token.post('/purchase', authMiddleware, async (c) => {
+  const body = await c.req.json().catch(() => null);
+  if (!body || !Number.isInteger(body.amount) || body.amount <= 0) {
+    return c.json(error('amount must be a positive integer'), 400);
+  }
+
+  try {
+    const result = await paymentService.createTokenOrder(
+      c.get('user').id,
+      body.amount,
+    );
+    return c.json(success(result), 200);
+  } catch (err) {
+    return handleError(c, err);
+  }
+});
+
+// GET /api/tokens/orders/:orderId — poll an order's status after returning from
+// the Midtrans redirect (owner only).
+token.get('/orders/:orderId', authMiddleware, async (c) => {
+  try {
+    const result = await paymentService.getOrderStatus(
+      c.get('user').id,
+      c.req.param('orderId'),
+    );
+    return c.json(success(result), 200);
+  } catch (err) {
+    return handleError(c, err);
+  }
+});
+
+// POST /api/tokens/midtrans/notification — Midtrans server-to-server webhook.
+// Public by necessity; the SHA-512 signature is verified in the service. Credits
+// the wallet exactly once on the first PAID transition.
+token.post('/midtrans/notification', async (c) => {
+  const body = await c.req.json().catch(() => null);
+  if (!body) {
+    return c.json(error('Invalid notification body'), 400);
+  }
+
+  try {
+    const result = await paymentService.handleNotification(body);
+    return c.json(success(result), 200);
+  } catch (err) {
+    return handleError(c, err);
+  }
+});
+
+// POST /api/tokens/topup-demo — dummy top-up (no payment gateway). Kept for
+// local dev / the MVP demo.
 token.post('/topup-demo', authMiddleware, async (c) => {
   const body = await c.req.json().catch(() => null);
   if (!body || !Number.isInteger(body.amount) || body.amount <= 0) {

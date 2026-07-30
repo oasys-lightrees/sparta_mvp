@@ -25,6 +25,7 @@ type AssessmentConfig = {
   base_knowledge?: string | null;
   ai_enabled?: boolean;
   result_categories?: ResultCategories | null;
+  study_video_url?: string | null;
 };
 
 export const assessmentApi = {

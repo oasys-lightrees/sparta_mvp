@@ -99,6 +99,7 @@ type AssessmentSeed = {
   premiumTokenCost: number;
   premiumReportDescription: string;
   baseKnowledge: string;
+  studyVideoUrl?: string;
   questions: string[];
 };
 
@@ -115,6 +116,8 @@ const ASSESSMENTS: AssessmentSeed[] = [
       'A personalized deep-dive into your AI engineering readiness: your strongest competencies, the specific gaps holding you back, recommended resources, and a 30-day roadmap to become production-ready.',
     baseKnowledge:
       'This assessment measures readiness for a professional AI/ML engineering role across modeling, MLOps, software engineering and applied research. Higher scores indicate production-grade competency. Beginners should focus on Python and ML fundamentals; intermediates on deployment and evaluation; advanced engineers on research and system design.',
+    // Study video unlocked with the premium report (demo).
+    studyVideoUrl: 'https://www.youtube.com/watch?v=aircAruvnKk',
     questions: [
       'I can design and train machine learning models for production use.',
       'I understand how transformer architectures and attention work.',
@@ -377,6 +380,7 @@ async function seed() {
           premiumReportDescription: a.premiumReportDescription,
           baseKnowledge: a.baseKnowledge,
           aiEnabled: true,
+          studyVideoUrl: a.studyVideoUrl ?? null,
           lowScoreThreshold: LOW,
           highScoreThreshold: HIGH,
           price: a.price,

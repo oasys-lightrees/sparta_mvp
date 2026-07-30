@@ -111,23 +111,59 @@ function DashboardHome() {
     };
   }, []);
 
+  // Confirm a purchase after returning from the Midtrans redirect. Midtrans
+  // appends order_id/transaction_status to the finish URL; we poll our backend
+  // (the wallet is credited by the payment webhook) and clean up the URL.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get('order_id');
+    if (!orderId) return;
+    window.history.replaceState(null, '', window.location.pathname);
+    (async () => {
+      try {
+        const order = await tokenApi.getOrder(orderId);
+        setBalance(order.balance);
+        if (order.status === 'PAID') {
+          setActionNotice(
+            `Payment received — ${order.token_amount} tokens added. Balance: ${order.balance}.`,
+          );
+        } else if (order.status === 'PENDING') {
+          setActionNotice(
+            'Payment is being processed. Your tokens will appear once it settles.',
+          );
+        } else {
+          setActionError(`Payment ${order.status.toLowerCase()}. No tokens were added.`);
+        }
+      } catch {
+        /* ignore — stale/foreign order id */
+      }
+    })();
+  }, []);
+
   const topUp = async () => {
-    const input = window.prompt('How many tokens would you like to top up?', '10');
+    const input = window.prompt('How many tokens would you like to buy?', '10');
     if (input === null) return;
     const amount = Number(input);
     if (!Number.isInteger(amount) || amount <= 0) {
-      setActionError('Top-up amount must be a positive whole number');
+      setActionError('Amount must be a positive whole number');
       return;
     }
     setBusy('topup');
     setActionError('');
     setActionNotice('');
     try {
-      const wallet = await tokenApi.topupDemo(amount);
-      setBalance(wallet.balance);
-      setActionNotice(`Added ${amount} tokens — your balance is now ${wallet.balance}.`);
+      const result = await tokenApi.purchase(amount);
+      if (result.mode === 'midtrans') {
+        // Hand off to the Midtrans hosted payment page; the webhook credits the
+        // wallet and we confirm on return (see the effect above).
+        window.location.href = result.redirect_url;
+        return;
+      }
+      // Demo fallback (gateway not configured): credited immediately.
+      setBalance(result.balance);
+      setActionNotice(`Added ${amount} tokens — your balance is now ${result.balance}.`);
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Top-up failed');
+      setActionError(err instanceof Error ? err.message : 'Purchase failed');
     } finally {
       setBusy(null);
     }

@@ -193,6 +193,7 @@ function DetailView({ id }: { id: string }) {
                 base_knowledge: detail.base_knowledge,
                 ai_enabled: detail.ai_enabled,
                 result_categories: detail.result_categories,
+                study_video_url: detail.study_video_url,
               }}
               onSubmit={handleSave}
               onCancel={() => setEditing(false)}
@@ -223,6 +224,23 @@ function DetailView({ id }: { id: string }) {
               <Info
                 label="Free report text"
                 value={detail.free_report_text ?? '—'}
+              />
+              <Info
+                label="Study video"
+                value={
+                  detail.study_video_url ? (
+                    <a
+                      href={detail.study_video_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      {detail.study_video_url}
+                    </a>
+                  ) : (
+                    '—'
+                  )
+                }
               />
             </dl>
           )}

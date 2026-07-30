@@ -23,6 +23,11 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}
       JWT_SECRET: ${JWT_SECRET}
       PORT: 3001
+      # Midtrans token payments (unset -> demo credit fallback).
+      MIDTRANS_SERVER_KEY: ${MIDTRANS_SERVER_KEY:-}
+      MIDTRANS_CLIENT_KEY: ${MIDTRANS_CLIENT_KEY:-}
+      MIDTRANS_IS_PRODUCTION: ${MIDTRANS_IS_PRODUCTION:-false}
+      TOKEN_PRICE_IDR: ${TOKEN_PRICE_IDR:-1000}
     ports:
       - "3001:3001"
     depends_on:

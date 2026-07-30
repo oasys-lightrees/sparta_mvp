@@ -31,6 +31,14 @@ export const transactionType = pgEnum('transaction_type', [
   'PREMIUM_UNLOCK',
   'ADMIN_GRANT',
 ]);
+// Lifecycle of a real (Midtrans) token purchase. PENDING until the payment
+// gateway confirms; PAID credits the wallet exactly once.
+export const paymentStatus = pgEnum('payment_status', [
+  'PENDING',
+  'PAID',
+  'FAILED',
+  'EXPIRED',
+]);
 
 /**
  * users
@@ -75,6 +83,10 @@ export const assessments = pgTable('assessments', {
   // AI assistant (v2 sprint 3).
   baseKnowledge: text('base_knowledge'),
   aiEnabled: boolean('ai_enabled').notNull().default(false),
+  // Study video (v4): a mentor-provided URL (YouTube/Vimeo/hosted) unlocked for
+  // the taker once they purchase this assessment's premium report. URL-based for
+  // the MVP (no file upload), mirroring imageUrl. Null -> no study video.
+  studyVideoUrl: text('study_video_url'),
   // Diagnostic/personality engine (v3): when set, each answer position maps to
   // a result category. Null -> fall back to the exam-style score engine.
   resultCategories: jsonb('result_categories').$type<ResultCategories>(),
@@ -327,3 +339,37 @@ export const transactions = pgTable('transactions', {
   type: transactionType('type').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
+
+/**
+ * token_orders
+ * A real token purchase processed through the Midtrans payment gateway. One row
+ * is created (PENDING) when the user starts checkout; the gateway's asynchronous
+ * notification flips it to PAID/FAILED/EXPIRED. On the first PAID transition the
+ * wallet is credited and a TOKEN_TOPUP transaction is recorded — the PAID state
+ * makes crediting idempotent against duplicate notifications.
+ */
+export const tokenOrders = pgTable('token_orders', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  // Midtrans order_id (also our idempotency key). Unique across all orders.
+  orderId: varchar('order_id', { length: 255 }).notNull().unique(),
+  // Tokens to credit on success.
+  tokenAmount: integer('token_amount').notNull(),
+  // Charged amount in IDR (Midtrans gross_amount, whole rupiah).
+  grossAmount: integer('gross_amount').notNull(),
+  status: paymentStatus('status').notNull().default('PENDING'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+export const tokenOrdersRelations = relations(tokenOrders, ({ one }) => ({
+  user: one(users, {
+    fields: [tokenOrders.userId],
+    references: [users.id],
+  }),
+}));
