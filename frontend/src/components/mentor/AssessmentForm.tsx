@@ -27,6 +27,7 @@ export type AssessmentPayload = {
   base_knowledge: string | null;
   ai_enabled: boolean;
   result_categories: ResultCategories | null;
+  study_video_url: string | null;
 };
 
 // Result-category editor rows (diagnostic/personality assessments). Codes are
@@ -49,6 +50,7 @@ type Props = {
     base_knowledge: string | null;
     ai_enabled: boolean;
     result_categories: ResultCategories | null;
+    study_video_url: string | null;
   }>;
   submitLabel: string;
   submitting: boolean;
@@ -91,6 +93,9 @@ export function AssessmentForm({
     str(initial?.base_knowledge),
   );
   const [aiEnabled, setAiEnabled] = useState(Boolean(initial?.ai_enabled));
+  const [studyVideoUrl, setStudyVideoUrl] = useState(
+    str(initial?.study_video_url),
+  );
   const [categories, setCategories] = useState<CategoryRow[]>(() => {
     const rc = initial?.result_categories;
     if (rc && Object.keys(rc).length > 0) {
@@ -178,6 +183,8 @@ export function AssessmentForm({
       ai_enabled: aiEnabled,
       // Categories only apply to personality mode.
       result_categories: isPersonality ? buildResultCategories() : null,
+      study_video_url:
+        studyVideoUrl.trim() === '' ? null : studyVideoUrl.trim(),
     });
   };
 
@@ -357,6 +364,20 @@ export function AssessmentForm({
           onChange={(e) => setPremiumDesc(e.target.value)}
           placeholder="What the premium report includes (shown to users)"
         />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="study_video_url">Study video URL</Label>
+        <Input
+          id="study_video_url"
+          type="url"
+          value={studyVideoUrl}
+          onChange={(e) => setStudyVideoUrl(e.target.value)}
+          placeholder="https://youtube.com/watch?v=…"
+        />
+        <p className="text-xs text-muted-foreground">
+          Optional. Shown to the taker after they unlock the premium report.
+          Supports YouTube, Vimeo, or a direct video link.
+        </p>
       </div>
       <div className="space-y-2">
         <Label htmlFor="email_template">Email template</Label>

@@ -61,6 +61,7 @@ export const getReport = async (userId: string, attemptId: string) => {
       description: assessments.premiumReportDescription,
       low: assessments.lowScoreThreshold,
       high: assessments.highScoreThreshold,
+      studyVideoUrl: assessments.studyVideoUrl,
     })
     .from(assessments)
     .where(eq(assessments.id, attempt.assessmentId))
@@ -90,6 +91,9 @@ export const getReport = async (userId: string, attemptId: string) => {
       description: assessment?.description ?? null,
       unlocked: Boolean(premium),
       content: premium?.content ?? null,
+      // Study video is a paid perk — only revealed once the premium report is
+      // unlocked, so the URL never leaks to non-purchasers.
+      study_video_url: premium ? (assessment?.studyVideoUrl ?? null) : null,
     },
   };
 };

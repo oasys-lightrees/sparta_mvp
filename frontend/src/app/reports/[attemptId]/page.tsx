@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Lock, Sparkles } from 'lucide-react';
+import { Lock, PlayCircle, Sparkles } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { attemptApi } from '@/services/attempt.api';
 import { clearPendingAttempt } from '@/lib/storage';
 import { ReportView } from '@/components/assessment/ReportView';
 import { PremiumReportView } from '@/components/assessment/PremiumReportView';
+import { StudyVideo } from '@/components/assessment/StudyVideo';
 import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import { Loading } from '@/components/common/Loading';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
@@ -106,8 +107,20 @@ function ReportContent({ attemptId }: { attemptId: string }) {
               </CardDescription>
             ) : null}
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
             <PremiumReportView content={report.premium.content ?? ''} />
+            {report.premium.study_video_url ? (
+              <div className="space-y-2 border-t pt-4">
+                <h3 className="flex items-center gap-2 font-semibold">
+                  <PlayCircle className="h-5 w-5 text-primary" />
+                  {t('report.studyVideoTitle')}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {t('report.studyVideoDescription')}
+                </p>
+                <StudyVideo url={report.premium.study_video_url} />
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       ) : report.premium.cost > 0 ? (

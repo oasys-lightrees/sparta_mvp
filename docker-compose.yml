@@ -23,6 +23,26 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}
       JWT_SECRET: ${JWT_SECRET}
       PORT: 3001
+      # CORS allowlist (comma-separated). Defaults to the prod domain + local dev
+      # to match the backend's own fallback — override in .env for other domains.
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://sparta.jearimjarden.com,http://localhost:3000}
+      # SMTP result emails. Email is disabled while SMTP_HOST is empty (sends are
+      # skipped/logged); submission is never affected. Port/From carry non-empty
+      # defaults so an unset value doesn't break a configured transport.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-no-reply@sparta.jearimjarden.com}
+      # OpenAI (AI disabled while OPENAI_API_KEY is empty). Backend-only.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5-mini}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      # Midtrans token payments (unset -> demo credit fallback).
+      MIDTRANS_SERVER_KEY: ${MIDTRANS_SERVER_KEY:-}
+      MIDTRANS_CLIENT_KEY: ${MIDTRANS_CLIENT_KEY:-}
+      MIDTRANS_IS_PRODUCTION: ${MIDTRANS_IS_PRODUCTION:-false}
+      TOKEN_PRICE_IDR: ${TOKEN_PRICE_IDR:-1000}
     ports:
       - "3001:3001"
     depends_on:

@@ -45,6 +45,8 @@ export type PremiumInfo = {
   description: string | null;
   unlocked: boolean;
   content: string | null;
+  // Mentor-provided study video, revealed only once premium is unlocked.
+  study_video_url: string | null;
 };
 export type AttemptReport = {
   attempt_id: string;
@@ -72,6 +74,25 @@ export type MyAttempt = {
 
 // --- Tokens ---
 export type TokenBalance = { balance: number };
+export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'EXPIRED';
+// Result of starting a token purchase. When the payment gateway is not
+// configured the backend credits immediately and returns the 'demo' variant.
+export type PurchaseResult =
+  | { mode: 'demo'; balance: number }
+  | {
+      mode: 'midtrans';
+      order_id: string;
+      token: string;
+      redirect_url: string;
+      client_key: string;
+      gross_amount: number;
+    };
+export type TokenOrderStatus = {
+  order_id: string;
+  status: PaymentStatus;
+  token_amount: number;
+  balance: number;
+};
 export type UnlockResult = {
   report_id: string;
   type: ReportType;
@@ -140,6 +161,7 @@ export type MentorAssessmentDetail = {
   email_template: string | null;
   base_knowledge: string | null;
   ai_enabled: boolean;
+  study_video_url: string | null;
   created_at: string;
   updated_at: string;
   questions: MentorQuestion[];

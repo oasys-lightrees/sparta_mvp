@@ -122,9 +122,20 @@ automatically.
 | **Premium report** | Value capture — unlocked with tokens |
 | **Mentor revenue** | Each premium unlock credits the assessment's mentor, tracked on their dashboard |
 
-Tokens are the unit of account. The MVP uses a **demo top-up** (no real payment
-gateway); the token ledger and mentor revenue accounting are fully implemented
-and ready for a real payment integration.
+Tokens are the unit of account. Token purchases go through **Midtrans** (Snap):
+the backend creates an order, hands the browser off to Midtrans' hosted
+checkout, and credits the wallet from a signed server-to-server notification
+(webhook) exactly once. When `MIDTRANS_SERVER_KEY` is not configured the app
+degrades gracefully to an instant **demo top-up**, so local dev and the MVP demo
+keep working. The token ledger and mentor revenue accounting are fully
+implemented.
+
+### Study video reward
+
+Each assessment can carry a mentor-provided **study video URL** (YouTube, Vimeo,
+or a direct link). After a taker unlocks the premium report, the video is
+revealed alongside it as a training resource. The URL is only exposed once
+premium is unlocked, so it never leaks to non-purchasers.
 
 ---
 
@@ -265,7 +276,10 @@ npm run dev                      # http://localhost:3000
 > AI features need `OPENAI_API_KEY` set on the backend. Without it the app still
 > runs — AI endpoints return a clear error and premium unlock falls back to a
 > placeholder. Email needs `SMTP_HOST`; without it, result emails are cleanly
-> skipped and submission is never affected.
+> skipped and submission is never affected. Real token payments need
+> `MIDTRANS_SERVER_KEY` / `MIDTRANS_CLIENT_KEY` (and the gateway's notification
+> URL pointed at `POST /api/tokens/midtrans/notification`); without them, token
+> purchase falls back to an instant demo credit.
 
 ---
 

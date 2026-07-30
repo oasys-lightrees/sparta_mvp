@@ -83,6 +83,9 @@ const validateConfigFields = (body: Record<string, unknown>): string | null => {
   if (!isNullableString(body.base_knowledge)) {
     return 'base_knowledge must be a string';
   }
+  if (!isNullableString(body.study_video_url)) {
+    return 'study_video_url must be a string';
+  }
   if (body.ai_enabled !== undefined && typeof body.ai_enabled !== 'boolean') {
     return 'ai_enabled must be a boolean';
   }
@@ -163,6 +166,7 @@ assessment.post('/', authMiddleware, requireRole('MENTOR'), async (c) => {
       base_knowledge: body.base_knowledge,
       ai_enabled: body.ai_enabled,
       result_categories: body.result_categories,
+      study_video_url: body.study_video_url,
     });
     return c.json(success(created), 201);
   } catch (err) {
@@ -206,6 +210,7 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
     'base_knowledge',
     'ai_enabled',
     'result_categories',
+    'study_video_url',
   ];
   if (!updatableKeys.some((k) => body[k] !== undefined)) {
     return c.json(error('Nothing to update'), 400);
@@ -227,6 +232,7 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
       base_knowledge: body.base_knowledge,
       ai_enabled: body.ai_enabled,
       result_categories: body.result_categories,
+      study_video_url: body.study_video_url,
     });
     return c.json(success(updated), 200);
   } catch (err) {
