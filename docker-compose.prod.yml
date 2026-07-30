@@ -62,14 +62,24 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      # Substituted into nginx/default.conf.template by the image's envsubst step.
+      # Substituted into the rendered config by the command's envsubst step below.
       DOMAIN: ${DOMAIN}
     volumes:
       - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
       - certbot_www:/var/www/certbot:ro
       - letsencrypt:/etc/letsencrypt:ro
-    # Reload every 6h so renewed certificates are picked up without a restart.
-    command: /bin/sh -c "while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g 'daemon off;'"
+    # Render the template ourselves, then start nginx. The image's built-in
+    # envsubst step only runs when the container command is `nginx ...`; since we
+    # override the command (for the 6h reload loop that picks up renewed certs),
+    # we must substitute ${DOMAIN} explicitly or nginx sees an unknown variable.
+    # `$$DOMAIN` -> literal `$DOMAIN` for envsubst (compose collapses `$$`->`$`),
+    # so only DOMAIN is replaced and nginx's own $host/$scheme are preserved.
+    command: >-
+      /bin/sh -c "envsubst '$$DOMAIN'
+      < /etc/nginx/templates/default.conf.template
+      > /etc/nginx/conf.d/default.conf
+      && { while :; do sleep 6h & wait $${!}; nginx -s reload; done &
+      nginx -g 'daemon off;'; }"
 
   certbot:
     image: certbot/certbot:latest
