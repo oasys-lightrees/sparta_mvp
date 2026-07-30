@@ -25,6 +25,7 @@ export type CreateInput = {
   base_knowledge?: string | null;
   ai_enabled?: boolean;
   result_categories?: ResultCategories | null;
+  study_video_url?: string | null;
 };
 
 export type UpdateInput = {
@@ -42,6 +43,7 @@ export type UpdateInput = {
   base_knowledge?: string | null;
   ai_enabled?: boolean;
   result_categories?: ResultCategories | null;
+  study_video_url?: string | null;
 };
 
 const publicColumns = {
@@ -157,6 +159,7 @@ export const create = async (mentorId: string, input: CreateInput) => {
       baseKnowledge: input.base_knowledge ?? null,
       aiEnabled: input.ai_enabled ?? false,
       resultCategories: input.result_categories ?? null,
+      studyVideoUrl: input.study_video_url ?? null,
     })
     .returning({ id: assessments.id, status: assessments.status });
 
@@ -188,6 +191,7 @@ export const update = async (
     baseKnowledge: string | null;
     aiEnabled: boolean;
     resultCategories: ResultCategories | null;
+    studyVideoUrl: string | null;
   }> = {};
   if (input.title !== undefined) values.title = input.title.trim();
   if (input.description !== undefined) values.description = input.description;
@@ -212,6 +216,8 @@ export const update = async (
   if (input.ai_enabled !== undefined) values.aiEnabled = input.ai_enabled;
   if (input.result_categories !== undefined)
     values.resultCategories = input.result_categories;
+  if (input.study_video_url !== undefined)
+    values.studyVideoUrl = input.study_video_url;
 
   const [updated] = await db
     .update(assessments)
@@ -234,6 +240,7 @@ export const update = async (
       base_knowledge: assessments.baseKnowledge,
       ai_enabled: assessments.aiEnabled,
       result_categories: assessments.resultCategories,
+      study_video_url: assessments.studyVideoUrl,
     });
 
   return updated;

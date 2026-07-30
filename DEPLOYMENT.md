@@ -49,6 +49,10 @@ Create a root `.env` (from `.env.example`) used by `docker compose`:
 | `OPENAI_API_KEY` | backend (optional) | `sk-…` | **AI disabled when unset** — AI endpoints return a clear error; premium unlock falls back to a placeholder. Backend-only, never sent to the browser |
 | `OPENAI_MODEL` | backend | `gpt-5-mini` | no hardcoded model — set per deployment |
 | `OPENAI_BASE_URL` | backend (optional) | `https://api.openai.com/v1` | override for Azure / OpenAI-compatible proxies |
+| `MIDTRANS_SERVER_KEY` | backend (optional) | `Mid-server-…` | **real payments disabled when unset** — token purchase falls back to an instant demo credit. Backend-only, never sent to the browser. Signs/verifies the notification webhook |
+| `MIDTRANS_CLIENT_KEY` | backend (optional) | `Mid-client-…` | returned to the browser for the Snap checkout |
+| `MIDTRANS_IS_PRODUCTION` | backend | `false` | `true` uses live Midtrans endpoints; anything else (default) uses sandbox |
+| `TOKEN_PRICE_IDR` | backend (optional) | `1000` | price of one token in IDR (Midtrans charges whole rupiah); default `1000` |
 | `NEXT_PUBLIC_API_URL` | frontend (optional) | `https://sparta.example.com` | **build-time** — compose defaults it to `https://${DOMAIN}`; override only for non-standard setups (see note) |
 
 Generate strong secrets, e.g.:
@@ -230,7 +234,61 @@ Recommended Cloudflare settings:
 
 ---
 
-## 6. Authentication / cookie note
+## 6. Payments (Midtrans)
+
+Token purchases run through **Midtrans Snap**. The backend creates a `PENDING`
+order, hands the browser to Midtrans' hosted checkout, and credits the wallet
+from a **signed server-to-server notification (webhook)** — exactly once, on the
+first `PAID` transition. When `MIDTRANS_SERVER_KEY` is unset the flow degrades
+gracefully to an instant demo credit (same philosophy as the AI/email features),
+so the site still works without a gateway configured.
+
+### Keys
+From the Midtrans Dashboard → **Settings → Access Keys**, copy the **Server Key**
+and **Client Key** into the root `.env` (`MIDTRANS_SERVER_KEY`,
+`MIDTRANS_CLIENT_KEY`). Sandbox and production have separate key pairs. Set
+`MIDTRANS_IS_PRODUCTION=true` only when using live keys; leave it `false` (the
+default) for the sandbox. `TOKEN_PRICE_IDR` sets how many rupiah one token costs
+(default `1000`).
+
+> Keys are backend-only. `MIDTRANS_SERVER_KEY` never reaches the browser; the
+> client key is handed out only to initialize the Snap checkout.
+
+### Webhook (required for tokens to be credited)
+In the Midtrans Dashboard → **Settings → Configuration**, set the **Payment
+Notification URL** to:
+
+```
+https://<your DOMAIN>/api/tokens/midtrans/notification
+```
+
+- This endpoint **must be publicly reachable** — it is the only path that
+  credits the wallet after a payment settles.
+- It is intentionally unauthenticated (no Bearer header) and guarded by
+  Midtrans' **SHA-512 signature** verification, so it works as-is behind
+  nginx / Cloudflare with **no special rules** — do not add auth or IP rules
+  that would block Midtrans' servers.
+- nginx already routes `/api/*` → `backend:3001`, so no extra config is needed.
+
+### Redirect back
+After paying, Midtrans redirects the user to the app with `order_id` in the URL;
+the dashboard polls `GET /api/tokens/orders/:orderId` to confirm and refresh the
+balance. Because the webhook does the actual crediting, tokens still land even if
+the user closes the tab before the redirect.
+
+### Verify before going live
+Configure the **sandbox** keys first, set `MIDTRANS_IS_PRODUCTION=false`, and run
+a purchase end-to-end using the Midtrans **Simulator** / test payment methods.
+Confirm the wallet balance increases and a `TOKEN_TOPUP` transaction is recorded,
+then switch to live keys and `MIDTRANS_IS_PRODUCTION=true`.
+
+> **Local dev caveat:** the webhook cannot reach `localhost`. To test the paid
+> path off a server, expose the backend with a tunnel (e.g. ngrok) and point the
+> notification URL at the tunnel; otherwise use the demo-credit fallback.
+
+---
+
+## 7. Authentication / cookie note
 
 **Current behaviour (do not change for this release):** the backend issues a
 JWT (Bearer) that the frontend stores in **`localStorage`** and sends via the
@@ -250,7 +308,7 @@ This is intentionally deferred; no auth code is changed in this deployment prep.
 
 ---
 
-## 7. Production security checklist
+## 8. Production security checklist
 
 - [ ] `DOMAIN` and `CERTBOT_EMAIL` set in `.env`; `DOMAIN` resolves to this host's public IP.
 - [ ] `JWT_SECRET` is a long random secret (not the example value).
@@ -264,5 +322,7 @@ This is intentionally deferred; no auth code is changed in this deployment prep.
 - [ ] `docker compose exec backend npm run db:migrate` run after each deploy with schema changes.
 - [ ] First admin promoted (`UPDATE users SET role='ADMIN' WHERE email='…';`) or demo seed run.
 - [ ] SMTP_* configured if result emails are wanted (otherwise email is cleanly skipped — submission still works).
+- [ ] `MIDTRANS_*` configured if real payments are wanted (otherwise purchase falls back to a demo credit); `MIDTRANS_IS_PRODUCTION=true` only with live keys.
+- [ ] Midtrans **Payment Notification URL** set to `https://<domain>/api/tokens/midtrans/notification` and reachable; verified end-to-end in sandbox before going live.
 - [ ] Backups configured for the `postgres_data` volume.
 - [ ] Container logs monitored (`docker compose logs`); restart policy is `unless-stopped`.
