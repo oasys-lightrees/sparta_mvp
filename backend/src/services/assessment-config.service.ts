@@ -130,12 +130,22 @@ export const updateConfig = async (
     throw err;
   }
 
+  // Server-owned provenance: bump the revision counter and stamp timestamps
+  // (never trusting client-supplied values for these).
+  const now = new Date().toISOString();
+  const stamped: AssessmentApp = {
+    ...validated,
+    createdAt: current.createdAt ?? now,
+    updatedAt: now,
+    configVersion: (current.configVersion ?? 0) + 1,
+  };
+
   await db
     .update(assessments)
-    .set({ appConfig: validated })
+    .set({ appConfig: stamped })
     .where(eq(assessments.id, assessmentId));
 
-  return validated;
+  return stamped;
 };
 
 /**

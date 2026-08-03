@@ -24,6 +24,7 @@ export interface ThemeTokens {
   spacing: 'compact' | 'regular' | 'roomy';
   gradients: boolean;
   animations: 'full' | 'reduced';
+  mode: 'light' | 'dark' | 'auto';
 }
 
 export interface Stat {
@@ -95,6 +96,11 @@ export interface Modules {
   vouchers: boolean;
   certificates: boolean;
   referral: boolean;
+  organization: boolean;
+  marketplace: boolean;
+  blog: boolean;
+  community: boolean;
+  analytics: boolean;
 }
 
 export interface AiConfig {
@@ -105,6 +111,7 @@ export interface AiConfig {
   tone: 'professional' | 'warm' | 'direct' | 'playful';
   temperature: number | null;
   capabilities: { questionGeneration: boolean; premiumReport: boolean };
+  languages: string[];
   guardrails: string;
 }
 
@@ -142,6 +149,9 @@ export interface Products {
 
 export interface AssessmentApp {
   version: number;
+  configVersion: number;
+  createdAt: string | null;
+  updatedAt: string | null;
   tier: Tier;
   modules: Modules;
   featureFlags: Record<string, boolean>;

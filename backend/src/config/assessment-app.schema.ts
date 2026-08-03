@@ -59,6 +59,13 @@ export const ModulesSchema = z
     vouchers: z.boolean().default(true),
     certificates: z.boolean().default(false),
     referral: z.boolean().default(false),
+    // Reserved for future surfaces — off by default until built, so shipping
+    // them never requires a schema bump (a config just flips the flag).
+    organization: z.boolean().default(false),
+    marketplace: z.boolean().default(false),
+    blog: z.boolean().default(false),
+    community: z.boolean().default(false),
+    analytics: z.boolean().default(false),
   })
   .prefault({});
 
@@ -94,6 +101,8 @@ export const ThemeSchema = z
     spacing: z.enum(['compact', 'regular', 'roomy']).default('regular'),
     gradients: z.boolean().default(true),
     animations: z.enum(['full', 'reduced']).default('full'),
+    // Color scheme preference for the tenant. 'auto' follows the viewer's OS.
+    mode: z.enum(['light', 'dark', 'auto']).default('auto'),
   })
   .prefault({});
 
@@ -113,6 +122,8 @@ export const AiSchema = z
         premiumReport: z.boolean().default(true),
       })
       .prefault({}),
+    // Output languages the AI may generate reports in (BCP-47-ish codes).
+    languages: z.array(z.string()).default(['en']),
     // Free-text safety/guardrail instructions appended to prompts.
     guardrails: z.string().default(''),
   })
@@ -310,7 +321,14 @@ export const SettingsSchema = z
 
 // ---- root ------------------------------------------------------------------
 export const AssessmentAppSchema = z.object({
+  // Schema version — drives migrateAssessmentApp(). Bumped only on shape changes.
   version: z.number().int().default(CURRENT_VERSION),
+  // Content revision counter — bumped by the API on every save (audit +
+  // optimistic concurrency + cache busting). Independent of `version`.
+  configVersion: z.number().int().nonnegative().default(1),
+  // ISO timestamps stamped by the API. Null until first saved.
+  createdAt: z.string().datetime().nullable().default(null),
+  updatedAt: z.string().datetime().nullable().default(null),
   tier: TierSchema,
   modules: ModulesSchema,
   featureFlags: FeatureFlagsSchema,
