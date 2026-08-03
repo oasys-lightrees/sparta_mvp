@@ -270,7 +270,7 @@ export function BrandedReport({
         ) : null}
 
         <div style={{ marginTop: 26 }}>
-          <a href="/dashboard" className="lato-btn lato-btn--ghost">
+          <a href={`/a/${assessmentId}/dashboard`} className="lato-btn lato-btn--ghost">
             Go to my dashboard
           </a>
         </div>
