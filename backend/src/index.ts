@@ -7,6 +7,7 @@ import assessmentRoutes from './routes/assessment.routes';
 import attemptRoutes from './routes/attempt.routes';
 import authRoutes from './routes/auth.routes';
 import blogRoutes from './routes/blog.routes';
+import configRoutes from './routes/config.routes';
 import contactRoutes from './routes/contact.routes';
 import mentorRoutes from './routes/mentor.routes';
 import questionRoutes from './routes/question.routes';
@@ -55,6 +56,8 @@ app.route('/api/tokens', tokenRoutes);
 app.route('/api/reports', reportRoutes);
 // Contact routes (public POST /api/contact + admin /api/admin/contacts).
 app.route('/api', contactRoutes);
+// Branded AssessmentApp config (public read + mentor edit).
+app.route('/api', configRoutes);
 //   app.route('/api/admin', adminRoutes);
 //   app.route('/api/mentor', mentorRoutes);
 
