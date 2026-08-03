@@ -31,6 +31,14 @@ export const transactionType = pgEnum('transaction_type', [
   'TOKEN_TOPUP',
   'PREMIUM_UNLOCK',
   'ADMIN_GRANT',
+  // Tokens granted to a user when they redeem a company voucher code.
+  'VOUCHER_REDEEM',
+]);
+// Lifecycle of a single voucher code.
+export const voucherStatus = pgEnum('voucher_status', [
+  'ACTIVE',
+  'REDEEMED',
+  'REVOKED',
 ]);
 // Lifecycle of a real (Midtrans) token purchase. PENDING until the payment
 // gateway confirms; PAID credits the wallet exactly once.
@@ -376,6 +384,72 @@ export const tokenOrders = pgTable('token_orders', {
 export const tokenOrdersRelations = relations(tokenOrders, ({ one }) => ({
   user: one(users, {
     fields: [tokenOrders.userId],
+    references: [users.id],
+  }),
+}));
+
+/**
+ * voucher_batches
+ * A company's purchase of N assessment credits for a single assessment. Buying
+ * a batch generates `credits` unique voucher codes (see vouchers). The buyer is
+ * the company admin; employees redeem individual codes.
+ */
+export const voucherBatches = pgTable('voucher_batches', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  assessmentId: uuid('assessment_id')
+    .notNull()
+    .references(() => assessments.id, { onDelete: 'cascade' }),
+  buyerId: uuid('buyer_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  // Free-text company/org label shown on the buyer's dashboard.
+  companyName: varchar('company_name', { length: 255 }).notNull(),
+  credits: integer('credits').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+/**
+ * vouchers
+ * A single redeemable code belonging to a batch. Redeeming grants the taker the
+ * tokens needed to unlock this assessment's premium report (a VOUCHER_REDEEM
+ * transaction), so a code == one funded premium assessment.
+ */
+export const vouchers = pgTable('vouchers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  batchId: uuid('batch_id')
+    .notNull()
+    .references(() => voucherBatches.id, { onDelete: 'cascade' }),
+  code: varchar('code', { length: 32 }).notNull().unique(),
+  status: voucherStatus('status').notNull().default('ACTIVE'),
+  redeemedByUserId: uuid('redeemed_by_user_id').references(() => users.id, {
+    onDelete: 'set null',
+  }),
+  redeemedAt: timestamp('redeemed_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const voucherBatchesRelations = relations(
+  voucherBatches,
+  ({ one, many }) => ({
+    assessment: one(assessments, {
+      fields: [voucherBatches.assessmentId],
+      references: [assessments.id],
+    }),
+    buyer: one(users, {
+      fields: [voucherBatches.buyerId],
+      references: [users.id],
+    }),
+    vouchers: many(vouchers),
+  }),
+);
+
+export const vouchersRelations = relations(vouchers, ({ one }) => ({
+  batch: one(voucherBatches, {
+    fields: [vouchers.batchId],
+    references: [voucherBatches.id],
+  }),
+  redeemedBy: one(users, {
+    fields: [vouchers.redeemedByUserId],
     references: [users.id],
   }),
 }));

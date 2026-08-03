@@ -14,6 +14,7 @@ import questionRoutes from './routes/question.routes';
 import reportRoutes from './routes/report.routes';
 import submissionRoutes from './routes/submission.routes';
 import tokenRoutes from './routes/token.routes';
+import voucherRoutes from './routes/voucher.routes';
 import { error, success } from './utils/response';
 
 const app = new Hono();
@@ -53,6 +54,7 @@ app.route('/api/mentor', mentorRoutes);
 app.route('/api/attempts', attemptRoutes);
 app.route('/api/blogs', blogRoutes);
 app.route('/api/tokens', tokenRoutes);
+app.route('/api/vouchers', voucherRoutes);
 app.route('/api/reports', reportRoutes);
 // Contact routes (public POST /api/contact + admin /api/admin/contacts).
 app.route('/api', contactRoutes);
