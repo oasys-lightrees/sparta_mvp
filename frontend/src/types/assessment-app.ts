@@ -78,6 +78,57 @@ export interface Plan {
   highlight: boolean;
   voucher: boolean;
   badge: string;
+  grantsTier: Tier;
+}
+
+export type Tier = 'free' | 'pro' | 'company' | 'enterprise';
+
+export interface Modules {
+  landing: boolean;
+  assessment: boolean;
+  freeReport: boolean;
+  premiumReport: boolean;
+  studyResources: boolean;
+  userDashboard: boolean;
+  companyDashboard: boolean;
+  mentorDashboard: boolean;
+  vouchers: boolean;
+  certificates: boolean;
+  referral: boolean;
+}
+
+export interface AiConfig {
+  enabled: boolean;
+  provider: 'openai';
+  model: string | null;
+  persona: string;
+  tone: 'professional' | 'warm' | 'direct' | 'playful';
+  temperature: number | null;
+  capabilities: { questionGeneration: boolean; premiumReport: boolean };
+  guardrails: string;
+}
+
+export type WebhookEvent =
+  | 'assessment.completed'
+  | 'report.unlocked'
+  | 'voucher.redeemed'
+  | 'batch.purchased';
+
+export interface Automation {
+  webhooks: { event: WebhookEvent; url: string; secret: string | null }[];
+}
+
+export interface Integrations {
+  customDomain: string | null;
+  sso: { enabled: boolean; provider: 'none' | 'saml' | 'oidc'; metadataUrl: string | null };
+  scimEnabled: boolean;
+  api: { enabled: boolean };
+  analyticsId: string | null;
+}
+
+export interface Settings {
+  defaultLocale: 'en' | 'id';
+  removeBranding: boolean;
 }
 
 export interface Products {
@@ -91,8 +142,12 @@ export interface Products {
 
 export interface AssessmentApp {
   version: number;
+  tier: Tier;
+  modules: Modules;
+  featureFlags: Record<string, boolean>;
   brand: Brand;
   theme: ThemeTokens;
+  ai: AiConfig;
   landing: Landing;
   assessment: {
     intro: { title: string; body: string };
@@ -113,11 +168,8 @@ export interface AssessmentApp {
     pdf: { footer: string };
   };
   products: Products;
-  dashboard: {
-    user: { enabled: boolean };
-    company: { enabled: boolean };
-    mentor: { enabled: boolean };
-  };
+  automation: Automation;
+  integrations: Integrations;
   emails: Record<string, { subject: string; heading: string; body: string }>;
   seo: {
     title: string;
@@ -125,11 +177,6 @@ export interface AssessmentApp {
     keywords: string[];
     ogImageUrl: string | null;
   };
-  integrations: {
-    customDomain: string | null;
-    ssoEnabled: boolean;
-    apiEnabled: boolean;
-    webhooks: string[];
-    analyticsId: string | null;
-  };
+  settings: Settings;
+  metadata: Record<string, unknown>;
 }

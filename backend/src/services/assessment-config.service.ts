@@ -7,6 +7,7 @@ import {
   type AssessmentApp,
   defaultAssessmentApp,
   mergeAssessmentApp,
+  migrateAssessmentApp,
   parseAssessmentApp,
 } from '../config/assessment-app.schema';
 
@@ -58,9 +59,12 @@ const deriveDefault = async (row: AssessmentRow): Promise<AssessmentApp> => {
   });
 };
 
-/** The saved config, or a generated default when none is stored yet. */
+/**
+ * The saved config (forward-migrated to the current schema version), or a
+ * generated default when none is stored yet.
+ */
 const resolveConfig = async (row: AssessmentRow): Promise<AssessmentApp> =>
-  row.appConfig ?? deriveDefault(row);
+  row.appConfig ? migrateAssessmentApp(row.appConfig) : deriveDefault(row);
 
 /**
  * Public config for the branded landing/app. Only PUBLISHED assessments are

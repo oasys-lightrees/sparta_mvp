@@ -442,7 +442,9 @@ export function BrandedLanding({
             <span>
               © {new Date().getFullYear()} {brand.brandName}. All rights reserved.
             </span>
-            <span>Powered by LATO — the assessment platform</span>
+            {app.settings.removeBranding ? null : (
+              <span>Powered by LATO — the assessment platform</span>
+            )}
           </div>
         </div>
       </footer>

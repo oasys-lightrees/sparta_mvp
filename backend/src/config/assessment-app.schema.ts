@@ -1,24 +1,69 @@
 import { z } from 'zod';
 
 /**
- * AssessmentApp configuration schema.
+ * AssessmentApp configuration schema — the multi-tenant "tenant document".
  *
- * This is the "tenant document" for the multi-tenant assessment platform: one
- * reusable frontend renders any assessment purely from this object, so a new
- * branded assessment is a config row, not new code (the Shopify-theme model).
+ * One reusable frontend renders any assessment purely from this object, so a
+ * new branded assessment is a config row, not new code (the Shopify-theme
+ * model). It is a *presentation, branding, capability & behavior* layer that
+ * sits ON TOP of the relational assessment (questions, choices, thresholds,
+ * result categories, premium token cost live in their own tables).
  *
- * It is a *presentation & branding* layer that sits ON TOP of the existing
- * relational assessment (questions, choices, thresholds, result categories,
- * premium token cost live in their own tables). Nothing here duplicates those —
- * `defaultAssessmentApp()` hydrates sensible defaults from the assessment row.
+ * ── Long-term architecture ─────────────────────────────────────────────────
+ * The document is organized into stable concerns so it can grow without churn:
+ *   - version         schema version + forward migration (see migrateAssessmentApp)
+ *   - tier            entitlement tier (free → enterprise)
+ *   - modules         which product surfaces/capabilities are enabled
+ *   - featureFlags    open-ended experiment/rollout switches (escape hatch)
+ *   - brand / theme   visual identity + design tokens
+ *   - ai              per-tenant AI behavior (model, persona, capabilities)
+ *   - landing / assessment / reports / products   content + presentation
+ *   - automation      event → webhook wiring
+ *   - integrations    enterprise connectivity (SSO/SCIM/API/custom domain)
+ *   - emails / seo / settings                    channels + metadata
+ *   - metadata        untyped per-tenant extension bag (never dropped)
+ *
+ * Rules of thumb for evolving this schema:
+ *   1. Prefer ADDING optional fields with defaults over changing existing ones.
+ *   2. Any breaking shape change bumps CURRENT_VERSION and gets an upcaster in
+ *      migrateAssessmentApp so stored configs keep loading.
+ *   3. Keep sections cohesive by concern; don't leak behavior into content.
  */
+
+/** Bump when the shape changes in a way stored configs must be migrated for. */
+export const CURRENT_VERSION = 2;
 
 /** #rgb or #rrggbb */
 const Hex = z
   .string()
   .regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'must be a hex color like #4f46e5');
-
 const NonEmpty = z.string().min(1);
+
+// ---- tier + modules + flags ------------------------------------------------
+export const TierSchema = z
+  .enum(['free', 'pro', 'company', 'enterprise'])
+  .default('free');
+
+// Which product surfaces/capabilities are switched on for this tenant. The
+// frontend and API gate behavior on these rather than hardcoding availability.
+export const ModulesSchema = z
+  .object({
+    landing: z.boolean().default(true),
+    assessment: z.boolean().default(true),
+    freeReport: z.boolean().default(true),
+    premiumReport: z.boolean().default(true),
+    studyResources: z.boolean().default(true),
+    userDashboard: z.boolean().default(true),
+    companyDashboard: z.boolean().default(true),
+    mentorDashboard: z.boolean().default(true),
+    vouchers: z.boolean().default(true),
+    certificates: z.boolean().default(false),
+    referral: z.boolean().default(false),
+  })
+  .prefault({});
+
+// Open-ended switches for experiments / gradual rollout without a schema bump.
+const FeatureFlagsSchema = z.record(z.string(), z.boolean()).prefault({});
 
 // ---- brand -----------------------------------------------------------------
 export const BrandSchema = z.object({
@@ -37,7 +82,7 @@ export const BrandSchema = z.object({
       display: z.enum(['sans', 'grotesk', 'serif']).default('sans'),
       body: z.enum(['sans', 'serif']).default('sans'),
     })
-    .default({ display: 'sans', body: 'sans' }),
+    .prefault({}),
   iconStyle: z.enum(['line', 'solid']).default('line'),
   illustrationStyle: z.enum(['mesh', 'flat', 'photo']).default('mesh'),
 });
@@ -50,12 +95,28 @@ export const ThemeSchema = z
     gradients: z.boolean().default(true),
     animations: z.enum(['full', 'reduced']).default('full'),
   })
-  .default({
-    radius: 'soft',
-    spacing: 'regular',
-    gradients: true,
-    animations: 'full',
-  });
+  .prefault({});
+
+// ---- ai (per-tenant behavior; keys/models resolved server-side) ------------
+export const AiSchema = z
+  .object({
+    enabled: z.boolean().default(true),
+    provider: z.enum(['openai']).default('openai'),
+    // Null -> use the platform default model (env). Never a secret/key here.
+    model: z.string().nullable().default(null),
+    persona: z.string().default('a seasoned, encouraging mentor'),
+    tone: z.enum(['professional', 'warm', 'direct', 'playful']).default('warm'),
+    temperature: z.number().min(0).max(2).nullable().default(null),
+    capabilities: z
+      .object({
+        questionGeneration: z.boolean().default(true),
+        premiumReport: z.boolean().default(true),
+      })
+      .prefault({}),
+    // Free-text safety/guardrail instructions appended to prompts.
+    guardrails: z.string().default(''),
+  })
+  .prefault({});
 
 // ---- landing ---------------------------------------------------------------
 const StatSchema = z.object({ value: NonEmpty, label: NonEmpty });
@@ -89,7 +150,7 @@ export const LandingSchema = z.object({
       companies: z.array(NonEmpty).default([]),
       stats: z.array(StatSchema).default([]),
     })
-    .default({ lead: 'Trusted by teams at', companies: [], stats: [] }),
+    .prefault({}),
   features: z.array(FeatureSchema).default([]),
   process: z.array(StepSchema).default([]),
   testimonials: z.array(TestimonialSchema).default([]),
@@ -101,12 +162,7 @@ export const LandingSchema = z.object({
       button: NonEmpty.default('Get started'),
       fineprint: z.string().default('Free to start · No credit card'),
     })
-    .default({
-      title: 'Ready to begin?',
-      subtitle: '',
-      button: 'Get started',
-      fineprint: 'Free to start · No credit card',
-    }),
+    .prefault({}),
 });
 
 // ---- assessment (presentation only; questions stay relational) -------------
@@ -128,17 +184,13 @@ export const AssessmentSectionSchema = z.object({
 
 // ---- reports ---------------------------------------------------------------
 export const ReportsSchema = z.object({
-  free: z
-    .object({ title: NonEmpty.default('Your free report') })
-    .default({ title: 'Your free report' }),
+  free: z.object({ title: NonEmpty.default('Your free report') }).prefault({}),
   premium: z
     .object({ title: NonEmpty.default('Your premium report') })
-    .default({ title: 'Your premium report' }),
+    .prefault({}),
   competencies: z.array(z.object({ key: NonEmpty })).default([]),
   roadmapEnabled: z.boolean().default(true),
-  pdf: z
-    .object({ footer: z.string().default('') })
-    .default({ footer: '' }),
+  pdf: z.object({ footer: z.string().default('') }).prefault({}),
 });
 
 // ---- products / pricing / vouchers -----------------------------------------
@@ -152,6 +204,8 @@ const PlanSchema = z.object({
   highlight: z.boolean().default(false),
   voucher: z.boolean().default(false),
   badge: z.string().default(''),
+  // Which entitlement tier purchasing this plan grants (drives access later).
+  grantsTier: z.enum(['free', 'pro', 'company', 'enterprise']).default('free'),
 });
 const VoucherPackSchema = z.object({
   credits: z.number().int().positive(),
@@ -166,35 +220,49 @@ export const ProductsSchema = z
     voucherPackages: z.array(VoucherPackSchema).default([]),
     enterprise: z
       .object({ features: z.array(NonEmpty).default([]) })
-      .default({ features: [] }),
+      .prefault({}),
   })
-  .default({
-    eyebrow: 'Products',
-    title: 'Plans for every buyer',
-    subtitle: '',
-    plans: [],
-    voucherPackages: [],
-    enterprise: { features: [] },
-  });
+  .prefault({});
 
-// ---- dashboard (which surfaces are enabled per tenant) ---------------------
-export const DashboardSchema = z
+// ---- automation (event → webhook) ------------------------------------------
+export const WebhookEventSchema = z.enum([
+  'assessment.completed',
+  'report.unlocked',
+  'voucher.redeemed',
+  'batch.purchased',
+]);
+export const AutomationSchema = z
   .object({
-    user: z.object({ enabled: z.boolean().default(true) }).default({ enabled: true }),
-    company: z
-      .object({ enabled: z.boolean().default(true) })
-      .default({ enabled: true }),
-    mentor: z
-      .object({ enabled: z.boolean().default(true) })
-      .default({ enabled: true }),
+    webhooks: z
+      .array(
+        z.object({
+          event: WebhookEventSchema,
+          url: z.string().url(),
+          secret: z.string().nullable().default(null),
+        }),
+      )
+      .default([]),
   })
-  .default({
-    user: { enabled: true },
-    company: { enabled: true },
-    mentor: { enabled: true },
-  });
+  .prefault({});
 
-// ---- emails (branded transactional copy) -----------------------------------
+// ---- integrations (enterprise connectivity) --------------------------------
+export const IntegrationsSchema = z
+  .object({
+    customDomain: z.string().nullable().default(null),
+    sso: z
+      .object({
+        enabled: z.boolean().default(false),
+        provider: z.enum(['none', 'saml', 'oidc']).default('none'),
+        metadataUrl: z.string().url().nullable().default(null),
+      })
+      .prefault({}),
+    scimEnabled: z.boolean().default(false),
+    api: z.object({ enabled: z.boolean().default(false) }).prefault({}),
+    analyticsId: z.string().nullable().default(null),
+  })
+  .prefault({});
+
+// ---- emails ----------------------------------------------------------------
 const EmailSchema = z.object({
   subject: NonEmpty,
   heading: NonEmpty,
@@ -222,7 +290,7 @@ export const EmailsSchema = z
     },
   });
 
-// ---- seo -------------------------------------------------------------------
+// ---- seo + settings --------------------------------------------------------
 export const SeoSchema = z
   .object({
     title: z.string().default(''),
@@ -230,72 +298,108 @@ export const SeoSchema = z
     keywords: z.array(z.string()).default([]),
     ogImageUrl: z.string().url().nullable().default(null),
   })
-  .default({ title: '', description: '', keywords: [], ogImageUrl: null });
+  .prefault({});
 
-// ---- integrations ----------------------------------------------------------
-export const IntegrationsSchema = z
+export const SettingsSchema = z
   .object({
-    customDomain: z.string().nullable().default(null),
-    ssoEnabled: z.boolean().default(false),
-    apiEnabled: z.boolean().default(false),
-    webhooks: z.array(z.string().url()).default([]),
-    analyticsId: z.string().nullable().default(null),
+    defaultLocale: z.enum(['en', 'id']).default('en'),
+    // Enterprise white-label: hide the "Powered by LATO" mark.
+    removeBranding: z.boolean().default(false),
   })
-  .default({
-    customDomain: null,
-    ssoEnabled: false,
-    apiEnabled: false,
-    webhooks: [],
-    analyticsId: null,
-  });
+  .prefault({});
 
 // ---- root ------------------------------------------------------------------
 export const AssessmentAppSchema = z.object({
-  version: z.literal(1).default(1),
+  version: z.number().int().default(CURRENT_VERSION),
+  tier: TierSchema,
+  modules: ModulesSchema,
+  featureFlags: FeatureFlagsSchema,
   brand: BrandSchema,
   theme: ThemeSchema,
+  ai: AiSchema,
   landing: LandingSchema,
   assessment: AssessmentSectionSchema,
   reports: ReportsSchema,
   products: ProductsSchema,
-  dashboard: DashboardSchema,
+  automation: AutomationSchema,
+  integrations: IntegrationsSchema,
   emails: EmailsSchema,
   seo: SeoSchema,
-  integrations: IntegrationsSchema,
+  settings: SettingsSchema,
+  // Untyped per-tenant extension bag. Survives round-trips so custom keys are
+  // never silently dropped (the typed sections strip unknowns).
+  metadata: z.record(z.string(), z.unknown()).prefault({}),
 });
 
 export type AssessmentApp = z.infer<typeof AssessmentAppSchema>;
 
-/**
- * Validate an unknown value as a full AssessmentApp. Throws ZodError on failure.
- */
+/** Validate an unknown value as a full AssessmentApp. Throws ZodError. */
 export const parseAssessmentApp = (value: unknown): AssessmentApp =>
   AssessmentAppSchema.parse(value);
 
+const isObj = (v: unknown): v is Record<string, unknown> =>
+  v !== null && typeof v === 'object' && !Array.isArray(v);
+
 /**
- * Deep-merge a partial patch onto a base config (plain objects merged
- * recursively; arrays and scalars are replaced, not concatenated). Used so
- * mentors can PATCH one field without resending the whole document. The result
- * is validated by the caller before persisting.
+ * Forward-migrate a stored config to the current shape, then validate. Older
+ * documents (identified by `version`) are upcast field-by-field so no data is
+ * lost when the typed schema would otherwise strip removed keys. Call this on
+ * every read of a persisted config.
  */
-export const mergeAssessmentApp = (
-  base: unknown,
-  patch: unknown,
-): unknown => {
-  if (
-    base === null ||
-    typeof base !== 'object' ||
-    Array.isArray(base) ||
-    patch === null ||
-    typeof patch !== 'object' ||
-    Array.isArray(patch)
-  ) {
-    return patch === undefined ? base : patch;
-  }
-  const out: Record<string, unknown> = { ...(base as Record<string, unknown>) };
-  for (const [key, val] of Object.entries(patch as Record<string, unknown>)) {
+export const migrateAssessmentApp = (raw: unknown): AssessmentApp => {
+  if (!isObj(raw)) return AssessmentAppSchema.parse(raw);
+  const version = typeof raw.version === 'number' ? raw.version : 1;
+  let doc: Record<string, unknown> = raw;
+  if (version < 2) doc = upcastV1toV2(doc);
+  // Future: if (doc.version < 3) doc = upcastV2toV3(doc); …
+  return AssessmentAppSchema.parse(doc);
+};
+
+/** v1 → v2: `dashboard.*.enabled` → `modules.*`, flat `integrations` →
+ *  structured `integrations` + `automation`, and set the new sections. */
+const upcastV1toV2 = (o: Record<string, unknown>): Record<string, unknown> => {
+  const dashboard = isObj(o.dashboard) ? o.dashboard : {};
+  const enabled = (k: string) =>
+    isObj(dashboard[k]) && typeof (dashboard[k] as Record<string, unknown>).enabled === 'boolean'
+      ? ((dashboard[k] as Record<string, unknown>).enabled as boolean)
+      : true;
+  const oldInt = isObj(o.integrations) ? o.integrations : {};
+  const webhooks = Array.isArray(oldInt.webhooks)
+    ? (oldInt.webhooks as unknown[])
+        .filter((u): u is string => typeof u === 'string')
+        .map((url) => ({ event: 'assessment.completed' as const, url }))
+    : [];
+
+  const { dashboard: _drop, integrations: _drop2, ...rest } = o;
+  return {
+    ...rest,
+    version: 2,
+    modules: {
+      userDashboard: enabled('user'),
+      companyDashboard: enabled('company'),
+      mentorDashboard: enabled('mentor'),
+    },
+    automation: { webhooks },
+    integrations: {
+      customDomain: typeof oldInt.customDomain === 'string' ? oldInt.customDomain : null,
+      sso: { enabled: oldInt.ssoEnabled === true },
+      api: { enabled: oldInt.apiEnabled === true },
+      analyticsId: typeof oldInt.analyticsId === 'string' ? oldInt.analyticsId : null,
+    },
+  };
+};
+
+/**
+ * Deep-merge a partial patch onto a base config (objects merged recursively;
+ * arrays and scalars replaced). Lets mentors PATCH one field without resending
+ * the whole document; the caller validates the merged result before persisting.
+ */
+export const mergeAssessmentApp = (base: unknown, patch: unknown): unknown => {
+  if (!isObj(base) || !isObj(patch)) return patch === undefined ? base : patch;
+  const out: Record<string, unknown> = { ...base };
+  for (const [key, val] of Object.entries(patch)) {
     if (val === undefined) continue;
-    out[key] = mergeAssessmentApp((base as Record<string, unknown>)[key], val);
+    out[key] = mergeAssessmentApp(base[key], val);
   }
   return out;
 };
@@ -305,27 +409,21 @@ export type DefaultConfigInput = {
   assessmentTitle: string;
   monogram?: string;
   colors?: { primary?: string; secondary?: string; accent?: string };
-  premiumPrice?: string; // display string, e.g. "$29"
+  premiumPrice?: string;
   premiumTokenCost?: number;
   questionCount?: number;
   estimatedMinutes?: number;
   description?: string | null;
 };
 
-const DEFAULT_COLORS = {
-  primary: '#4f46e5',
-  secondary: '#7c3aed',
-  accent: '#06b6d4',
-};
+const DEFAULT_COLORS = { primary: '#4f46e5', secondary: '#7c3aed', accent: '#06b6d4' };
 
 /**
  * Produce a COMPLETE, valid AssessmentApp from minimal input, so a brand-new
- * assessment renders as a finished product on day one. Copy is intentionally
- * generic placeholder text the mentor can then refine.
+ * assessment renders as a finished product on day one. Copy is generic
+ * placeholder text the mentor can refine.
  */
-export const defaultAssessmentApp = (
-  input: DefaultConfigInput,
-): AssessmentApp => {
+export const defaultAssessmentApp = (input: DefaultConfigInput): AssessmentApp => {
   const name = input.brandName.trim() || input.assessmentTitle.trim();
   const monogram = (input.monogram || name || 'A').trim().slice(0, 2).toUpperCase();
   const colors = {
@@ -338,7 +436,10 @@ export const defaultAssessmentApp = (
   const title = input.assessmentTitle.trim() || name;
 
   const draft: z.input<typeof AssessmentAppSchema> = {
-    version: 1,
+    version: CURRENT_VERSION,
+    tier: 'free',
+    modules: {},
+    featureFlags: {},
     brand: {
       brandName: name,
       monogram,
@@ -350,6 +451,16 @@ export const defaultAssessmentApp = (
       illustrationStyle: 'mesh',
     },
     theme: { radius: 'soft', spacing: 'regular', gradients: true, animations: 'full' },
+    ai: {
+      enabled: true,
+      provider: 'openai',
+      model: null,
+      persona: 'a seasoned, encouraging mentor',
+      tone: 'warm',
+      temperature: null,
+      capabilities: { questionGeneration: true, premiumReport: true },
+      guardrails: '',
+    },
     landing: {
       hero: {
         eyebrow: 'AI Assessment',
@@ -424,10 +535,10 @@ export const defaultAssessmentApp = (
       title: 'One assessment. Plans for every buyer.',
       subtitle: 'Start free. Upgrade for depth, or roll it out across your whole company.',
       plans: [
-        { name: 'Free', price: '$0', period: 'forever', tagline: 'The essentials to get oriented.', features: ['Full assessment', 'Instant score & level', 'Strengths summary'], cta: 'Start free', highlight: false, voucher: false, badge: '' },
-        { name: 'Individual', price, period: 'one-time', tagline: 'Your complete personalized blueprint.', features: ['Everything in Free', 'Premium AI report', 'Study materials', 'Personalized recommendations'], cta: 'Unlock my report', highlight: true, voucher: false, badge: 'Most popular' },
-        { name: 'Company', price: '$249', period: '/ 10 seats', tagline: 'Assess a team and see it all in one place.', features: ['10 voucher codes', 'Employee dashboard', 'Team & role reports', 'HR analytics'], cta: 'Buy team plan', highlight: false, voucher: true, badge: '' },
-        { name: 'Enterprise', price: 'Custom', period: '', tagline: 'For org-wide rollout and integration.', features: ['Unlimited employees', 'Org-wide dashboard', 'API integration', 'SSO & security review', 'Dedicated support'], cta: 'Talk to sales', highlight: false, voucher: false, badge: '' },
+        { name: 'Free', price: '$0', period: 'forever', tagline: 'The essentials to get oriented.', features: ['Full assessment', 'Instant score & level', 'Strengths summary'], cta: 'Start free', highlight: false, voucher: false, badge: '', grantsTier: 'free' },
+        { name: 'Individual', price, period: 'one-time', tagline: 'Your complete personalized blueprint.', features: ['Everything in Free', 'Premium AI report', 'Study materials', 'Personalized recommendations'], cta: 'Unlock my report', highlight: true, voucher: false, badge: 'Most popular', grantsTier: 'pro' },
+        { name: 'Company', price: '$249', period: '/ 10 seats', tagline: 'Assess a team and see it all in one place.', features: ['10 voucher codes', 'Employee dashboard', 'Team & role reports', 'HR analytics'], cta: 'Buy team plan', highlight: false, voucher: true, badge: '', grantsTier: 'company' },
+        { name: 'Enterprise', price: 'Custom', period: '', tagline: 'For org-wide rollout and integration.', features: ['Unlimited employees', 'Org-wide dashboard', 'API integration', 'SSO & security review', 'Dedicated support'], cta: 'Talk to sales', highlight: false, voucher: false, badge: '', grantsTier: 'enterprise' },
       ],
       voucherPackages: [
         { credits: 10, price: '$249' },
@@ -438,10 +549,13 @@ export const defaultAssessmentApp = (
         features: ['White-label branding', 'API access', 'SSO / SCIM', 'Custom domain', 'Dedicated support'],
       },
     },
-    dashboard: {
-      user: { enabled: true },
-      company: { enabled: true },
-      mentor: { enabled: true },
+    automation: { webhooks: [] },
+    integrations: {
+      customDomain: null,
+      sso: { enabled: false, provider: 'none', metadataUrl: null },
+      scimEnabled: false,
+      api: { enabled: false },
+      analyticsId: null,
     },
     emails: {
       welcome: { subject: `Welcome to ${name}`, heading: `Welcome to ${name}`, body: 'Thanks for joining. Take your first assessment any time.' },
@@ -455,15 +569,9 @@ export const defaultAssessmentApp = (
       keywords: [name.toLowerCase(), 'assessment', 'ai report'],
       ogImageUrl: null,
     },
-    integrations: {
-      customDomain: null,
-      ssoEnabled: false,
-      apiEnabled: false,
-      webhooks: [],
-      analyticsId: null,
-    },
+    settings: { defaultLocale: 'en', removeBranding: false },
+    metadata: {},
   };
 
-  // Parse to fill any remaining defaults and guarantee a valid document.
   return AssessmentAppSchema.parse(draft);
 };
