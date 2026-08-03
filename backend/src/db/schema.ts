@@ -1,4 +1,5 @@
 import { relations } from 'drizzle-orm';
+import type { AssessmentApp } from '../config/assessment-app.schema';
 import {
   boolean,
   integer,
@@ -87,6 +88,11 @@ export const assessments = pgTable('assessments', {
   // the taker once they purchase this assessment's premium report. URL-based for
   // the MVP (no file upload), mirroring imageUrl. Null -> no study video.
   studyVideoUrl: text('study_video_url'),
+  // Branded landing/app configuration (v5, multi-tenant). The full presentation
+  // + branding document that the reusable frontend renders from — see
+  // config/assessment-app.schema.ts. Null -> the API returns a generated default
+  // derived from this assessment's fields, so it always renders.
+  appConfig: jsonb('app_config').$type<AssessmentApp>(),
   // Diagnostic/personality engine (v3): when set, each answer position maps to
   // a result category. Null -> fall back to the exam-style score engine.
   resultCategories: jsonb('result_categories').$type<ResultCategories>(),
