@@ -63,10 +63,14 @@ export function BrandedLanding({
   app,
   startHref = '#products',
   loginHref = '/login',
+  companyHref,
+  redeemHref,
 }: {
   app: AssessmentApp;
   startHref?: string;
   loginHref?: string;
+  companyHref?: string;
+  redeemHref?: string;
 }) {
   const { brand, theme, landing, assessment, products, reports } = app;
   const comps = reports.competencies.slice(0, 3);
@@ -86,6 +90,7 @@ export function BrandedLanding({
       style={themeVars(app)}
       data-radius={theme.radius}
       data-spacing={theme.spacing}
+      data-theme={theme.mode === 'auto' ? undefined : theme.mode}
     >
       {/* NAV */}
       <header className="lato-nav">
@@ -334,6 +339,23 @@ export function BrandedLanding({
                 </Fragment>
               ))}
             </div>
+            {companyHref || redeemHref ? (
+              <div
+                className="lato-hero__cta"
+                style={{ justifyContent: 'center', marginTop: 44 }}
+              >
+                {companyHref ? (
+                  <a href={companyHref} className="lato-btn lato-btn--grad lato-btn--lg">
+                    Buy team vouchers
+                  </a>
+                ) : null}
+                {redeemHref ? (
+                  <a href={redeemHref} className="lato-btn lato-btn--ghost lato-btn--lg">
+                    Redeem a code
+                  </a>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </section>
 

@@ -101,6 +101,52 @@ export type UnlockResult = {
   already_unlocked: boolean;
 };
 
+// --- Vouchers (company packages) ---
+export type VoucherBatchSummary = {
+  batch_id: string;
+  company_name: string;
+  credits: number;
+  created_at: string;
+  assessment_id: string;
+  assessment_title: string;
+  redeemed: number;
+};
+export type VoucherAnalytics = {
+  credits: number;
+  redeemed: number;
+  remaining: number;
+  completed: number;
+  completion_rate: number;
+  average_score: number;
+};
+export type VoucherCode = {
+  code: string;
+  status: 'ACTIVE' | 'REDEEMED' | 'REVOKED';
+  redeemed_at: string | null;
+};
+export type VoucherBatchDetail = {
+  batch_id: string;
+  assessment_id: string;
+  company_name: string;
+  credits: number;
+  created_at: string;
+  analytics: VoucherAnalytics;
+  codes: VoucherCode[];
+};
+export type CreateBatchResult = {
+  batch_id: string;
+  assessment_id: string;
+  assessment_title: string;
+  company_name: string;
+  credits: number;
+  created_at: string;
+};
+export type RedeemResult = {
+  assessment_id: string;
+  assessment_title: string;
+  granted_tokens: number;
+};
+
 // --- Mentor ---
 export type MentorStats = {
   totalAssessments: number;

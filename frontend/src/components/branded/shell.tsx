@@ -57,6 +57,7 @@ export function BrandedShell({
       style={themeVars(app)}
       data-radius={app.theme.radius}
       data-spacing={app.theme.spacing}
+      data-theme={app.theme.mode === 'auto' ? undefined : app.theme.mode}
     >
       <header className="lato-topbar">
         <div className="lato-topbar__in">

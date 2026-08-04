@@ -83,9 +83,14 @@ export function BrandedDashboard({
             <span className="lato-eyebrow">{app.brand.brandName}</span>
             <h1>Your dashboard</h1>
           </div>
-          <a href={`/a/${assessmentId}/start`} className="lato-btn lato-btn--grad">
-            Take again
-          </a>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <a href={`/a/${assessmentId}/redeem`} className="lato-btn lato-btn--ghost">
+              Redeem voucher
+            </a>
+            <a href={`/a/${assessmentId}/start`} className="lato-btn lato-btn--grad">
+              Take again
+            </a>
+          </div>
         </div>
 
         {error ? <div className="lato-note">{error}</div> : null}

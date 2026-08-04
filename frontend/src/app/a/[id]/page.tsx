@@ -55,6 +55,12 @@ export default async function BrandedAssessmentPage({
   const app = await fetchConfig(id);
   if (!app) notFound();
   return (
-    <BrandedLanding app={app} startHref={`/a/${id}/start`} loginHref="/login" />
+    <BrandedLanding
+      app={app}
+      startHref={`/a/${id}/start`}
+      loginHref="/login"
+      companyHref={`/a/${id}/company`}
+      redeemHref={`/a/${id}/redeem`}
+    />
   );
 }
