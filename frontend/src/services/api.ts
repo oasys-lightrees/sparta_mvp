@@ -30,11 +30,20 @@ async function request<T>(
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_URL}${path}`, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+  } catch {
+    // Connection-level failure (offline, DNS, CORS, server down) — fetch itself
+    // rejected. Surface a friendly message instead of a raw "Failed to fetch".
+    throw new Error(
+      'Network error — please check your connection and try again.',
+    );
+  }
 
   let parsed: ApiResponse<T>;
   try {
