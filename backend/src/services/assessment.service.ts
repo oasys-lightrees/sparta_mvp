@@ -6,6 +6,7 @@ import {
   questions,
   type ResultCategories,
 } from '../db/schema';
+import type { LearningResources } from '../config/learning-resources.schema';
 import { HttpError } from '../utils/http-error';
 
 export type AssessmentStatus = 'DRAFT' | 'PUBLISHED';
@@ -26,6 +27,7 @@ export type CreateInput = {
   ai_enabled?: boolean;
   result_categories?: ResultCategories | null;
   study_video_url?: string | null;
+  learning_resources?: LearningResources | null;
 };
 
 export type UpdateInput = {
@@ -44,6 +46,7 @@ export type UpdateInput = {
   ai_enabled?: boolean;
   result_categories?: ResultCategories | null;
   study_video_url?: string | null;
+  learning_resources?: LearningResources | null;
 };
 
 const publicColumns = {
@@ -160,6 +163,7 @@ export const create = async (mentorId: string, input: CreateInput) => {
       aiEnabled: input.ai_enabled ?? false,
       resultCategories: input.result_categories ?? null,
       studyVideoUrl: input.study_video_url ?? null,
+      learningResources: input.learning_resources ?? null,
     })
     .returning({ id: assessments.id, status: assessments.status });
 
@@ -192,6 +196,7 @@ export const update = async (
     aiEnabled: boolean;
     resultCategories: ResultCategories | null;
     studyVideoUrl: string | null;
+    learningResources: LearningResources | null;
   }> = {};
   if (input.title !== undefined) values.title = input.title.trim();
   if (input.description !== undefined) values.description = input.description;
@@ -218,6 +223,8 @@ export const update = async (
     values.resultCategories = input.result_categories;
   if (input.study_video_url !== undefined)
     values.studyVideoUrl = input.study_video_url;
+  if (input.learning_resources !== undefined)
+    values.learningResources = input.learning_resources;
 
   const [updated] = await db
     .update(assessments)
@@ -241,6 +248,7 @@ export const update = async (
       ai_enabled: assessments.aiEnabled,
       result_categories: assessments.resultCategories,
       study_video_url: assessments.studyVideoUrl,
+      learning_resources: assessments.learningResources,
     });
 
   return updated;

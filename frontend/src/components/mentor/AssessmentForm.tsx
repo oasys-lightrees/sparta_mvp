@@ -7,8 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { AssessmentImage } from '@/components/assessment/AssessmentImage';
+import {
+  LearningResourcesEditor,
+  type ResourceProfile,
+} from '@/components/mentor/LearningResourcesEditor';
 import { cn } from '@/lib/utils';
-import type { ResultCategories } from '@/types';
+import type { LearningResourcesDoc, ResultCategories } from '@/types';
 
 type AssessmentMode = 'SKILL' | 'PERSONALITY';
 
@@ -28,6 +32,7 @@ export type AssessmentPayload = {
   ai_enabled: boolean;
   result_categories: ResultCategories | null;
   study_video_url: string | null;
+  learning_resources: LearningResourcesDoc | null;
 };
 
 // Result-category editor rows (diagnostic/personality assessments). Codes are
@@ -51,6 +56,7 @@ type Props = {
     ai_enabled: boolean;
     result_categories: ResultCategories | null;
     study_video_url: string | null;
+    learning_resources: LearningResourcesDoc | null;
   }>;
   submitLabel: string;
   submitting: boolean;
@@ -95,6 +101,9 @@ export function AssessmentForm({
   const [aiEnabled, setAiEnabled] = useState(Boolean(initial?.ai_enabled));
   const [studyVideoUrl, setStudyVideoUrl] = useState(
     str(initial?.study_video_url),
+  );
+  const [resourcesDoc, setResourcesDoc] = useState<LearningResourcesDoc | null>(
+    initial?.learning_resources ?? null,
   );
   const [categories, setCategories] = useState<CategoryRow[]>(() => {
     const rc = initial?.result_categories;
@@ -185,8 +194,25 @@ export function AssessmentForm({
       result_categories: isPersonality ? buildResultCategories() : null,
       study_video_url:
         studyVideoUrl.trim() === '' ? null : studyVideoUrl.trim(),
+      learning_resources: resourcesDoc,
     });
   };
+
+  // Result profiles a resource can target: personality categories, or the score
+  // levels for skill assessments.
+  const resourceProfiles: ResourceProfile[] = isPersonality
+    ? categories
+        .filter((c) => c.code.trim() !== '')
+        .map((c) => ({
+          code: c.code.trim(),
+          label: c.name.trim() || c.code.trim(),
+        }))
+    : [
+        { code: 'Beginner', label: 'Beginner' },
+        { code: 'Intermediate', label: 'Intermediate' },
+        { code: 'Advanced', label: 'Advanced' },
+        { code: 'Completed', label: 'Completed (no thresholds)' },
+      ];
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -379,6 +405,13 @@ export function AssessmentForm({
           Supports YouTube, Vimeo, or a direct video link.
         </p>
       </div>
+
+      <LearningResourcesEditor
+        initial={initial?.learning_resources ?? null}
+        profiles={resourceProfiles}
+        onChange={setResourcesDoc}
+      />
+
       <div className="space-y-2">
         <Label htmlFor="email_template">Email template</Label>
         <Textarea

@@ -4,6 +4,7 @@ import type {
   AssessmentDetail,
   AssessmentStatus,
   AssessmentSummary,
+  LearningResourcesDoc,
   MentorChoice,
   MentorQuestion,
   ResultCategories,
@@ -26,6 +27,7 @@ type AssessmentConfig = {
   ai_enabled?: boolean;
   result_categories?: ResultCategories | null;
   study_video_url?: string | null;
+  learning_resources?: LearningResourcesDoc | null;
 };
 
 export const assessmentApi = {

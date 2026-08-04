@@ -8,6 +8,7 @@ import {
   parseAssessmentApp,
   type AssessmentApp,
 } from '../config/assessment-app.schema';
+import type { LearningResources } from '../config/learning-resources.schema';
 import {
   assessments,
   attempts,
@@ -106,6 +107,7 @@ type AssessmentSeed = {
   premiumReportDescription: string;
   baseKnowledge: string;
   studyVideoUrl?: string;
+  learningResources?: LearningResources;
   questions: string[];
 };
 
@@ -222,6 +224,76 @@ const ASSESSMENTS: AssessmentSeed[] = [
       'This assessment measures readiness for a professional AI/ML engineering role across modeling, MLOps, software engineering and applied research. Higher scores indicate production-grade competency. Beginners should focus on Python and ML fundamentals; intermediates on deployment and evaluation; advanced engineers on research and system design.',
     // Study video unlocked with the premium report (demo).
     studyVideoUrl: 'https://www.youtube.com/watch?v=aircAruvnKk',
+    // Learning resources tailored to the taker's result level. `shared` shows for
+    // everyone; `byProfile` adds level-specific study material. `free` resources
+    // appear on the result immediately; `premium` ones unlock with the report.
+    learningResources: {
+      version: 1,
+      shared: [
+        {
+          id: 'r-shared-1',
+          type: 'article',
+          title: 'How to read your AI readiness result',
+          description: 'A short guide to interpreting your score and level.',
+          url: 'https://example.com/guides/reading-your-result',
+          access: 'free',
+          meta: {},
+        },
+      ],
+      byProfile: {
+        Beginner: [
+          {
+            id: 'r-beg-1',
+            type: 'video',
+            title: 'Python & ML foundations (crash course)',
+            description: 'Start here: the fundamentals every AI engineer needs.',
+            url: 'https://www.youtube.com/watch?v=aircAruvnKk',
+            access: 'free',
+            meta: { durationMinutes: 18 },
+          },
+          {
+            id: 'r-beg-2',
+            type: 'course',
+            title: 'From zero to first ML model',
+            description: 'A guided path covering data, training and evaluation.',
+            url: 'https://example.com/courses/zero-to-first-model',
+            access: 'premium',
+            meta: {},
+          },
+        ],
+        Intermediate: [
+          {
+            id: 'r-int-1',
+            type: 'pdf',
+            title: 'MLOps deployment checklist',
+            description: 'Ship and monitor models with confidence.',
+            url: 'https://example.com/files/mlops-checklist.pdf',
+            access: 'premium',
+            meta: {},
+          },
+          {
+            id: 'r-int-2',
+            type: 'article',
+            title: 'Choosing the right evaluation metrics',
+            description: 'Offline vs online metrics, and when to trust them.',
+            url: 'https://example.com/guides/evaluation-metrics',
+            access: 'free',
+            meta: {},
+          },
+        ],
+        Advanced: [
+          {
+            id: 'r-adv-1',
+            type: 'link',
+            title: 'Applied research reading list',
+            description: 'Curated papers to keep your edge sharp.',
+            url: 'https://example.com/reading/applied-research',
+            access: 'premium',
+            meta: {},
+          },
+        ],
+      },
+    },
     questions: [
       'I can design and train machine learning models for production use.',
       'I understand how transformer architectures and attention work.',
@@ -485,6 +557,7 @@ async function seed() {
           baseKnowledge: a.baseKnowledge,
           aiEnabled: true,
           studyVideoUrl: a.studyVideoUrl ?? null,
+          learningResources: a.learningResources ?? null,
           lowScoreThreshold: LOW,
           highScoreThreshold: HIGH,
           price: a.price,

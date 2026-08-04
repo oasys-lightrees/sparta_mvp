@@ -25,6 +25,34 @@ export type AssessmentSummary = {
   price: number;
 };
 
+// --- Learning resources ---
+// Extensible resource kinds — not video-only. New kinds are additive.
+export type LearningResourceType =
+  | 'video'
+  | 'pdf'
+  | 'article'
+  | 'file'
+  | 'link'
+  | 'course';
+export type LearningResourceAccess = 'free' | 'premium';
+export type LearningResource = {
+  id: string;
+  type: LearningResourceType;
+  title: string;
+  description: string;
+  url: string;
+  access: LearningResourceAccess;
+  meta?: Record<string, unknown>;
+};
+// The mentor-authored library attached to an assessment: shared resources shown
+// for every result, plus resources keyed by result profile (a result-category
+// code, or a score level like "Beginner").
+export type LearningResourcesDoc = {
+  version: 1;
+  shared: LearningResource[];
+  byProfile: Record<string, LearningResource[]>;
+};
+
 export type PublicChoice = { id: string; text: string };
 export type PublicQuestion = {
   id: string;
@@ -47,6 +75,8 @@ export type PremiumInfo = {
   content: string | null;
   // Mentor-provided study video, revealed only once premium is unlocked.
   study_video_url: string | null;
+  // Count of premium learning resources still hidden behind the paywall.
+  locked_resources: number;
 };
 export type AttemptReport = {
   attempt_id: string;
@@ -55,6 +85,8 @@ export type AttemptReport = {
   assessment_title: string | null;
   report_id: string;
   report: Report;
+  // Learning resources visible for this result (free always; premium after unlock).
+  learning_resources: LearningResource[];
   premium: PremiumInfo;
 };
 
@@ -208,6 +240,7 @@ export type MentorAssessmentDetail = {
   base_knowledge: string | null;
   ai_enabled: boolean;
   study_video_url: string | null;
+  learning_resources: LearningResourcesDoc | null;
   created_at: string;
   updated_at: string;
   questions: MentorQuestion[];

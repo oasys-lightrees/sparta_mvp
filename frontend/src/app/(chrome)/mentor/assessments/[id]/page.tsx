@@ -194,6 +194,7 @@ function DetailView({ id }: { id: string }) {
                 ai_enabled: detail.ai_enabled,
                 result_categories: detail.result_categories,
                 study_video_url: detail.study_video_url,
+                learning_resources: detail.learning_resources,
               }}
               onSubmit={handleSave}
               onCancel={() => setEditing(false)}

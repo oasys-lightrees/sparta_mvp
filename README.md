@@ -137,6 +137,23 @@ or a direct link). After a taker unlocks the premium report, the video is
 revealed alongside it as a training resource. The URL is only exposed once
 premium is unlocked, so it never leaks to non-purchasers.
 
+### Learning resources (per result profile)
+
+Beyond the single study video, each assessment can carry a configuration-driven
+**learning-resources library** attached to its result profiles. A resource is a
+`{ type, title, url, description, access }` record where `type` is one of
+`video · pdf · article · file · link · course` (extensible — new kinds are
+additive) and `access` is `free` (shown on the result) or `premium` (unlocked
+with the report). Resources are keyed per result **profile** — a personality
+result-category code, or a skill level (`Beginner`/`Intermediate`/`Advanced`) —
+plus a `shared` bucket shown for every result, so a taker sees materials matched
+to the result they actually got. The document lives on the assessment
+(`learning_resources` JSON) next to the other presentation config; mentors curate
+it from a dedicated editor in the assessment form, and the report resolves the
+visible set server-side (premium URLs are never sent while locked). Videos accept
+external URLs (YouTube/Vimeo, embedded) or direct file URLs (uploaded/hosted,
+played natively).
+
 ---
 
 ## Architecture

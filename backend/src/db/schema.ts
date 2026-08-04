@@ -1,5 +1,6 @@
 import { relations } from 'drizzle-orm';
 import type { AssessmentApp } from '../config/assessment-app.schema';
+import type { LearningResources } from '../config/learning-resources.schema';
 import {
   boolean,
   integer,
@@ -96,6 +97,11 @@ export const assessments = pgTable('assessments', {
   // the taker once they purchase this assessment's premium report. URL-based for
   // the MVP (no file upload), mirroring imageUrl. Null -> no study video.
   studyVideoUrl: text('study_video_url'),
+  // Learning resources (v6): a configuration-driven document mapping each result
+  // profile to curated learning resources (videos, PDFs, articles, files, links,
+  // courses). Extends the single studyVideoUrl into a per-result, multi-type
+  // library — see config/learning-resources.schema.ts. Null -> no resources.
+  learningResources: jsonb('learning_resources').$type<LearningResources>(),
   // Branded landing/app configuration (v5, multi-tenant). The full presentation
   // + branding document that the reusable frontend renders from — see
   // config/assessment-app.schema.ts. Null -> the API returns a generated default
