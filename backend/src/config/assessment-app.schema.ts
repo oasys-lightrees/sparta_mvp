@@ -43,18 +43,109 @@ export const BrandSchema = z.object({
 });
 
 // ---- theme -----------------------------------------------------------------
+// Additive design tokens. Existing color/radius/spacing/animations are
+// unchanged; the new tokens default to values that reproduce today's look, so
+// existing configs (and the default generator) behave exactly as before.
 export const ThemeSchema = z
   .object({
     radius: z.enum(['sharp', 'soft', 'round']).default('soft'),
     spacing: z.enum(['compact', 'regular', 'roomy']).default('regular'),
     gradients: z.boolean().default(true),
     animations: z.enum(['full', 'reduced']).default('full'),
+    // Color-scheme preference. 'auto' follows the viewer's OS (current behavior).
+    mode: z.enum(['light', 'dark', 'auto']).default('auto'),
+    // Named typography preset the frontend can map to a font pairing.
+    typographyPreset: z
+      .enum(['modern', 'classic', 'editorial', 'technical'])
+      .default('modern'),
+    // Motion intensity (finer than `animations`; reserved for future use).
+    motion: z.enum(['full', 'subtle', 'none']).default('full'),
   })
   .default({
     radius: 'soft',
     spacing: 'regular',
     gradients: true,
     animations: 'full',
+    mode: 'auto',
+    typographyPreset: 'modern',
+    motion: 'full',
+  });
+
+// ---- modules (capability enablement) ---------------------------------------
+// A lightweight switchboard for major platform capabilities. Every module
+// defaults to ENABLED so existing configs and current behavior are unchanged —
+// a tenant only ever opts OUT. Modules for surfaces that don't exist yet are
+// included (and default on) so shipping them never requires a schema change.
+export const ModulesSchema = z
+  .object({
+    landing: z.boolean().default(true),
+    assessment: z.boolean().default(true),
+    reports: z.boolean().default(true),
+    dashboard: z.boolean().default(true),
+    vouchers: z.boolean().default(true),
+    organization: z.boolean().default(true),
+    marketplace: z.boolean().default(true),
+    blog: z.boolean().default(true),
+    community: z.boolean().default(true),
+    analytics: z.boolean().default(true),
+  })
+  .default({
+    landing: true,
+    assessment: true,
+    reports: true,
+    dashboard: true,
+    vouchers: true,
+    organization: true,
+    marketplace: true,
+    blog: true,
+    community: true,
+    analytics: true,
+  });
+
+// ---- ai (reserved; does not affect current report generation) --------------
+// Optional AI configuration space for future model routing, languages, report
+// options and prompt tuning. Nothing here is wired into report generation yet
+// (that still uses the server default model + the relational assessment fields);
+// this simply reserves a stable, typed home so adding AI features later is
+// additive rather than breaking. Never holds secrets/API keys.
+export const AiSchema = z
+  .object({
+    enabled: z.boolean().default(true),
+    provider: z.enum(['openai']).default('openai'),
+    // Null -> use the platform default model (env).
+    model: z.string().nullable().default(null),
+    // Output languages the AI may generate in (BCP-47-ish codes).
+    languages: z.array(z.string()).default(['en']),
+    tone: z
+      .enum(['professional', 'warm', 'direct', 'playful'])
+      .default('warm'),
+    persona: z.string().default('a seasoned, encouraging mentor'),
+    temperature: z.number().min(0).max(2).nullable().default(null),
+    // Report-generation options (reserved).
+    reportOptions: z
+      .object({
+        includeRoadmap: z.boolean().default(true),
+        includeRecommendations: z.boolean().default(true),
+      })
+      .default({ includeRoadmap: true, includeRecommendations: true }),
+    // Prompt tuning (reserved). Null -> platform default prompt.
+    prompts: z
+      .object({ systemPromptOverride: z.string().nullable().default(null) })
+      .default({ systemPromptOverride: null }),
+    // Free-text safety/guardrail instructions (reserved).
+    guardrails: z.string().default(''),
+  })
+  .default({
+    enabled: true,
+    provider: 'openai',
+    model: null,
+    languages: ['en'],
+    tone: 'warm',
+    persona: 'a seasoned, encouraging mentor',
+    temperature: null,
+    reportOptions: { includeRoadmap: true, includeRecommendations: true },
+    prompts: { systemPromptOverride: null },
+    guardrails: '',
   });
 
 // ---- landing ---------------------------------------------------------------
@@ -251,7 +342,21 @@ export const IntegrationsSchema = z
 
 // ---- root ------------------------------------------------------------------
 export const AssessmentAppSchema = z.object({
+  // Legacy shape version, retained for backward compatibility (== schemaVersion).
   version: z.literal(1).default(1),
+  // --- Configuration metadata (additive) ---
+  // Canonical schema version going forward. Bumped only on shape changes.
+  schemaVersion: z.number().int().default(1),
+  // Content revision counter — bumped by the API on every save (audit +
+  // optimistic concurrency + cache busting). Independent of the schema version.
+  configVersion: z.number().int().nonnegative().default(1),
+  // ISO timestamps stamped by the API. Null until first saved.
+  createdAt: z.string().datetime().nullable().default(null),
+  updatedAt: z.string().datetime().nullable().default(null),
+  // --- Capability + AI (additive) ---
+  modules: ModulesSchema,
+  ai: AiSchema,
+  // --- Existing sections (unchanged) ---
   brand: BrandSchema,
   theme: ThemeSchema,
   landing: LandingSchema,

@@ -24,6 +24,36 @@ export interface ThemeTokens {
   spacing: 'compact' | 'regular' | 'roomy';
   gradients: boolean;
   animations: 'full' | 'reduced';
+  // Additive design tokens (default to today's look).
+  mode: 'light' | 'dark' | 'auto';
+  typographyPreset: 'modern' | 'classic' | 'editorial' | 'technical';
+  motion: 'full' | 'subtle' | 'none';
+}
+
+export interface Modules {
+  landing: boolean;
+  assessment: boolean;
+  reports: boolean;
+  dashboard: boolean;
+  vouchers: boolean;
+  organization: boolean;
+  marketplace: boolean;
+  blog: boolean;
+  community: boolean;
+  analytics: boolean;
+}
+
+export interface AiConfig {
+  enabled: boolean;
+  provider: 'openai';
+  model: string | null;
+  languages: string[];
+  tone: 'professional' | 'warm' | 'direct' | 'playful';
+  persona: string;
+  temperature: number | null;
+  reportOptions: { includeRoadmap: boolean; includeRecommendations: boolean };
+  prompts: { systemPromptOverride: string | null };
+  guardrails: string;
 }
 
 export interface Stat {
@@ -91,6 +121,14 @@ export interface Products {
 
 export interface AssessmentApp {
   version: number;
+  // Configuration metadata (additive).
+  schemaVersion: number;
+  configVersion: number;
+  createdAt: string | null;
+  updatedAt: string | null;
+  // Capability + AI (additive).
+  modules: Modules;
+  ai: AiConfig;
   brand: Brand;
   theme: ThemeTokens;
   landing: Landing;

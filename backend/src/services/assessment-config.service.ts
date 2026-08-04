@@ -58,9 +58,13 @@ const deriveDefault = async (row: AssessmentRow): Promise<AssessmentApp> => {
   });
 };
 
-/** The saved config, or a generated default when none is stored yet. */
+/**
+ * The saved config, or a generated default when none is stored yet. Stored
+ * configs are re-parsed so any newly-added fields are filled with their
+ * defaults on read — existing documents stay valid with no migration.
+ */
 const resolveConfig = async (row: AssessmentRow): Promise<AssessmentApp> =>
-  row.appConfig ?? deriveDefault(row);
+  row.appConfig ? parseAssessmentApp(row.appConfig) : deriveDefault(row);
 
 /**
  * Public config for the branded landing/app. Only PUBLISHED assessments are
@@ -126,12 +130,22 @@ export const updateConfig = async (
     throw err;
   }
 
+  // Server-owned provenance: bump the content revision and stamp timestamps
+  // (never trusting client-supplied values for these).
+  const now = new Date().toISOString();
+  const stamped: AssessmentApp = {
+    ...validated,
+    createdAt: current.createdAt ?? now,
+    updatedAt: now,
+    configVersion: (current.configVersion ?? 0) + 1,
+  };
+
   await db
     .update(assessments)
-    .set({ appConfig: validated })
+    .set({ appConfig: stamped })
     .where(eq(assessments.id, assessmentId));
 
-  return validated;
+  return stamped;
 };
 
 /**
