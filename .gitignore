@@ -17,3 +17,6 @@ npm-debug.log*
 
 # OS
 .DS_Store
+
+# CI/CD server-side deploy marker (created by scripts/deploy.sh on EC2)
+.last_deploy
