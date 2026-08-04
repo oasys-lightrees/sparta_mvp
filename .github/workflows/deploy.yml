@@ -1,0 +1,146 @@
+name: CI/CD — Production Deploy
+
+# Runs on merge to main; also manually dispatchable (with an optional image_tag
+# to redeploy/rollback to any previous commit SHA).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Commit SHA to (re)deploy. Leave blank to use the current commit — set it to a previous SHA to roll back.'
+        required: false
+        default: ''
+
+# Never run two production deploys at once; don't cancel an in-flight deploy.
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io/${{ github.repository_owner }}
+
+jobs:
+  # 1) Quality gates — fast checks before we build/ship anything.
+  quality:
+    name: Lint · Typecheck · Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Backend — install
+        working-directory: backend
+        run: npm ci
+      - name: Backend — lint (if present)
+        working-directory: backend
+        run: npm run --if-present lint
+      - name: Backend — typecheck
+        working-directory: backend
+        run: npm run typecheck
+      - name: Backend — test (if present)
+        working-directory: backend
+        run: npm run --if-present test
+
+      - name: Frontend — install
+        working-directory: frontend
+        run: npm ci
+      - name: Frontend — lint
+        working-directory: frontend
+        run: npm run --if-present lint
+      - name: Frontend — typecheck (if present)
+        working-directory: frontend
+        run: npm run --if-present typecheck
+      - name: Frontend — test (if present)
+        working-directory: frontend
+        run: npm run --if-present test
+
+  # 2) Build both images once and push to GHCR, tagged by commit SHA + latest.
+  build:
+    name: Build & push images (GHCR)
+    needs: quality
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/lato-backend:${{ github.sha }}
+            ${{ env.REGISTRY }}/lato-backend:latest
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
+
+      - name: Build & push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          # NEXT_PUBLIC_API_URL is inlined at build time — must be the public
+          # origin so both client and SSR fetches hit the API through nginx.
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://${{ vars.DOMAIN }}
+          tags: |
+            ${{ env.REGISTRY }}/lato-frontend:${{ github.sha }}
+            ${{ env.REGISTRY }}/lato-frontend:latest
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,scope=frontend,mode=max
+
+  # 3) Deploy to EC2 over SSH — zero manual work. Pulls the images built above,
+  #    migrates, rolls the stack with a health gate, verifies, cleans up.
+  deploy:
+    name: Deploy to EC2
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: SSH deploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_SSH_PORT || 22 }}
+          command_timeout: 20m
+          envs: DEPLOY_SHA,IMAGE_TAG,REGISTRY,GHCR_USER,GHCR_TOKEN,APP_DIR
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd "${APP_DIR}"
+            echo "Syncing repo to ${DEPLOY_SHA}"
+            git fetch --quiet origin
+            git reset --hard "${DEPLOY_SHA}"
+            chmod +x scripts/deploy.sh
+            ./scripts/deploy.sh
+        env:
+          DEPLOY_SHA: ${{ github.event.inputs.image_tag || github.sha }}
+          IMAGE_TAG: ${{ github.event.inputs.image_tag || github.sha }}
+          REGISTRY: ${{ env.REGISTRY }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APP_DIR: ${{ vars.EC2_APP_DIR || '/home/ubuntu/lato' }}
