@@ -12,7 +12,4 @@ export const tokenApi = {
   // Poll a purchase's status after returning from the Midtrans redirect.
   getOrder: (orderId: string) =>
     apiClient.get<TokenOrderStatus>(`/api/tokens/orders/${orderId}`),
-
-  topupDemo: (amount: number) =>
-    apiClient.post<TokenBalance>('/api/tokens/topup-demo', { amount }),
 };
