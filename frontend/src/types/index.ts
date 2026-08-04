@@ -16,6 +16,29 @@ export type AuthResult = {
   user: User;
 };
 
+// --- Access model ---
+// How an assessment gates *starting*. Config-driven; see backend config/access.ts.
+export type AccessMode = 'FREE' | 'FREEMIUM' | 'PAID' | 'VOUCHER';
+
+// Resolved access state for the current viewer — drives the take-flow CTA.
+export type AccessState = {
+  assessment_id: string;
+  mode: AccessMode;
+  start_requires_grant: boolean;
+  requires_auth_to_start: boolean;
+  grant_via: 'payment' | 'voucher' | null;
+  premium_unlockable: boolean;
+  access_token_cost: number;
+  premium_token_cost: number;
+  price: number;
+  has_access: boolean;
+  token_balance: number | null;
+};
+export type PurchaseAccessResult = AccessState & {
+  charged: number;
+  already_purchased: boolean;
+};
+
 // --- Public assessment ---
 export type AssessmentSummary = {
   id: string;
@@ -23,6 +46,8 @@ export type AssessmentSummary = {
   description: string | null;
   imageUrl?: string | null;
   price: number;
+  accessMode?: AccessMode | null;
+  accessTokenCost?: number;
 };
 
 // --- Learning resources ---
@@ -83,6 +108,7 @@ export type AttemptReport = {
   score: number;
   level: string;
   assessment_title: string | null;
+  access_mode: AccessMode;
   report_id: string;
   report: Report;
   // Learning resources visible for this result (free always; premium after unlock).
@@ -241,6 +267,8 @@ export type MentorAssessmentDetail = {
   ai_enabled: boolean;
   study_video_url: string | null;
   learning_resources: LearningResourcesDoc | null;
+  access_mode: AccessMode | null;
+  access_token_cost: number;
   created_at: string;
   updated_at: string;
   questions: MentorQuestion[];

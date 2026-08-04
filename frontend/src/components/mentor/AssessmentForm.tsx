@@ -12,7 +12,7 @@ import {
   type ResourceProfile,
 } from '@/components/mentor/LearningResourcesEditor';
 import { cn } from '@/lib/utils';
-import type { LearningResourcesDoc, ResultCategories } from '@/types';
+import type { AccessMode, LearningResourcesDoc, ResultCategories } from '@/types';
 
 type AssessmentMode = 'SKILL' | 'PERSONALITY';
 
@@ -33,6 +33,8 @@ export type AssessmentPayload = {
   result_categories: ResultCategories | null;
   study_video_url: string | null;
   learning_resources: LearningResourcesDoc | null;
+  access_mode: AccessMode;
+  access_token_cost: number;
 };
 
 // Result-category editor rows (diagnostic/personality assessments). Codes are
@@ -57,6 +59,8 @@ type Props = {
     result_categories: ResultCategories | null;
     study_video_url: string | null;
     learning_resources: LearningResourcesDoc | null;
+    access_mode: AccessMode | null;
+    access_token_cost: number;
   }>;
   submitLabel: string;
   submitting: boolean;
@@ -104,6 +108,12 @@ export function AssessmentForm({
   );
   const [resourcesDoc, setResourcesDoc] = useState<LearningResourcesDoc | null>(
     initial?.learning_resources ?? null,
+  );
+  const [accessMode, setAccessMode] = useState<AccessMode>(
+    initial?.access_mode ?? 'FREEMIUM',
+  );
+  const [accessTokenCost, setAccessTokenCost] = useState(
+    numStr(initial?.access_token_cost),
   );
   const [categories, setCategories] = useState<CategoryRow[]>(() => {
     const rc = initial?.result_categories;
@@ -173,6 +183,11 @@ export function AssessmentForm({
       setLocalError('Low score threshold must be <= high score threshold');
       return;
     }
+    const accessCost = accessTokenCost.trim() === '' ? 0 : Number(accessTokenCost);
+    if (accessMode === 'PAID' && accessCost <= 0) {
+      setLocalError('PAID assessments need a positive access cost (tokens)');
+      return;
+    }
     onSubmit({
       title: title.trim(),
       description: description.trim() === '' ? null : description,
@@ -195,6 +210,9 @@ export function AssessmentForm({
       study_video_url:
         studyVideoUrl.trim() === '' ? null : studyVideoUrl.trim(),
       learning_resources: resourcesDoc,
+      access_mode: accessMode,
+      // Access cost only applies to PAID; force 0 otherwise so it's never stale.
+      access_token_cost: accessMode === 'PAID' ? accessCost : 0,
     });
   };
 
@@ -323,6 +341,68 @@ export function AssessmentForm({
             onChange={(e) => setPremiumCost(e.target.value)}
           />
         </div>
+      </div>
+
+      {/* Access model — how takers get to start this assessment. */}
+      <div className="space-y-3 rounded-md border p-4">
+        <div className="space-y-1">
+          <Label>Access model</Label>
+          <p className="text-xs text-muted-foreground">
+            Controls who can start this assessment. Premium reports remain a
+            separate token unlock only in Freemium.
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {(
+            [
+              { value: 'FREE', title: 'Free', description: 'Anyone can start immediately. No premium tier.' },
+              { value: 'FREEMIUM', title: 'Freemium', description: 'Free to take; premium report unlockable with tokens.' },
+              { value: 'PAID', title: 'Paid', description: 'Must buy access (tokens) before starting. Full result included.' },
+              { value: 'VOUCHER', title: 'Voucher', description: 'Must redeem a valid voucher before starting.' },
+            ] as const
+          ).map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => setAccessMode(opt.value)}
+              aria-pressed={accessMode === opt.value}
+              className={cn(
+                'rounded-md border p-3 text-left transition-colors',
+                accessMode === opt.value
+                  ? 'border-primary bg-accent/40 ring-1 ring-primary'
+                  : 'hover:bg-accent/30',
+              )}
+            >
+              <span className="block text-sm font-medium">{opt.title}</span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                {opt.description}
+              </span>
+            </button>
+          ))}
+        </div>
+        {accessMode === 'PAID' ? (
+          <div className="space-y-2">
+            <Label htmlFor="access_token_cost">Access cost (tokens)</Label>
+            <Input
+              id="access_token_cost"
+              type="number"
+              min={1}
+              value={accessTokenCost}
+              onChange={(e) => setAccessTokenCost(e.target.value)}
+              placeholder="e.g. 30"
+            />
+            <p className="text-xs text-muted-foreground">
+              Tokens a taker spends to unlock access. They fund their wallet via
+              payment (Midtrans) or the demo top-up, then spend it here.
+            </p>
+          </div>
+        ) : null}
+        {accessMode === 'VOUCHER' ? (
+          <p className="text-xs text-muted-foreground">
+            Takers redeem a code from a voucher batch (see the Company/Vouchers
+            flow) to start. Redeeming grants access automatically.
+          </p>
+        ) : null}
       </div>
 
       {/* Score thresholds — skill mode only. */}

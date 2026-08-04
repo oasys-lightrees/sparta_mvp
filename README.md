@@ -137,6 +137,27 @@ degrades gracefully to an instant **demo top-up**, so local dev and the MVP demo
 keep working. The token ledger and mentor revenue accounting are fully
 implemented.
 
+### Access model (per assessment)
+
+Each assessment declares how it gates **starting**, configured by the mentor and
+enforced server-side (guests can't slip past it). The mode is driven by a single
+policy table (`backend/src/config/access.ts`) — nothing branches on the mode
+string directly:
+
+| Mode | Start | Result |
+|---|---|---|
+| **FREE** | Anyone, immediately | Fully free |
+| **FREEMIUM** | Anyone, immediately | Free report; premium unlockable with tokens |
+| **PAID** | Purchase access first (tokens) | Full result included |
+| **VOUCHER** | Redeem a valid voucher first | Full result included |
+
+Backward compatible: assessments with no mode set behave as **FREEMIUM** — the
+platform's original "take free, unlock premium" flow. PAID access is bought with
+the existing token wallet (funded by Midtrans or the demo top-up), crediting the
+mentor; VOUCHER access is granted by the existing voucher redemption. The
+landing CTA and the start flow adapt to the mode, and the backend blocks
+`submit` for anyone without a grant.
+
 ### Study video reward
 
 Each assessment can carry a mentor-provided **study video URL** (YouTube, Vimeo,

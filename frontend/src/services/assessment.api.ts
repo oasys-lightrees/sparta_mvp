@@ -1,5 +1,7 @@
 import { apiClient } from '@/services/api';
 import type {
+  AccessMode,
+  AccessState,
   Answer,
   AssessmentDetail,
   AssessmentStatus,
@@ -7,6 +9,7 @@ import type {
   LearningResourcesDoc,
   MentorChoice,
   MentorQuestion,
+  PurchaseAccessResult,
   ResultCategories,
   SubmitResult,
 } from '@/types';
@@ -28,6 +31,8 @@ type AssessmentConfig = {
   result_categories?: ResultCategories | null;
   study_video_url?: string | null;
   learning_resources?: LearningResourcesDoc | null;
+  access_mode?: AccessMode | null;
+  access_token_cost?: number;
 };
 
 export const assessmentApi = {
@@ -36,6 +41,14 @@ export const assessmentApi = {
 
   getPublic: (id: string) =>
     apiClient.get<AssessmentDetail>(`/api/assessments/${id}`),
+
+  // Access model: resolve the viewer's access state (drives the take-flow CTA).
+  getAccess: (id: string) =>
+    apiClient.get<AccessState>(`/api/assessments/${id}/access`),
+
+  // Access model: purchase start access with tokens (PAID mode; idempotent).
+  purchaseAccess: (id: string) =>
+    apiClient.post<PurchaseAccessResult>(`/api/assessments/${id}/access/purchase`),
 
   submit: (
     id: string,

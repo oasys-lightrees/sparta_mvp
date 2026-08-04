@@ -14,6 +14,7 @@ import {
 } from '../db/schema';
 import { HttpError } from '../utils/http-error';
 import { sendEmail } from './email.service';
+import { assertCanStart } from './access.service';
 import {
   hasCategories,
   labelFor,
@@ -271,6 +272,7 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
       lowScoreThreshold: assessments.lowScoreThreshold,
       highScoreThreshold: assessments.highScoreThreshold,
       resultCategories: assessments.resultCategories,
+      accessMode: assessments.accessMode,
     })
     .from(assessments)
     .where(eq(assessments.id, assessmentId))
@@ -279,6 +281,11 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
   if (!assessment || assessment.status !== 'PUBLISHED') {
     throw new HttpError(404, 'Assessment not found');
   }
+
+  // Access model authorization: gated modes (PAID/VOUCHER) require the taker to
+  // hold an access grant before an attempt may be created. Ungated modes
+  // (FREE/FREEMIUM) always pass — guests included — preserving the original UX.
+  await assertCanStart(assessmentId, input.userId ?? null, assessment.accessMode);
 
   const resultCategories: ResultCategories | null =
     assessment.resultCategories ?? null;
