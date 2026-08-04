@@ -3,6 +3,12 @@ import bcrypt from 'bcryptjs';
 import { inArray } from 'drizzle-orm';
 import { db, pool } from './client';
 import {
+  defaultAssessmentApp,
+  mergeAssessmentApp,
+  parseAssessmentApp,
+  type AssessmentApp,
+} from '../config/assessment-app.schema';
+import {
   assessments,
   attempts,
   blogs,
@@ -101,6 +107,104 @@ type AssessmentSeed = {
   baseKnowledge: string;
   studyVideoUrl?: string;
   questions: string[];
+};
+
+/**
+ * Per-assessment branding used to build a polished AssessmentApp config, so each
+ * seeded assessment renders as its own distinct branded product at /a/<id>.
+ * Keyed by title to avoid bloating the ASSESSMENTS entries.
+ */
+type Showcase = {
+  brandName: string;
+  monogram: string;
+  colors: { primary: string; secondary: string; accent: string };
+  competencies: string[];
+  companies: string[];
+  stats: { value: string; label: string }[];
+  testimonials: { quote: string; name: string; role: string; company: string }[];
+};
+
+const SHOWCASE: Record<string, Showcase> = {
+  'AI Engineer Readiness Assessment': {
+    brandName: 'Aptio',
+    monogram: 'AP',
+    colors: { primary: '#4f46e5', secondary: '#7c3aed', accent: '#06b6d4' },
+    competencies: ['Modeling', 'MLOps', 'Software', 'Evaluation', 'Research'],
+    companies: ['Northwind', 'Cobalt', 'Vantly', 'Rhombus', 'Lumen', 'Kestrel'],
+    stats: [
+      { value: '120k+', label: 'assessments completed' },
+      { value: '4.9', label: 'average rating' },
+      { value: '2,400+', label: 'companies onboard' },
+    ],
+    testimonials: [
+      { quote: 'The AI report read like a mentor who had actually seen my work. The roadmap was the useful part.', name: 'Maya Chen', role: 'Product Lead', company: 'Cobalt' },
+      { quote: 'We rolled it out to 60 people with voucher codes in an afternoon. The HR dashboard sold it.', name: 'David Okoro', role: 'Head of People', company: 'Northwind' },
+      { quote: 'Finally an assessment that tells you what to do next instead of just labeling you.', name: 'Priya Nair', role: 'Engineering Manager', company: 'Vantly' },
+    ],
+  },
+  'Leadership Potential Assessment': {
+    brandName: 'Meridian',
+    monogram: 'MD',
+    colors: { primary: '#0f9d77', secondary: '#0d9488', accent: '#84cc16' },
+    competencies: ['Vision', 'Decisiveness', 'Empathy', 'Communication', 'Accountability'],
+    companies: ['Everline', 'Harborlight', 'Terra', 'Solstice', 'Meadowbrook', 'Ironwood'],
+    stats: [
+      { value: '80k+', label: 'leaders assessed' },
+      { value: '4.8', label: 'average rating' },
+      { value: '900+', label: 'organizations' },
+    ],
+    testimonials: [
+      { quote: 'Meridian named a blind spot I’d been dancing around for years. The coaching moves were spot on.', name: 'Elena Ruiz', role: 'VP Engineering', company: 'Everline' },
+      { quote: 'We mapped our whole leadership team in a week. The shared vocabulary changed how we run meetings.', name: 'Tom Bradley', role: 'COO', company: 'Harborlight' },
+      { quote: 'No right answers, no judgment — just an honest mirror. Rare in this category.', name: 'Aisha Khan', role: 'Director of Ops', company: 'Terra' },
+    ],
+  },
+  'Sales Skill Assessment': {
+    brandName: 'Ember',
+    monogram: 'EM',
+    colors: { primary: '#e0492f', secondary: '#f59e0b', accent: '#f43f5e' },
+    competencies: ['Discovery', 'Qualifying', 'Objections', 'Closing', 'Follow-up'],
+    companies: ['Pipeline', 'Quota', 'Velocity', 'Apex', 'Frontier', 'Momentum'],
+    stats: [
+      { value: '60k+', label: 'reps benchmarked' },
+      { value: '4.9', label: 'average rating' },
+      { value: '1,300+', label: 'sales teams' },
+    ],
+    testimonials: [
+      { quote: 'Ember pinpointed that I was losing deals in discovery, not closing. Fixed it in a month.', name: 'Jordan Blake', role: 'Account Executive', company: 'Velocity' },
+      { quote: 'The team heatmap told me exactly who to coach on objections. Ramp time dropped noticeably.', name: 'Sara Lindqvist', role: 'Sales Manager', company: 'Apex' },
+      { quote: 'Ten minutes, and I got a drill plan I actually used on my next call. It worked.', name: 'Marcus Feld', role: 'SDR', company: 'Pipeline' },
+    ],
+  },
+};
+
+/**
+ * Build a complete, polished AssessmentApp config for a seeded assessment:
+ * generate sensible defaults from its fields, then layer on the showcase brand,
+ * trust, testimonials and competencies. Returns null when there's no showcase
+ * (the API then serves a generated default).
+ */
+const buildAppConfig = (a: AssessmentSeed): AssessmentApp | null => {
+  const s = SHOWCASE[a.title];
+  if (!s) return null;
+  const base = defaultAssessmentApp({
+    brandName: s.brandName,
+    assessmentTitle: a.title,
+    monogram: s.monogram,
+    colors: s.colors,
+    premiumTokenCost: a.premiumTokenCost,
+    questionCount: a.questions.length,
+    estimatedMinutes: 10,
+    description: a.description,
+  });
+  const merged = mergeAssessmentApp(base, {
+    landing: {
+      trust: { lead: 'Trusted by teams at', companies: s.companies, stats: s.stats },
+      testimonials: s.testimonials,
+    },
+    reports: { competencies: s.competencies.map((key) => ({ key })) },
+  });
+  return parseAssessmentApp(merged);
 };
 
 const ASSESSMENTS: AssessmentSeed[] = [
@@ -385,6 +489,9 @@ async function seed() {
           highScoreThreshold: HIGH,
           price: a.price,
           premiumTokenCost: a.premiumTokenCost,
+          // Polished branded landing/app config for the demo (distinct per
+          // assessment). Null falls back to a generated default.
+          appConfig: buildAppConfig(a),
         })
         .returning({ id: assessments.id });
 

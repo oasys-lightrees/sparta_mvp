@@ -163,6 +163,8 @@
 .lato-voucher__c{display:flex;flex-wrap:wrap;gap:6px}
 .lato-code{font:600 .72rem/1 var(--mono);color:var(--ink);background:var(--ground);border:1px solid var(--b1-line);padding:.42em .5em;border-radius:6px}
 .lato-code--more{color:var(--muted);border-style:dashed}
+.lato-codes{display:flex;flex-wrap:wrap;gap:7px}
+.lato-code.used{background:var(--b1-weak);color:var(--b1)}
 
 /* voucher flow */
 .lato-flow{display:flex;align-items:stretch;flex-wrap:wrap;justify-content:center;margin-top:52px}

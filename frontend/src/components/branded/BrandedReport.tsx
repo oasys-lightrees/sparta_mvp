@@ -264,6 +264,15 @@ export function BrandedReport({
                     {unlocking ? 'Unlocking…' : `Unlock (${premium.cost} tokens)`}
                   </button>
                 </div>
+                <p style={{ marginTop: 12, fontSize: '.85rem', color: 'var(--muted)' }}>
+                  Have a company voucher?{' '}
+                  <a
+                    href={`/a/${assessmentId}/redeem`}
+                    style={{ color: 'var(--b1)', fontWeight: 600 }}
+                  >
+                    Redeem it
+                  </a>
+                </p>
               </div>
             </div>
           </div>
