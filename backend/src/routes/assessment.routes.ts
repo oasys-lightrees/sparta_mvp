@@ -3,6 +3,10 @@ import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { authMiddleware, type AppEnv } from '../middleware/auth.middleware';
 import { requireRole } from '../middleware/role.middleware';
 import * as assessmentService from '../services/assessment.service';
+import {
+  LearningResourcesSchema,
+  type LearningResources,
+} from '../config/learning-resources.schema';
 import { HttpError } from '../utils/http-error';
 import { error, success } from '../utils/response';
 
@@ -96,6 +100,28 @@ const validateConfigFields = (body: Record<string, unknown>): string | null => {
 };
 
 /**
+ * Normalize the optional learning_resources document. Returns the parsed value
+ * (with schema defaults applied) or an error message. undefined -> leave field
+ * untouched; null -> clear the field.
+ */
+const normalizeLearningResources = (
+  raw: unknown,
+): { value: LearningResources | null | undefined } | { message: string } => {
+  if (raw === undefined) return { value: undefined };
+  if (raw === null) return { value: null };
+  const parsed = LearningResourcesSchema.safeParse(raw);
+  if (!parsed.success) {
+    const first = parsed.error.issues[0];
+    return {
+      message: `learning_resources is invalid${
+        first ? `: ${first.path.join('.')} ${first.message}`.trimEnd() : ''
+      }`,
+    };
+  }
+  return { value: parsed.data };
+};
+
+/**
  * Maps a thrown HttpError to the error envelope; rethrows anything else so the
  * global onError handler returns a 500.
  */
@@ -149,6 +175,10 @@ assessment.post('/', authMiddleware, requireRole('MENTOR'), async (c) => {
   if (configError) {
     return c.json(error(configError), 400);
   }
+  const resources = normalizeLearningResources(body.learning_resources);
+  if ('message' in resources) {
+    return c.json(error(resources.message), 400);
+  }
 
   try {
     const created = await assessmentService.create(c.get('user').id, {
@@ -167,6 +197,7 @@ assessment.post('/', authMiddleware, requireRole('MENTOR'), async (c) => {
       ai_enabled: body.ai_enabled,
       result_categories: body.result_categories,
       study_video_url: body.study_video_url,
+      learning_resources: resources.value,
     });
     return c.json(success(created), 201);
   } catch (err) {
@@ -195,6 +226,10 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
   if (configError) {
     return c.json(error(configError), 400);
   }
+  const resources = normalizeLearningResources(body.learning_resources);
+  if ('message' in resources) {
+    return c.json(error(resources.message), 400);
+  }
   const updatableKeys = [
     'title',
     'description',
@@ -211,6 +246,7 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
     'ai_enabled',
     'result_categories',
     'study_video_url',
+    'learning_resources',
   ];
   if (!updatableKeys.some((k) => body[k] !== undefined)) {
     return c.json(error('Nothing to update'), 400);
@@ -233,6 +269,7 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
       ai_enabled: body.ai_enabled,
       result_categories: body.result_categories,
       study_video_url: body.study_video_url,
+      learning_resources: resources.value,
     });
     return c.json(success(updated), 200);
   } catch (err) {

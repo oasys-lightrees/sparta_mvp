@@ -1,6 +1,6 @@
 # DATABASE_SCHEMA.md
 
-# SPARTA Database Schema
+# LATO Database Schema
 
 Database:
 PostgreSQL

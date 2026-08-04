@@ -1,6 +1,6 @@
 # PROJECT_REQUIREMENT.md
 
-# SPARTA — Self Assessment Platform
+# LATO — Self Assessment Platform
 
 ## Project Goal
 

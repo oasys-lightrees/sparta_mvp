@@ -24,7 +24,7 @@ const app = new Hono();
 // cookies), so credentials are not enabled.
 const allowedOrigins = (
   process.env.CORS_ORIGINS ??
-  'https://sparta.jearimjarden.com,http://localhost:3000'
+  'https://lato.example.com,http://localhost:3000'
 )
   .split(',')
   .map((origin) => origin.trim())
@@ -75,5 +75,5 @@ app.onError((err, c) => {
 const port = Number(process.env.PORT ?? 3001);
 
 serve({ fetch: app.fetch, port }, (info) => {
-  console.log(`SPARTA backend running on http://localhost:${info.port}`);
+  console.log(`LATO backend running on http://localhost:${info.port}`);
 });

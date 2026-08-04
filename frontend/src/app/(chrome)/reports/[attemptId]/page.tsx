@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Lock, PlayCircle, Sparkles } from 'lucide-react';
+import { BookOpen, Lock, PlayCircle, Sparkles } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { attemptApi } from '@/services/attempt.api';
 import { clearPendingAttempt } from '@/lib/storage';
 import { ReportView } from '@/components/assessment/ReportView';
 import { PremiumReportView } from '@/components/assessment/PremiumReportView';
 import { StudyVideo } from '@/components/assessment/StudyVideo';
+import { LearningResources } from '@/components/assessment/LearningResources';
 import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import { Loading } from '@/components/common/Loading';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
@@ -157,6 +158,29 @@ function ReportContent({ attemptId }: { attemptId: string }) {
                 </>
               )}
             </Button>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {/* Learning Resources — curated materials matched to the taker's result.
+          Free resources show immediately; premium ones unlock with the report. */}
+      {report.learning_resources.length > 0 ||
+      report.premium.locked_resources > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary" />
+              {t('report.resourcesTitle')}
+            </CardTitle>
+            <CardDescription>{t('report.resourcesDescription')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LearningResources
+              resources={report.learning_resources}
+              lockedCount={
+                report.premium.unlocked ? 0 : report.premium.locked_resources
+              }
+            />
           </CardContent>
         </Card>
       ) : null}

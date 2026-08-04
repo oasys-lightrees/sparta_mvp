@@ -8,6 +8,7 @@ import {
   parseAssessmentApp,
   type AssessmentApp,
 } from '../config/assessment-app.schema';
+import type { LearningResources } from '../config/learning-resources.schema';
 import {
   assessments,
   attempts,
@@ -21,7 +22,7 @@ import {
 } from './schema';
 
 /**
- * Demo seed — populates SPARTA with realistic, presentation-ready SaaS data so
+ * Demo seed — populates LATO with realistic, presentation-ready SaaS data so
  * every dashboard (user, mentor, admin) and report looks alive during a live
  * MVP demo. Seed-only: it does not change any application logic and is safe to
  * re-run (it removes the known demo accounts first, which cascades their
@@ -94,7 +95,7 @@ const renderPremium = (title: string, score: number): string => {
 // mentor immediately shows a full dashboard (assessments, revenue, analytics).
 const MENTOR = {
   name: 'Sarah Chen — AI Career Coach',
-  email: 'mentor@sparta.demo',
+  email: 'mentor@lato.demo',
 };
 
 type AssessmentSeed = {
@@ -106,6 +107,7 @@ type AssessmentSeed = {
   premiumReportDescription: string;
   baseKnowledge: string;
   studyVideoUrl?: string;
+  learningResources?: LearningResources;
   questions: string[];
 };
 
@@ -222,6 +224,76 @@ const ASSESSMENTS: AssessmentSeed[] = [
       'This assessment measures readiness for a professional AI/ML engineering role across modeling, MLOps, software engineering and applied research. Higher scores indicate production-grade competency. Beginners should focus on Python and ML fundamentals; intermediates on deployment and evaluation; advanced engineers on research and system design.',
     // Study video unlocked with the premium report (demo).
     studyVideoUrl: 'https://www.youtube.com/watch?v=aircAruvnKk',
+    // Learning resources tailored to the taker's result level. `shared` shows for
+    // everyone; `byProfile` adds level-specific study material. `free` resources
+    // appear on the result immediately; `premium` ones unlock with the report.
+    learningResources: {
+      version: 1,
+      shared: [
+        {
+          id: 'r-shared-1',
+          type: 'article',
+          title: 'How to read your AI readiness result',
+          description: 'A short guide to interpreting your score and level.',
+          url: 'https://example.com/guides/reading-your-result',
+          access: 'free',
+          meta: {},
+        },
+      ],
+      byProfile: {
+        Beginner: [
+          {
+            id: 'r-beg-1',
+            type: 'video',
+            title: 'Python & ML foundations (crash course)',
+            description: 'Start here: the fundamentals every AI engineer needs.',
+            url: 'https://www.youtube.com/watch?v=aircAruvnKk',
+            access: 'free',
+            meta: { durationMinutes: 18 },
+          },
+          {
+            id: 'r-beg-2',
+            type: 'course',
+            title: 'From zero to first ML model',
+            description: 'A guided path covering data, training and evaluation.',
+            url: 'https://example.com/courses/zero-to-first-model',
+            access: 'premium',
+            meta: {},
+          },
+        ],
+        Intermediate: [
+          {
+            id: 'r-int-1',
+            type: 'pdf',
+            title: 'MLOps deployment checklist',
+            description: 'Ship and monitor models with confidence.',
+            url: 'https://example.com/files/mlops-checklist.pdf',
+            access: 'premium',
+            meta: {},
+          },
+          {
+            id: 'r-int-2',
+            type: 'article',
+            title: 'Choosing the right evaluation metrics',
+            description: 'Offline vs online metrics, and when to trust them.',
+            url: 'https://example.com/guides/evaluation-metrics',
+            access: 'free',
+            meta: {},
+          },
+        ],
+        Advanced: [
+          {
+            id: 'r-adv-1',
+            type: 'link',
+            title: 'Applied research reading list',
+            description: 'Curated papers to keep your edge sharp.',
+            url: 'https://example.com/reading/applied-research',
+            access: 'premium',
+            meta: {},
+          },
+        ],
+      },
+    },
     questions: [
       'I can design and train machine learning models for production use.',
       'I understand how transformer architectures and attention work.',
@@ -290,12 +362,12 @@ const ASSESSMENTS: AssessmentSeed[] = [
 // Realistic registered users (besides admin + mentors). Token balances vary so
 // the user dashboards and admin token column look populated.
 const USERS = [
-  { name: 'Demo User', email: 'user@sparta.demo', tokens: 120 },
-  { name: 'Olivia Bennett', email: 'olivia.bennett@sparta.demo', tokens: 70 },
-  { name: 'Liam Carter', email: 'liam.carter@sparta.demo', tokens: 35 },
-  { name: 'Sophia Nguyen', email: 'sophia.nguyen@sparta.demo', tokens: 0 },
-  { name: 'Noah Patel', email: 'noah.patel@sparta.demo', tokens: 60 },
-  { name: 'Emma Rossi', email: 'emma.rossi@sparta.demo', tokens: 15 },
+  { name: 'Demo User', email: 'user@lato.demo', tokens: 120 },
+  { name: 'Olivia Bennett', email: 'olivia.bennett@lato.demo', tokens: 70 },
+  { name: 'Liam Carter', email: 'liam.carter@lato.demo', tokens: 35 },
+  { name: 'Sophia Nguyen', email: 'sophia.nguyen@lato.demo', tokens: 0 },
+  { name: 'Noah Patel', email: 'noah.patel@lato.demo', tokens: 60 },
+  { name: 'Emma Rossi', email: 'emma.rossi@lato.demo', tokens: 15 },
 ];
 
 // Guest (not-registered) takers, used for some attempts + the contact inbox.
@@ -391,7 +463,7 @@ const ATTEMPTS: AttemptSpec[][] = [
 
 async function seed() {
   const allDemoEmails = [
-    'admin@sparta.demo',
+    'admin@lato.demo',
     MENTOR.email,
     ...USERS.map((u) => u.email),
   ];
@@ -416,7 +488,7 @@ async function seed() {
       .insert(users)
       .values({
         name: 'Demo Admin',
-        email: 'admin@sparta.demo',
+        email: 'admin@lato.demo',
         passwordHash,
         role: 'ADMIN',
       })
@@ -485,6 +557,7 @@ async function seed() {
           baseKnowledge: a.baseKnowledge,
           aiEnabled: true,
           studyVideoUrl: a.studyVideoUrl ?? null,
+          learningResources: a.learningResources ?? null,
           lowScoreThreshold: LOW,
           highScoreThreshold: HIGH,
           price: a.price,
@@ -605,9 +678,9 @@ async function seed() {
 
   console.log('✅ Demo seed complete.');
   console.log('   Password for all accounts: %s', DEMO_PASSWORD);
-  console.log('   ADMIN  -> admin@sparta.demo');
-  console.log('   MENTOR -> mentor@sparta.demo (Sarah Chen — AI Career Coach)');
-  console.log('   USER   -> user@sparta.demo (+ 5 named users)');
+  console.log('   ADMIN  -> admin@lato.demo');
+  console.log('   MENTOR -> mentor@lato.demo (Sarah Chen — AI Career Coach)');
+  console.log('   USER   -> user@lato.demo (+ 5 named users)');
   console.log('   3 published assessments (10 questions each, AI enabled)');
   console.log('   Historical attempts across beginner/intermediate/advanced');
   console.log('   Premium unlocks + token transactions + mentor revenue');

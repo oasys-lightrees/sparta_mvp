@@ -1,6 +1,6 @@
-# SPARTA — Architecture
+# LATO — Architecture
 
-This document explains how SPARTA is built and the reasoning behind the key
+This document explains how LATO is built and the reasoning behind the key
 technical decisions. It complements the root [`README.md`](../README.md) (product
 view), [`DATABASE_SCHEMA.md`](../DATABASE_SCHEMA.md) (data model), and
 [`DEPLOYMENT.md`](../DEPLOYMENT.md) (operations).
@@ -9,7 +9,7 @@ view), [`DATABASE_SCHEMA.md`](../DATABASE_SCHEMA.md) (data model), and
 
 ## System Overview
 
-SPARTA is a three-tier web application with an AI integration:
+LATO is a three-tier web application with an AI integration:
 
 ```
             Browser

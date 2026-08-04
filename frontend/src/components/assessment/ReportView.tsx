@@ -3,7 +3,7 @@
 import { Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { ShieldMark } from '@/components/brand/ShieldMark';
+import { LatoMark } from '@/components/brand/LatoMark';
 import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import type { TranslationKey } from '@/lib/i18n';
 import type { AttemptReport } from '@/types';
@@ -28,7 +28,7 @@ export function ReportView({ data }: { data: AttemptReport }) {
       {/* Blueprint hero — a personal training scroll, not an exam result */}
       <div className="relative bg-gradient-to-br from-primary to-[hsl(222,47%,16%)] px-6 py-8 text-primary-foreground">
         <div className="flex items-center gap-2 text-bronze">
-          <ShieldMark className="h-5 w-5" withGlyph={false} />
+          <LatoMark className="h-5 w-5" withGlyph={false} />
           <span className="font-display text-xs font-semibold uppercase tracking-[0.22em]">
             {data.report.type === 'PREMIUM'
               ? t('report.premiumReport')

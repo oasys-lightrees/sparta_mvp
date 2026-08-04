@@ -1,6 +1,7 @@
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import { db } from '../db/client';
 import { assessments, attempts, reports } from '../db/schema';
+import { resolveLearningResources } from '../config/learning-resources.schema';
 import { HttpError } from '../utils/http-error';
 
 /**
@@ -30,6 +31,7 @@ export const getReport = async (userId: string, attemptId: string) => {
       userId: attempts.userId,
       totalScore: attempts.totalScore,
       assessmentId: attempts.assessmentId,
+      categoryResult: attempts.categoryResult,
     })
     .from(attempts)
     .where(eq(attempts.id, attemptId))
@@ -62,6 +64,7 @@ export const getReport = async (userId: string, attemptId: string) => {
       low: assessments.lowScoreThreshold,
       high: assessments.highScoreThreshold,
       studyVideoUrl: assessments.studyVideoUrl,
+      learningResources: assessments.learningResources,
     })
     .from(assessments)
     .where(eq(assessments.id, attempt.assessmentId))
@@ -75,17 +78,34 @@ export const getReport = async (userId: string, attemptId: string) => {
     )
     .limit(1);
 
+  const level = levelFor(
+    attempt.totalScore,
+    assessment?.low ?? null,
+    assessment?.high ?? null,
+  );
+
+  // The result "profile" keys the learning resources: for personality/diagnostic
+  // attempts it's the winning result-category code; for skill attempts it's the
+  // score level (Beginner/Intermediate/Advanced/Completed).
+  const profileCode =
+    attempt.categoryResult?.winner ??
+    attempt.categoryResult?.dominant ??
+    level;
+  const resources = resolveLearningResources(
+    assessment?.learningResources ?? null,
+    { profileCode, premiumUnlocked: Boolean(premium) },
+  );
+
   return {
     attempt_id: attempt.id,
     score: attempt.totalScore,
-    level: levelFor(
-      attempt.totalScore,
-      assessment?.low ?? null,
-      assessment?.high ?? null,
-    ),
+    level,
     assessment_title: assessment?.title ?? null,
     report_id: freeReport.id,
     report: { type: 'FREE' as const, content: freeReport.content },
+    // Learning resources visible for this result now (free ones always; premium
+    // ones only after unlock — premium URLs are never included while locked).
+    learning_resources: resources.items,
     premium: {
       cost: assessment?.cost ?? 0,
       description: assessment?.description ?? null,
@@ -94,6 +114,9 @@ export const getReport = async (userId: string, attemptId: string) => {
       // Study video is a paid perk — only revealed once the premium report is
       // unlocked, so the URL never leaks to non-purchasers.
       study_video_url: premium ? (assessment?.studyVideoUrl ?? null) : null,
+      // Count of premium learning resources still hidden behind the paywall, so
+      // the UI can show "unlock for N more" without leaking their URLs.
+      locked_resources: resources.locked,
     },
   };
 };

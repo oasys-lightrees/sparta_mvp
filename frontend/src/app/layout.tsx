@@ -5,17 +5,38 @@ import { AuthProvider } from '@/components/auth/AuthProvider';
 import { LanguageProvider } from '@/lib/i18n/LanguageProvider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
-// Spartan "academy" display voice for headings, hero, stats, report ranks.
+// Confident "academy" display voice for headings, hero, stats, report ranks.
 const sora = Sora({
   subsets: ['latin'],
   variable: '--font-display',
   weight: ['500', '600', '700'],
 });
 
+const APP_NAME = 'LATO';
+const APP_TITLE = 'LATO — LighTech Assessment Tool';
+const APP_DESCRIPTION =
+  'Create tests, generate questions with AI, deliver personalized reports, and monetize your expertise.';
+
 export const metadata: Metadata = {
-  title: 'SPARTA — AI-Powered Assessment Platform',
-  description:
-    'Create tests, generate questions with AI, deliver personalized reports, and monetize your expertise.',
+  title: APP_TITLE,
+  description: APP_DESCRIPTION,
+  applicationName: APP_NAME,
+  manifest: '/manifest.webmanifest',
+  icons: {
+    icon: '/icon.svg',
+    apple: '/apple-icon.svg',
+  },
+  openGraph: {
+    type: 'website',
+    siteName: APP_NAME,
+    title: APP_TITLE,
+    description: APP_DESCRIPTION,
+  },
+  twitter: {
+    card: 'summary',
+    title: APP_TITLE,
+    description: APP_DESCRIPTION,
+  },
 };
 
 export default function RootLayout({

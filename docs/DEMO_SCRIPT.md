@@ -1,4 +1,4 @@
-# SPARTA — 10-Minute Demo Script
+# LATO — 10-Minute Demo Script
 
 A timed walkthrough for a live product demo. The goal: show the **full loop** —
 a mentor creates an AI assessment, a user takes it and unlocks a premium AI
@@ -9,9 +9,9 @@ report, and the mentor sees revenue and analytics update.
 - Run the demo seed so dashboards are populated:
   `docker compose exec backend npm run db:seed`
 - Have three logins ready (password set by the seed — `password123`):
-  - Admin — `admin@sparta.demo`
-  - Mentor — `mentor@sparta.demo` (Sarah Chen — AI Career Coach)
-  - User — `user@sparta.demo`
+  - Admin — `admin@lato.demo`
+  - Mentor — `mentor@lato.demo` (Sarah Chen — AI Career Coach)
+  - User — `user@lato.demo`
 - For a true end-to-end AI moment, set `OPENAI_API_KEY` on the backend. Without
   it, AI steps still demo gracefully (clear message / placeholder report) — call
   that out as intentional resilience.
@@ -27,7 +27,7 @@ report, and the mentor sees revenue and analytics update.
   struggle to package and sell it."
 - "Three pains: building assessments by hand is slow; personalized feedback
   doesn't scale; and there's no simple way to monetize knowledge digitally."
-- "SPARTA solves all three with AI assessments and built-in, token-based
+- "LATO solves all three with AI assessments and built-in, token-based
   monetization."
 
 ## Minute 1–2 — Landing page

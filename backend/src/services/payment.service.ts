@@ -97,7 +97,7 @@ export const createTokenOrder = async (
   }
 
   const grossAmount = tokenAmount * tokenPriceIdr();
-  const orderId = `SPARTA-TOKENS-${randomUUID()}`;
+  const orderId = `LATO-TOKENS-${randomUUID()}`;
 
   await db.insert(tokenOrders).values({
     userId,
@@ -123,8 +123,8 @@ export const createTokenOrder = async (
         transaction_details: { order_id: orderId, gross_amount: grossAmount },
         item_details: [
           {
-            id: 'SPARTA_TOKENS',
-            name: `${tokenAmount} SPARTA tokens`,
+            id: 'LATO_TOKENS',
+            name: `${tokenAmount} LATO tokens`,
             price: tokenPriceIdr(),
             quantity: tokenAmount,
           },

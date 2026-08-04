@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { dictionaries, type Language, type TranslationKey } from './index';
 
-const STORAGE_KEY = 'sparta_lang';
+const STORAGE_KEY = 'lato_lang';
 
 type LanguageContextValue = {
   lang: Language;

@@ -10,7 +10,7 @@
     --card: 0 0% 100%;
     --card-foreground: 222 47% 14%;
 
-    /* Deep Spartan Ink Blue — trust, intelligence, discipline */
+    /* Deep Ink Blue — trust, intelligence, discipline */
     --primary: 222 47% 28%;
     --primary-foreground: 0 0% 100%;
 
@@ -59,7 +59,7 @@
   body {
     @apply bg-background text-foreground;
   }
-  /* Headings carry the Spartan "academy" display voice */
+  /* Headings carry the confident "academy" display voice */
   h1,
   h2,
   h3,

@@ -1,7 +1,7 @@
-# SPARTA — App Overview (context brief for brainstorming)
+# LATO — App Overview (context brief for brainstorming)
 
 > This document is a self-contained briefing. It is written so that an AI (or a
-> person) with **no access to the codebase** can understand what SPARTA is, how
+> person) with **no access to the codebase** can understand what LATO is, how
 > it works, what is actually built, and where the open questions are — enough to
 > brainstorm product and technical ideas. Where something is a demo/stub vs.
 > fully built, that is called out explicitly.
@@ -10,13 +10,13 @@
 
 ## 1. One-paragraph summary
 
-**SPARTA is an AI-powered assessment *monetization* platform.** Mentors,
+**LATO is an AI-powered assessment *monetization* platform.** Mentors,
 educators, and coaches create online assessments (quizzes / diagnostics),
 optionally using AI to generate the questions. People take those assessments for
 free and get an instant results report. They can then spend **tokens** to unlock
 a deeper, **AI-personalized premium report** (and a mentor-provided study video).
 Each premium unlock earns revenue for the mentor who created the assessment. The
-product's branding is a "Spartan Academy" / self-improvement theme ("Know
+product's branding is a "Assessment Academy" / self-improvement theme ("Know
 yourself. Train your potential. Become stronger.").
 
 The core idea: **turn subject-matter expertise into a productized, AI-assisted

@@ -6,7 +6,7 @@ import { AssessmentCard } from '@/components/assessment/AssessmentCard';
 import { Loading } from '@/components/common/Loading';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
-import { ShieldMark } from '@/components/brand/ShieldMark';
+import { LatoMark } from '@/components/brand/LatoMark';
 import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import type { AssessmentSummary } from '@/types';
 
@@ -36,7 +36,7 @@ export function PublishedAssessments() {
   return (
     <section className="container py-16">
       <div className="mb-8 flex items-center gap-2.5">
-        <ShieldMark className="h-6 w-6 text-bronze" withGlyph={false} />
+        <LatoMark className="h-6 w-6 text-bronze" withGlyph={false} />
         <div className="space-y-1">
           <h2 className="text-3xl font-bold tracking-tight">
             {t('assessment.availableTitle')}

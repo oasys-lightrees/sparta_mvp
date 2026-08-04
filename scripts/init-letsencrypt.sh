@@ -1,5 +1,5 @@
 #!/bin/sh
-# SPARTA — first-time Let's Encrypt certificate bootstrap.
+# LATO — first-time Let's Encrypt certificate bootstrap.
 #
 # nginx will not start unless a certificate already exists at
 # /etc/letsencrypt/live/<DOMAIN>/. This script solves the chicken-and-egg
@@ -25,7 +25,7 @@ fi
 # shellcheck disable=SC1091
 set -a; . ./.env; set +a
 
-: "${DOMAIN:?Set DOMAIN in .env (e.g. sparta.example.com)}"
+: "${DOMAIN:?Set DOMAIN in .env (e.g. lato.example.com)}"
 : "${CERTBOT_EMAIL:?Set CERTBOT_EMAIL in .env (used for Let's Encrypt expiry notices)}"
 STAGING="${CERTBOT_STAGING:-0}"
 RSA_KEY_SIZE=4096

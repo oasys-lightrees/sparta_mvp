@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { attemptApi } from '@/services/attempt.api';
 import { useAuth } from '@/hooks/useAuth';
+import { isDirectVideo } from '@/lib/video';
 import type { AssessmentApp } from '@/types/assessment-app';
-import type { AttemptReport } from '@/types';
+import type { AttemptReport, LearningResource } from '@/types';
 import { BrandedShell, LatoIcon } from './shell';
 
 /** Minimal markdown → elements (headings, bullets, paragraphs). */
@@ -65,6 +66,99 @@ function embedUrl(raw: string): string | null {
     return null;
   }
   return null;
+}
+
+const RESOURCE_LABEL: Record<LearningResource['type'], string> = {
+  video: 'Video',
+  pdf: 'PDF',
+  article: 'Article',
+  file: 'Download',
+  link: 'Link',
+  course: 'Course',
+};
+
+/** On-theme learning-resources list for the branded report surface. */
+function BrandedResources({
+  resources,
+  lockedCount,
+}: {
+  resources: LearningResource[];
+  lockedCount: number;
+}) {
+  if (resources.length === 0 && lockedCount === 0) return null;
+  return (
+    <div className="lato-card" style={{ marginTop: 20 }}>
+      <span className="lato-eyebrow">
+        <LatoIcon name="spark" size={14} /> Learning Resources
+      </span>
+      <div style={{ display: 'grid', gap: 12, marginTop: 14 }}>
+        {resources.map((r) => {
+          const embed = r.type === 'video' ? embedUrl(r.url) : null;
+          return (
+            <div
+              key={r.id}
+              style={{
+                border: '1px solid var(--line)',
+                borderRadius: 12,
+                padding: 12,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  justifyContent: 'space-between',
+                }}
+              >
+                <strong style={{ fontWeight: 700 }}>{r.title}</strong>
+                <span className="lato-pill" style={{ fontSize: '.7rem' }}>
+                  {RESOURCE_LABEL[r.type] ?? 'Link'}
+                </span>
+              </div>
+              {r.description ? (
+                <p style={{ color: 'var(--muted)', fontSize: '.88rem', marginTop: 4 }}>
+                  {r.description}
+                </p>
+              ) : null}
+              {embed ? (
+                <div className="lato-video" style={{ marginTop: 10 }}>
+                  <iframe
+                    src={embed}
+                    title={r.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              ) : r.type === 'video' && isDirectVideo(r.url) ? (
+                <video
+                  controls
+                  src={r.url}
+                  style={{ width: '100%', borderRadius: 10, marginTop: 10, background: '#000' }}
+                />
+              ) : null}
+              <a
+                href={r.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="lato-btn lato-btn--ghost"
+                style={{ marginTop: 12 }}
+              >
+                <LatoIcon name="play" size={14} /> Open{' '}
+                {(RESOURCE_LABEL[r.type] ?? 'link').toLowerCase()}
+              </a>
+            </div>
+          );
+        })}
+      </div>
+      {lockedCount > 0 ? (
+        <p style={{ color: 'var(--muted)', fontSize: '.85rem', marginTop: 12 }}>
+          Unlock the premium report to access {lockedCount} more resource
+          {lockedCount === 1 ? '' : 's'}.
+        </p>
+      ) : null}
+    </div>
+  );
 }
 
 export function BrandedReport({
@@ -277,6 +371,11 @@ export function BrandedReport({
             </div>
           </div>
         ) : null}
+
+        <BrandedResources
+          resources={report.learning_resources}
+          lockedCount={premium.unlocked ? 0 : premium.locked_resources}
+        />
 
         <div style={{ marginTop: 26 }}>
           <a href={`/a/${assessmentId}/dashboard`} className="lato-btn lato-btn--ghost">

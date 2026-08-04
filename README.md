@@ -1,6 +1,6 @@
-# SPARTA — AI Assessment Monetization Platform
+# LATO — AI Assessment Monetization Platform
 
-> **SPARTA helps mentors, educators, and creators turn their expertise into
+> **LATO helps mentors, educators, and creators turn their expertise into
 > AI-powered assessments with personalized reports and token-based
 > monetization.**
 
@@ -10,7 +10,7 @@
 | **Who** | For **mentors, educators, and coaches** |
 | **Why** | To **turn knowledge into scalable digital products** that earn revenue |
 
-SPARTA is a full-stack AI SaaS MVP: a multi-role platform where mentors build
+LATO is a full-stack AI SaaS MVP: a multi-role platform where mentors build
 assessments (optionally with AI-generated questions), users take them and
 receive an instant free report, and a deeper **AI-personalized premium report**
 can be unlocked with tokens — generating revenue for the mentor.
@@ -32,7 +32,7 @@ and sell what they know:
 
 ## Solution
 
-SPARTA turns expertise into a productized, AI-assisted assessment with built-in
+LATO turns expertise into a productized, AI-assisted assessment with built-in
 monetization:
 
 ```
@@ -137,6 +137,23 @@ or a direct link). After a taker unlocks the premium report, the video is
 revealed alongside it as a training resource. The URL is only exposed once
 premium is unlocked, so it never leaks to non-purchasers.
 
+### Learning resources (per result profile)
+
+Beyond the single study video, each assessment can carry a configuration-driven
+**learning-resources library** attached to its result profiles. A resource is a
+`{ type, title, url, description, access }` record where `type` is one of
+`video · pdf · article · file · link · course` (extensible — new kinds are
+additive) and `access` is `free` (shown on the result) or `premium` (unlocked
+with the report). Resources are keyed per result **profile** — a personality
+result-category code, or a skill level (`Beginner`/`Intermediate`/`Advanced`) —
+plus a `shared` bucket shown for every result, so a taker sees materials matched
+to the result they actually got. The document lives on the assessment
+(`learning_resources` JSON) next to the other presentation config; mentors curate
+it from a dedicated editor in the assessment form, and the report resolves the
+visible set server-side (premium URLs are never sent while locked). Videos accept
+external URLs (YouTube/Vimeo, embedded) or direct file URLs (uploaded/hosted,
+played natively).
+
 ---
 
 ## Architecture
@@ -222,9 +239,9 @@ set by the seed script** (`password123` — demo only, not a production secret).
 
 | Role | Email | Persona |
 |---|---|---|
-| Admin | `admin@sparta.demo` | Platform admin |
-| Mentor | `mentor@sparta.demo` | **Sarah Chen — AI Career Coach** |
-| User | `user@sparta.demo` | Assessment taker |
+| Admin | `admin@lato.demo` | Platform admin |
+| Mentor | `mentor@lato.demo` | **Sarah Chen — AI Career Coach** |
+| User | `user@lato.demo` | Assessment taker |
 
 > Sarah Chen owns all three demo assessments (AI Engineer Readiness, Leadership
 > Potential, Sales Skill). The seed also adds several named users with

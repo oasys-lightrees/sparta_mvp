@@ -41,7 +41,7 @@ services:
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
-      SMTP_FROM: ${SMTP_FROM:-no-reply@sparta.local}
+      SMTP_FROM: ${SMTP_FROM:-no-reply@lato.local}
       # OpenAI (AI disabled while OPENAI_API_KEY is empty). Backend-only.
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5-mini}

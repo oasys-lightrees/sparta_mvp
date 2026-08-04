@@ -5,7 +5,7 @@
 import { getToken } from '@/lib/storage';
 
 // API base URL. Set via NEXT_PUBLIC_API_URL (inlined at build time):
-//   production -> https://sparta.jearimjarden.com (same origin via nginx)
+//   production -> https://lato.example.com (same origin via nginx)
 //   local dev  -> http://localhost:3001 (see frontend/.env.example)
 // Falls back to a relative base ('') so same-origin deployments work even when
 // the value is omitted. No hardcoded localhost or IP.
