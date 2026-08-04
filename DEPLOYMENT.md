@@ -121,6 +121,14 @@ docker compose exec backend npm run db:migrate
 docker compose exec backend npm run db:seed
 ```
 
+> **Schema migrations.** `npm run db:migrate` applies every pending migration in
+> [`backend/drizzle/`](backend/drizzle) in order and is idempotent — already-applied
+> migrations are skipped. Whenever you pull changes that add a migration (for
+> example the `learning_resources` column added in `0014`), just re-run step 3;
+> new columns are additive and nullable, so existing rows and configs stay valid
+> with no manual backfill. Run it **before** the new backend serves traffic (the
+> automated `scripts/deploy.sh` does this for you).
+
 `init-letsencrypt.sh` always applies both compose files itself, so it works even
 before you set `COMPOSE_FILE`. It reads `DOMAIN`/`CERTBOT_EMAIL` from `.env`,
 installs a temporary self-signed cert so nginx can boot, runs

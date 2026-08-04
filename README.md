@@ -67,6 +67,10 @@ Publish                        Unlock premium AI insights
   when generating premium reports.
 - **AI premium report generation** — each unlock produces a tailored report from
   the user's answers, score, and the mentor's knowledge.
+- **Learning resources** — curate a per-result library of study materials
+  (video · PDF · article · file · link · course), each marked free or
+  premium-gated and targeted at a specific result profile or shared across all
+  results, from a dedicated editor in the assessment builder.
 - **Revenue tracking** — total token revenue and a per-unlock transaction
   history.
 - **Analytics dashboard** — attempts per assessment, revenue over time, score
@@ -80,6 +84,9 @@ Publish                        Unlock premium AI insights
   Advanced), and summary.
 - **Premium reports** — unlock an AI-personalized deep-dive
   (Overview / Strengths / Weaknesses / Recommendations / Roadmap).
+- **Learning resources** — a dedicated section on the report showing study
+  materials matched to the result you got; free resources appear immediately and
+  premium ones are revealed once the report is unlocked.
 - **Token wallet** — view balance, top up (demo), and spend tokens to unlock
   premium reports.
 
@@ -205,7 +212,7 @@ breakdown.
 | Entity | Purpose |
 |---|---|
 | **Users** | Accounts with a role (USER / MENTOR / ADMIN) and a token balance |
-| **Assessments** | Mentor-owned tests: config, thresholds, pricing, knowledge base, cover image |
+| **Assessments** | Mentor-owned tests: config, thresholds, pricing, knowledge base, cover image, study video + learning resources |
 | **Questions** | Multiple-choice questions belonging to an assessment (+ scored choices) |
 | **Attempts** | A submitted assessment (logged-in user or guest) with a total score |
 | **Reports** | Generated result for an attempt — `FREE` or `PREMIUM` |
