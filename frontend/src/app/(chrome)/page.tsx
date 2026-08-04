@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/card';
 import { PublishedAssessments } from '@/components/assessment/PublishedAssessments';
 import { BlogSection } from '@/components/blog/BlogSection';
-import { ShieldMark } from '@/components/brand/ShieldMark';
+import { LatoMark } from '@/components/brand/LatoMark';
 import { StrengthBar } from '@/components/brand/StrengthBar';
 
 const FEATURES = [
@@ -115,7 +115,7 @@ export default function HomePage() {
           {/* Message */}
           <div className="space-y-6 text-center lg:text-left">
             <div className="flex items-center justify-center gap-2 lg:justify-start">
-              <ShieldMark className="h-6 w-6 text-primary" />
+              <LatoMark className="h-6 w-6 text-primary" />
               <span className="font-display text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
                 {t('landing.badge')}
               </span>
@@ -148,7 +148,7 @@ export default function HomePage() {
             <div className="overflow-hidden rounded-2xl border bg-card shadow-lg shadow-primary/10">
               <div className="flex items-center justify-between bg-primary px-5 py-4 text-primary-foreground">
                 <div className="flex items-center gap-2">
-                  <ShieldMark className="h-5 w-5 text-primary-foreground" />
+                  <LatoMark className="h-5 w-5 text-primary-foreground" />
                   <span className="font-display text-sm font-semibold tracking-wide">
                     {t('landing.blueprintTitle')}
                   </span>
@@ -196,7 +196,7 @@ export default function HomePage() {
             <p className="text-muted-foreground">{t('landing.problemBody')}</p>
           </div>
           <div className="space-y-3 rounded-lg border bg-accent/40 p-6">
-            <Badge variant="bronze">The SPARTA way</Badge>
+            <Badge variant="bronze">The LATO way</Badge>
             <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {t('landing.solutionTitle')}
             </h2>
@@ -214,7 +214,7 @@ export default function HomePage() {
               {t('landing.featuresTitle')}
             </h2>
             <p className="text-muted-foreground">
-              From AI-assisted authoring to revenue tracking, SPARTA handles the
+              From AI-assisted authoring to revenue tracking, LATO handles the
               full lifecycle of your assessments.
             </p>
           </div>
@@ -404,7 +404,7 @@ export default function HomePage() {
       {/* Final CTA — the courage/action moment (crimson) */}
       <section className="border-t bg-primary text-primary-foreground">
         <div className="container flex flex-col items-center gap-5 py-20 text-center">
-          <ShieldMark className="h-10 w-10 text-bronze" />
+          <LatoMark className="h-10 w-10 text-bronze" />
           <h2 className="max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
             {t('landing.finalCtaTitle')}
           </h2>

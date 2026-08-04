@@ -141,7 +141,7 @@ const STRINGS: Record<
     thankYou: (title) => `Thank you for completing "${title}".`,
     yourResultLabel: 'Your result',
     premiumLabel: 'Premium report',
-    emailSubject: 'Your SPARTA Assessment Result',
+    emailSubject: 'Your LATO Assessment Result',
   },
   id: {
     completedCategory: 'Selesai',
@@ -154,7 +154,7 @@ const STRINGS: Record<
     thankYou: (title) => `Terima kasih telah menyelesaikan "${title}".`,
     yourResultLabel: 'Hasil Anda',
     premiumLabel: 'Laporan premium',
-    emailSubject: 'Hasil Asesmen SPARTA Anda',
+    emailSubject: 'Hasil Asesmen LATO Anda',
   },
 };
 

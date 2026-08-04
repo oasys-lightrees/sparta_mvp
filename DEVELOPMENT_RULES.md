@@ -1,6 +1,6 @@
 # DEVELOPMENT_RULES.md
 
-# SPARTA Development Rules
+# LATO Development Rules
 
 These rules must be followed during development.
 

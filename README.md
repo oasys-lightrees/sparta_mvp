@@ -1,6 +1,6 @@
-# SPARTA — AI Assessment Monetization Platform
+# LATO — AI Assessment Monetization Platform
 
-> **SPARTA helps mentors, educators, and creators turn their expertise into
+> **LATO helps mentors, educators, and creators turn their expertise into
 > AI-powered assessments with personalized reports and token-based
 > monetization.**
 
@@ -10,7 +10,7 @@
 | **Who** | For **mentors, educators, and coaches** |
 | **Why** | To **turn knowledge into scalable digital products** that earn revenue |
 
-SPARTA is a full-stack AI SaaS MVP: a multi-role platform where mentors build
+LATO is a full-stack AI SaaS MVP: a multi-role platform where mentors build
 assessments (optionally with AI-generated questions), users take them and
 receive an instant free report, and a deeper **AI-personalized premium report**
 can be unlocked with tokens — generating revenue for the mentor.
@@ -32,7 +32,7 @@ and sell what they know:
 
 ## Solution
 
-SPARTA turns expertise into a productized, AI-assisted assessment with built-in
+LATO turns expertise into a productized, AI-assisted assessment with built-in
 monetization:
 
 ```
@@ -222,9 +222,9 @@ set by the seed script** (`password123` — demo only, not a production secret).
 
 | Role | Email | Persona |
 |---|---|---|
-| Admin | `admin@sparta.demo` | Platform admin |
-| Mentor | `mentor@sparta.demo` | **Sarah Chen — AI Career Coach** |
-| User | `user@sparta.demo` | Assessment taker |
+| Admin | `admin@lato.demo` | Platform admin |
+| Mentor | `mentor@lato.demo` | **Sarah Chen — AI Career Coach** |
+| User | `user@lato.demo` | Assessment taker |
 
 > Sarah Chen owns all three demo assessments (AI Engineer Readiness, Leadership
 > Potential, Sales Skill). The seed also adds several named users with

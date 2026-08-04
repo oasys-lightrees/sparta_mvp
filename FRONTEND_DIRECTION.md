@@ -1,12 +1,12 @@
 # FRONTEND_DIRECTION.md
 
-# SPARTA Frontend Development Direction
+# LATO Frontend Development Direction
 
 ## Goal
 
-Build a production-style MVP frontend for SPARTA.
+Build a production-style MVP frontend for LATO.
 
-SPARTA is a self-assessment platform where:
+LATO is a self-assessment platform where:
 
 * Visitors discover assessments
 * Visitors can take assessments without login
@@ -376,7 +376,7 @@ Can:
 
 Purpose:
 
-Introduce SPARTA.
+Introduce LATO.
 
 Contains:
 

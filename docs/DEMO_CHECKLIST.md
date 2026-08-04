@@ -1,12 +1,12 @@
-# SPARTA — Demo Checklist
+# LATO — Demo Checklist
 
 A pre-flight and run-of-show checklist for the live MVP demo. Pair this with the
 timed walkthrough in [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md).
 
 > **Prep:** run `npm run db:seed` so every dashboard is populated. Demo logins
 > (password set by the seed — `password123`):
-> Admin `admin@sparta.demo` · Mentor `mentor@sparta.demo` (Sarah Chen) ·
-> User `user@sparta.demo`.
+> Admin `admin@lato.demo` · Mentor `mentor@lato.demo` (Sarah Chen) ·
+> User `user@lato.demo`.
 
 ---
 
@@ -29,7 +29,7 @@ timed walkthrough in [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md).
 
 ## Mentor demo
 
-- [ ] Login mentor (`mentor@sparta.demo`)
+- [ ] Login mentor (`mentor@lato.demo`)
 - [ ] View analytics dashboard (assessments, revenue, charts populated)
 - [ ] Create assessment
 - [ ] Add knowledge (base knowledge field)

@@ -1,6 +1,6 @@
-// Spartan Academy chart palette (SVG attributes need literal colors, so these
+// LATO chart palette (SVG attributes need literal colors, so these
 // mirror the ink-blue + forged-bronze theme rather than CSS variables).
-export const CHART_PRIMARY = '#27406F'; // deep Spartan ink blue
+export const CHART_PRIMARY = '#27406F'; // deep ink blue
 export const CHART_BRONZE = '#B5803F'; // forged bronze accent
 export const CHART_AXIS = '#94a3b8';
 export const CHART_GRID = '#e8e4dc'; // warm stone grid

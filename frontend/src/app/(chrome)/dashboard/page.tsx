@@ -10,7 +10,7 @@ import { assessmentApi } from '@/services/assessment.api';
 import { tokenApi } from '@/services/token.api';
 import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import { AssessmentCard } from '@/components/assessment/AssessmentCard';
-import { ShieldMark } from '@/components/brand/ShieldMark';
+import { LatoMark } from '@/components/brand/LatoMark';
 import { Loading } from '@/components/common/Loading';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
@@ -191,7 +191,7 @@ function DashboardHome() {
     <div className="container space-y-10 py-10">
       <div className="space-y-1.5">
         <div className="flex items-center gap-2 text-bronze">
-          <ShieldMark className="h-4 w-4" withGlyph={false} />
+          <LatoMark className="h-4 w-4" withGlyph={false} />
           <span className="font-display text-xs font-semibold uppercase tracking-[0.22em]">
             {t('dashboard.commandCenter')}
           </span>

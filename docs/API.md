@@ -1,4 +1,4 @@
-# SPARTA — API Overview
+# LATO — API Overview
 
 A high-level map of the REST API. For request/response field details see
 [`API_SPEC.md`](../API_SPEC.md); this page is a quick reference to the main

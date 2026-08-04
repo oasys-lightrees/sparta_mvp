@@ -1,6 +1,6 @@
-# SPARTA — Production Deployment (HTTPS)
+# LATO — Production Deployment (HTTPS)
 
-This guide covers deploying SPARTA with Docker Compose. **nginx and certbot run
+This guide covers deploying LATO with Docker Compose. **nginx and certbot run
 as compose services** — HTTPS is terminated by nginx and certificates are
 issued/renewed automatically by Let's Encrypt. Everything comes up with
 `docker compose up -d`; there is nothing to install on the host except Docker.
@@ -33,19 +33,19 @@ Create a root `.env` (from `.env.example`) used by `docker compose`:
 
 | Variable | Where | Example | Notes |
 |---|---|---|---|
-| `DOMAIN` | nginx / certbot / build | `sparta.example.com` | **required** — server_name, TLS cert, and the default for CORS + API base URL |
+| `DOMAIN` | nginx / certbot / build | `lato.example.com` | **required** — server_name, TLS cert, and the default for CORS + API base URL |
 | `CERTBOT_EMAIL` | certbot | `admin@example.com` | **required** — Let's Encrypt expiry/security notices |
 | `CERTBOT_STAGING` | certbot | `0` | `1` uses the Let's Encrypt staging CA (untrusted certs, no rate limits) while testing |
-| `POSTGRES_USER` | db | `sparta` | |
+| `POSTGRES_USER` | db | `lato` | |
 | `POSTGRES_PASSWORD` | db | *(strong secret)* | change in production |
-| `POSTGRES_DB` | db | `sparta` | |
+| `POSTGRES_DB` | db | `lato` | |
 | `JWT_SECRET` | backend | *(long random secret)* | **must** be strong/secret |
-| `DATABASE_URL` | backend (local tooling) | `postgres://sparta:…@localhost:5432/sparta` | inside compose the backend derives its own URL with host `database` |
-| `CORS_ORIGINS` | backend (optional) | `https://sparta.example.com,http://localhost:3000` | compose defaults it to `https://${DOMAIN}` when unset |
+| `DATABASE_URL` | backend (local tooling) | `postgres://lato:…@localhost:5432/lato` | inside compose the backend derives its own URL with host `database` |
+| `CORS_ORIGINS` | backend (optional) | `https://lato.example.com,http://localhost:3000` | compose defaults it to `https://${DOMAIN}` when unset |
 | `SMTP_HOST` | backend (optional) | `smtp.example.com` | **email disabled when unset** — sends are skipped/logged, submission never breaks |
 | `SMTP_PORT` | backend | `587` | `465` enables implicit TLS |
 | `SMTP_USER` / `SMTP_PASSWORD` | backend | *(provider credentials)* | omit for unauthenticated relays |
-| `SMTP_FROM` | backend | `no-reply@sparta.example.com` | From address for result emails |
+| `SMTP_FROM` | backend | `no-reply@lato.example.com` | From address for result emails |
 | `OPENAI_API_KEY` | backend (optional) | `sk-…` | **AI disabled when unset** — AI endpoints return a clear error; premium unlock falls back to a placeholder. Backend-only, never sent to the browser |
 | `OPENAI_MODEL` | backend | `gpt-5-mini` | no hardcoded model — set per deployment |
 | `OPENAI_BASE_URL` | backend (optional) | `https://api.openai.com/v1` | override for Azure / OpenAI-compatible proxies |
@@ -53,7 +53,7 @@ Create a root `.env` (from `.env.example`) used by `docker compose`:
 | `MIDTRANS_CLIENT_KEY` | backend (optional) | `Mid-client-…` | returned to the browser for the Snap checkout |
 | `MIDTRANS_IS_PRODUCTION` | backend | `false` | `true` uses live Midtrans endpoints; anything else (default) uses sandbox |
 | `TOKEN_PRICE_IDR` | backend (optional) | `1000` | price of one token in IDR (Midtrans charges whole rupiah); default `1000` |
-| `NEXT_PUBLIC_API_URL` | frontend (optional) | `https://sparta.example.com` | **build-time** — compose defaults it to `https://${DOMAIN}`; override only for non-standard setups (see note) |
+| `NEXT_PUBLIC_API_URL` | frontend (optional) | `https://lato.example.com` | **build-time** — compose defaults it to `https://${DOMAIN}`; override only for non-standard setups (see note) |
 
 Generate strong secrets, e.g.:
 
@@ -104,7 +104,7 @@ command.) First deploy:
 
 ```bash
 # 0. clone + configure
-git clone <repo> sparta && cd sparta
+git clone <repo> lato && cd lato
 cp .env.example .env            # set DOMAIN, CERTBOT_EMAIL, secrets;
                                 # uncomment COMPOSE_FILE for production
 
@@ -139,7 +139,7 @@ docker compose down                    # stop (certs persist in the volume)
 > **Testing tip:** set `CERTBOT_STAGING=1` in `.env` for your first run to avoid
 > Let's Encrypt's rate limits. The cert will be untrusted (browser warning);
 > once the flow works, set it back to `0`, delete the `letsencrypt` volume
-> (`docker compose down && docker volume rm sparta_letsencrypt`), and re-run the
+> (`docker compose down && docker volume rm lato_letsencrypt`), and re-run the
 > bootstrap script for a trusted cert.
 
 Services and how they're exposed:

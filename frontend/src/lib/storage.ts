@@ -3,9 +3,9 @@
 
 import type { User } from '@/types';
 
-const TOKEN_KEY = 'sparta_token';
-const USER_KEY = 'sparta_user';
-const PENDING_ATTEMPT_KEY = 'sparta_pending_attempt';
+const TOKEN_KEY = 'lato_token';
+const USER_KEY = 'lato_user';
+const PENDING_ATTEMPT_KEY = 'lato_pending_attempt';
 
 const hasWindow = () => typeof window !== 'undefined';
 

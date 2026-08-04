@@ -1,8 +1,8 @@
 # ARCHITECTURE.md
 
-# SPARTA System Architecture
+# LATO System Architecture
 
-SPARTA is a full-stack assessment platform.
+LATO is a full-stack assessment platform.
 
 The architecture goal is:
 

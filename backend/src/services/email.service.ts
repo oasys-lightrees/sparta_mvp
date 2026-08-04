@@ -59,7 +59,7 @@ export const sendEmail = async (
 
   try {
     await t.sendMail({
-      from: process.env.SMTP_FROM ?? 'no-reply@sparta.local',
+      from: process.env.SMTP_FROM ?? 'no-reply@lato.local',
       to: message.to,
       subject: message.subject,
       text: message.body,

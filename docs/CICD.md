@@ -70,7 +70,7 @@ Nothing else changes — the existing `docker-compose.yml`, `docker-compose.prod
 ### Variables (non-sensitive)
 | Variable | Example | Used for |
 |---|---|---|
-| `DOMAIN` | `sparta.example.com` | Baked into the frontend image as `NEXT_PUBLIC_API_URL=https://$DOMAIN` |
+| `DOMAIN` | `lato.example.com` | Baked into the frontend image as `NEXT_PUBLIC_API_URL=https://$DOMAIN` |
 | `EC2_APP_DIR` | `/home/ubuntu/lato` | Repo path on the server (defaults to `/home/ubuntu/lato`) |
 
 ### Application/runtime secrets live on the server, not in CI

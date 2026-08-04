@@ -45,7 +45,7 @@ export function LoginForm() {
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle>Sign in</CardTitle>
-        <CardDescription>Welcome back to SPARTA.</CardDescription>
+        <CardDescription>Welcome back to LATO.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-4">

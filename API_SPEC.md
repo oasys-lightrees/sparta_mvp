@@ -1,6 +1,6 @@
 # API_SPEC.md
 
-# SPARTA API Specification
+# LATO API Specification
 
 Backend Framework:
 Hono.js

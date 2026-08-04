@@ -13,11 +13,11 @@ export const id: Record<TranslationKey, string> = {
   'nav.logout': 'Keluar',
 
   // Landing page
-  'landing.badge': 'Akademi Spartan Modern',
+  'landing.badge': 'Akademi Asesmen Modern',
   'landing.heroTitlePrefix': 'Kenali diri. Latih potensi Anda.',
   'landing.heroTitleHighlight': 'Jadi lebih kuat.',
   'landing.heroSubtitle':
-    'Setiap pejuang butuh umpan balik; setiap transformasi dimulai dari pengukuran. SPARTA mengubah asesmen yang jujur menjadi Cetak Biru Pertumbuhan AI — dan rencana untuk menjalankannya.',
+    'Setiap pelajar butuh umpan balik; setiap transformasi dimulai dari pengukuran. LATO mengubah asesmen yang jujur menjadi Cetak Biru Pertumbuhan AI — dan rencana untuk menjalankannya.',
   'landing.ctaCreate': 'Mulai latihan Anda',
   'landing.ctaDemo': 'Lihat cara kerjanya',
   // Hero blueprint preview
@@ -28,7 +28,7 @@ export const id: Record<TranslationKey, string> = {
   'landing.problemTitle': 'Banyak orang hanya menebak posisi mereka.',
   'landing.problemBody':
     'Tanpa umpan balik yang jujur dan rencana yang jelas, pertumbuhan terhenti. Kursus umum tidak pernah menunjukkan kekuatan asli Anda — atau celah yang menghambat.',
-  'landing.solutionTitle': 'SPARTA mengukurnya — lalu memberi Anda rencana.',
+  'landing.solutionTitle': 'LATO mengukurnya — lalu memberi Anda rencana.',
   'landing.solutionBody':
     'Terima tantangan latihan, dapatkan gambaran objektif tentang posisi Anda, dan terima Cetak Biru Pertumbuhan AI yang mengubah hasil menjadi langkah nyata.',
   'landing.featuresTitle': 'Semua yang Anda butuhkan untuk berlatih dan berkembang',

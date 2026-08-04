@@ -21,7 +21,7 @@ import {
 } from './schema';
 
 /**
- * Demo seed — populates SPARTA with realistic, presentation-ready SaaS data so
+ * Demo seed — populates LATO with realistic, presentation-ready SaaS data so
  * every dashboard (user, mentor, admin) and report looks alive during a live
  * MVP demo. Seed-only: it does not change any application logic and is safe to
  * re-run (it removes the known demo accounts first, which cascades their
@@ -94,7 +94,7 @@ const renderPremium = (title: string, score: number): string => {
 // mentor immediately shows a full dashboard (assessments, revenue, analytics).
 const MENTOR = {
   name: 'Sarah Chen — AI Career Coach',
-  email: 'mentor@sparta.demo',
+  email: 'mentor@lato.demo',
 };
 
 type AssessmentSeed = {
@@ -290,12 +290,12 @@ const ASSESSMENTS: AssessmentSeed[] = [
 // Realistic registered users (besides admin + mentors). Token balances vary so
 // the user dashboards and admin token column look populated.
 const USERS = [
-  { name: 'Demo User', email: 'user@sparta.demo', tokens: 120 },
-  { name: 'Olivia Bennett', email: 'olivia.bennett@sparta.demo', tokens: 70 },
-  { name: 'Liam Carter', email: 'liam.carter@sparta.demo', tokens: 35 },
-  { name: 'Sophia Nguyen', email: 'sophia.nguyen@sparta.demo', tokens: 0 },
-  { name: 'Noah Patel', email: 'noah.patel@sparta.demo', tokens: 60 },
-  { name: 'Emma Rossi', email: 'emma.rossi@sparta.demo', tokens: 15 },
+  { name: 'Demo User', email: 'user@lato.demo', tokens: 120 },
+  { name: 'Olivia Bennett', email: 'olivia.bennett@lato.demo', tokens: 70 },
+  { name: 'Liam Carter', email: 'liam.carter@lato.demo', tokens: 35 },
+  { name: 'Sophia Nguyen', email: 'sophia.nguyen@lato.demo', tokens: 0 },
+  { name: 'Noah Patel', email: 'noah.patel@lato.demo', tokens: 60 },
+  { name: 'Emma Rossi', email: 'emma.rossi@lato.demo', tokens: 15 },
 ];
 
 // Guest (not-registered) takers, used for some attempts + the contact inbox.
@@ -391,7 +391,7 @@ const ATTEMPTS: AttemptSpec[][] = [
 
 async function seed() {
   const allDemoEmails = [
-    'admin@sparta.demo',
+    'admin@lato.demo',
     MENTOR.email,
     ...USERS.map((u) => u.email),
   ];
@@ -416,7 +416,7 @@ async function seed() {
       .insert(users)
       .values({
         name: 'Demo Admin',
-        email: 'admin@sparta.demo',
+        email: 'admin@lato.demo',
         passwordHash,
         role: 'ADMIN',
       })
@@ -605,9 +605,9 @@ async function seed() {
 
   console.log('✅ Demo seed complete.');
   console.log('   Password for all accounts: %s', DEMO_PASSWORD);
-  console.log('   ADMIN  -> admin@sparta.demo');
-  console.log('   MENTOR -> mentor@sparta.demo (Sarah Chen — AI Career Coach)');
-  console.log('   USER   -> user@sparta.demo (+ 5 named users)');
+  console.log('   ADMIN  -> admin@lato.demo');
+  console.log('   MENTOR -> mentor@lato.demo (Sarah Chen — AI Career Coach)');
+  console.log('   USER   -> user@lato.demo (+ 5 named users)');
   console.log('   3 published assessments (10 questions each, AI enabled)');
   console.log('   Historical attempts across beginner/intermediate/advanced');
   console.log('   Premium unlocks + token transactions + mentor revenue');

@@ -32,7 +32,7 @@ export function BlogSection() {
         <div className="mb-8 space-y-1">
           <h2 className="text-3xl font-bold tracking-tight">From the Blog</h2>
           <p className="text-muted-foreground">
-            Insights and updates from the SPARTA team.
+            Insights and updates from the LATO team.
           </p>
         </div>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

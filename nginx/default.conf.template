@@ -1,4 +1,4 @@
-# SPARTA — nginx reverse proxy + TLS (Docker Compose)
+# LATO — nginx reverse proxy + TLS (Docker Compose)
 #
 # This is an nginx *template*. The official nginx image runs envsubst over
 # files in /etc/nginx/templates/*.template on startup, substituting ${DOMAIN}
@@ -17,12 +17,12 @@
 # `letsencrypt` volume (mounted at /etc/letsencrypt). Run scripts/init-letsencrypt.sh
 # once before the first `docker compose up` so the certs exist and nginx can boot.
 
-upstream sparta_frontend {
+upstream lato_frontend {
     server frontend:3000;
     keepalive 32;
 }
 
-upstream sparta_backend {
+upstream lato_backend {
     server backend:3001;
     keepalive 32;
 }
@@ -96,11 +96,11 @@ server {
 
     # --- API -> backend (the /api prefix is preserved) ---
     location /api/ {
-        proxy_pass http://sparta_backend;
+        proxy_pass http://lato_backend;
     }
 
     # --- Everything else -> frontend (pages, /_next static assets, etc.) ---
     location / {
-        proxy_pass http://sparta_frontend;
+        proxy_pass http://lato_frontend;
     }
 }

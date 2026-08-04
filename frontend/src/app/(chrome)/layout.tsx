@@ -1,9 +1,9 @@
 import { Navbar } from '@/components/common/Navbar';
-import { ShieldMark } from '@/components/brand/ShieldMark';
+import { LatoMark } from '@/components/brand/LatoMark';
 
-// Shared SPARTA chrome (navbar + footer) for the platform's own pages.
+// Shared LATO chrome (navbar + footer) for the platform's own pages.
 // Branded per-assessment routes live outside this group so they render as
-// their own product with no SPARTA chrome. Route groups don't affect URLs.
+// their own product with no LATO chrome. Route groups don't affect URLs.
 export default function ChromeLayout({
   children,
 }: {
@@ -16,13 +16,13 @@ export default function ChromeLayout({
       <footer className="border-t bg-muted/30">
         <div className="container flex flex-col items-center justify-between gap-3 py-6 text-sm text-muted-foreground sm:flex-row">
           <div className="flex items-center gap-2">
-            <ShieldMark className="h-5 w-5 text-primary" />
+            <LatoMark className="h-5 w-5 text-primary" />
             <span className="font-display font-semibold tracking-[0.18em] text-foreground">
-              SPARTA
+              LATO
             </span>
-            <span className="hidden sm:inline">· The Growth Academy</span>
+            <span className="hidden sm:inline">· LighTech Assessment Tool</span>
           </div>
-          <span>© {new Date().getFullYear()} SPARTA</span>
+          <span>© {new Date().getFullYear()} LATO</span>
         </div>
       </footer>
     </div>
