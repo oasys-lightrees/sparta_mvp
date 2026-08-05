@@ -1,4 +1,4 @@
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import type { AssessmentApp } from '../config/assessment-app.schema';
 import type { LearningResources } from '../config/learning-resources.schema';
 import {
@@ -10,6 +10,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
@@ -254,15 +255,26 @@ export const attempts = pgTable('attempts', {
  * Generated result for an attempt (1:1). MVP only generates FREE reports;
  * the PREMIUM enum value is kept for future compatibility.
  */
-export const reports = pgTable('reports', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  attemptId: uuid('attempt_id')
-    .notNull()
-    .references(() => attempts.id, { onDelete: 'cascade' }),
-  reportType: reportType('report_type').notNull().default('FREE'),
-  content: text('content').notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-});
+export const reports = pgTable(
+  'reports',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    attemptId: uuid('attempt_id')
+      .notNull()
+      .references(() => attempts.id, { onDelete: 'cascade' }),
+    reportType: reportType('report_type').notNull().default('FREE'),
+    content: text('content').notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => [
+    // At most ONE premium report per attempt — the DB guard that makes premium
+    // unlock idempotent under concurrency (a losing racer's insert is rejected,
+    // rolling back its token debit).
+    uniqueIndex('reports_one_premium_per_attempt')
+      .on(t.attemptId)
+      .where(sql`${t.reportType} = 'PREMIUM'`),
+  ],
+);
 
 /**
  * Relations (used by Drizzle's query API in later steps)

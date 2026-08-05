@@ -140,6 +140,12 @@ export type MyAttempt = {
 
 // --- Tokens ---
 export type TokenBalance = { balance: number };
+export type TokenPricing = {
+  token_price_idr: number;
+  currency: string;
+  // When false the gateway isn't configured — purchases credit instantly (demo).
+  payment_configured: boolean;
+};
 export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'EXPIRED';
 // Result of starting a token purchase. When the payment gateway is not
 // configured the backend credits immediately and returns the 'demo' variant.
