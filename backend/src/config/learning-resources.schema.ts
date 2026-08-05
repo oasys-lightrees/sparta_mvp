@@ -39,6 +39,11 @@ export type ResourceType = (typeof RESOURCE_TYPES)[number];
 export const RESOURCE_ACCESS = ['free', 'premium'] as const;
 export type ResourceAccess = (typeof RESOURCE_ACCESS)[number];
 
+// Video source hint. Optional and display-only — the player still derives the
+// correct embed/native element from the URL, so provider is never required.
+export const VIDEO_PROVIDERS = ['youtube', 'vimeo', 'mp4', 'file', 'external'] as const;
+export type VideoProvider = (typeof VIDEO_PROVIDERS)[number];
+
 export const LearningResourceSchema = z.object({
   // Stable client-generated id (used for list keys, ordering, future edits).
   id: z.string().min(1),
@@ -48,8 +53,14 @@ export const LearningResourceSchema = z.object({
   // External URL or a direct/hosted file URL (see file header).
   url: z.string().url(),
   access: z.enum(RESOURCE_ACCESS).default('premium'),
-  // Type-specific metadata bag (reserved & extensible): e.g. durationMinutes,
-  // thumbnailUrl, author, pageCount. Never required so adding fields is additive.
+  // --- Optional video metadata (ignored for non-video types) ---
+  // All optional so existing documents remain valid without migration.
+  provider: z.enum(VIDEO_PROVIDERS).nullable().optional(),
+  thumbnailUrl: z.string().url().nullable().optional(),
+  // Free-text duration label, e.g. "12 min" or "1:05:00".
+  durationLabel: z.string().optional(),
+  // Type-specific metadata bag (reserved & extensible): e.g. author, pageCount.
+  // Never required so adding fields is additive.
   meta: z.record(z.string(), z.unknown()).default({}),
 });
 export type LearningResource = z.infer<typeof LearningResourceSchema>;

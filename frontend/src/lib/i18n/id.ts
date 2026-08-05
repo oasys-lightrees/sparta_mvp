@@ -87,6 +87,7 @@ export const id: Record<TranslationKey, string> = {
   'report.studyVideoDescription':
     'Video latihan dari mentor Anda untuk membantu menindaklanjuti laporan ini.',
   'report.resourcesTitle': 'Sumber Belajar',
+  'report.resourcesPathTitle': 'Jalur Belajar Personal Anda',
   'report.resourcesDescription':
     'Materi pilihan yang sesuai dengan hasil Anda untuk membantu menindaklanjutinya.',
   'report.goDashboard': 'Ke pusat komando',

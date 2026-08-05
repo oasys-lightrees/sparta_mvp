@@ -86,6 +86,7 @@ export const en = {
   'report.studyVideoDescription':
     'A training video from your mentor to help you act on this report.',
   'report.resourcesTitle': 'Learning Resources',
+  'report.resourcesPathTitle': 'Your Personalized Learning Path',
   'report.resourcesDescription':
     'Curated materials matched to your result to help you act on it.',
   'report.goDashboard': 'Go to command center',

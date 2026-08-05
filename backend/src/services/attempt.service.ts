@@ -107,12 +107,22 @@ export const getReport = async (userId: string, attemptId: string) => {
     { profileCode, premiumUnlocked: effectiveUnlocked },
   );
 
+  // The result profile powers the personalized learning header. For personality
+  // assessments it's the winning result category (code + name); null otherwise.
+  const resultProfile = attempt.categoryResult
+    ? {
+        code: profileCode,
+        name: attempt.categoryResult.dominantName ?? profileCode,
+      }
+    : null;
+
   return {
     attempt_id: attempt.id,
     score: attempt.totalScore,
     level,
     assessment_title: assessment?.title ?? null,
     access_mode: mode,
+    result_profile: resultProfile,
     report_id: freeReport.id,
     report: { type: 'FREE' as const, content: freeReport.content },
     // Learning resources visible for this result now (free ones always; premium

@@ -170,9 +170,15 @@ function ReportContent({ attemptId }: { attemptId: string }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-primary" />
-              {t('report.resourcesTitle')}
+              {report.result_profile
+                ? t('report.resourcesPathTitle')
+                : t('report.resourcesTitle')}
             </CardTitle>
-            <CardDescription>{t('report.resourcesDescription')}</CardDescription>
+            <CardDescription>
+              {report.result_profile
+                ? `Because your result is ${report.result_profile.name}, here's your personalized learning path.`
+                : t('report.resourcesDescription')}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <LearningResources
