@@ -486,6 +486,55 @@ export function AssessmentForm({
         </p>
       </div>
 
+      {isPersonality ? (
+      <div className="space-y-3 rounded-md border p-4">
+        <div className="space-y-1">
+          <Label>Personality Result Categories</Label>
+          <p className="text-xs text-muted-foreground">
+            Define result types with a short code (e.g. PB, PO), a name and
+            knowledge. Results are based on each answer&apos;s category mapping
+            (set per choice in the question editor) instead of a score.
+          </p>
+        </div>
+        {categories.map((c, i) => (
+          <div key={i} className="space-y-2 rounded-md border p-3">
+            <div className="flex gap-2">
+              <Input
+                value={c.code}
+                onChange={(e) => setCategory(i, { code: e.target.value })}
+                placeholder="Code (e.g. PB)"
+                className="w-32"
+                aria-label="Category code"
+              />
+              <Input
+                value={c.name}
+                onChange={(e) => setCategory(i, { name: e.target.value })}
+                placeholder="Name (e.g. Power Builder)"
+                className="flex-1"
+                aria-label="Category name"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => removeCategory(i)}
+              >
+                Remove
+              </Button>
+            </div>
+            <Textarea
+              value={c.knowledge}
+              onChange={(e) => setCategory(i, { knowledge: e.target.value })}
+              placeholder="Knowledge — what people with this result are like"
+            />
+          </div>
+        ))}
+        <Button type="button" variant="outline" size="sm" onClick={addCategory}>
+          + Add Category
+        </Button>
+      </div>
+      ) : null}
+
       <LearningResourcesEditor
         initial={initial?.learning_resources ?? null}
         profiles={resourceProfiles}
@@ -535,55 +584,6 @@ export function AssessmentForm({
           placeholder="Explain your framework, scoring logic, and how AI should interpret results."
         />
       </div>
-
-      {isPersonality ? (
-      <div className="space-y-3 rounded-md border p-4">
-        <div className="space-y-1">
-          <Label>Personality Result Categories</Label>
-          <p className="text-xs text-muted-foreground">
-            Define result types with a short code (e.g. PB, PO), a name and
-            knowledge. Results are based on each answer&apos;s category mapping
-            (set per choice in the question editor) instead of a score.
-          </p>
-        </div>
-        {categories.map((c, i) => (
-          <div key={i} className="space-y-2 rounded-md border p-3">
-            <div className="flex gap-2">
-              <Input
-                value={c.code}
-                onChange={(e) => setCategory(i, { code: e.target.value })}
-                placeholder="Code (e.g. PB)"
-                className="w-32"
-                aria-label="Category code"
-              />
-              <Input
-                value={c.name}
-                onChange={(e) => setCategory(i, { name: e.target.value })}
-                placeholder="Name (e.g. Power Builder)"
-                className="flex-1"
-                aria-label="Category name"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => removeCategory(i)}
-              >
-                Remove
-              </Button>
-            </div>
-            <Textarea
-              value={c.knowledge}
-              onChange={(e) => setCategory(i, { knowledge: e.target.value })}
-              placeholder="Knowledge — what people with this result are like"
-            />
-          </div>
-        ))}
-        <Button type="button" variant="outline" size="sm" onClick={addCategory}>
-          + Add Category
-        </Button>
-      </div>
-      ) : null}
 
       <ErrorMessage message={localError || error || ''} />
 
