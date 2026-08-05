@@ -13,6 +13,7 @@ import {
 import { QuestionEditor } from '@/components/mentor/QuestionEditor';
 import { ResultsTable } from '@/components/mentor/ResultsTable';
 import { ShareAssessment } from '@/components/mentor/ShareAssessment';
+import { LandingPageEditor } from '@/components/mentor/LandingPageEditor';
 import { Loading } from '@/components/common/Loading';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { Badge } from '@/components/ui/badge';
@@ -251,6 +252,11 @@ function DetailView({ id }: { id: string }) {
       </Card>
 
       <ShareAssessment
+        assessmentId={id}
+        isPublished={detail.status === 'PUBLISHED'}
+      />
+
+      <LandingPageEditor
         assessmentId={id}
         isPublished={detail.status === 'PUBLISHED'}
       />
