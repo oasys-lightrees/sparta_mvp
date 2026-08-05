@@ -31,9 +31,9 @@ export function AssessmentImage({
       )}
     >
       {showImage ? (
-        // eslint-disable-next-line @next/next/no-img-element -- URL-based images
-        // from arbitrary mentor-provided hosts; next/image remote config is out
-        // of scope for the MVP.
+        // URL-based images from arbitrary mentor-provided hosts; next/image
+        // remote config is out of scope for the MVP.
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={src as string}
           alt={alt}

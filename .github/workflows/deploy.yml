@@ -54,7 +54,8 @@ jobs:
         run: npm ci
       - name: Frontend — lint
         working-directory: frontend
-        run: npm run --if-present lint
+        # ESLint CLI (flat config), non-interactive; fails on errors or warnings.
+        run: npm run --if-present lint:ci
       - name: Frontend — typecheck (if present)
         working-directory: frontend
         run: npm run --if-present typecheck
