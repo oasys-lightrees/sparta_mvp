@@ -74,6 +74,7 @@ export default async function BrandedAssessmentPage({
       app={app}
       startHref={`/a/${id}/start`}
       loginHref="/login"
+      dashboardHref={`/a/${id}/dashboard`}
       companyHref={`/a/${id}/company`}
       redeemHref={`/a/${id}/redeem`}
       accessMode={access?.mode ?? null}

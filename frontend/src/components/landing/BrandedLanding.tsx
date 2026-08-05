@@ -1,6 +1,7 @@
 import { Fragment, type CSSProperties } from 'react';
 import type { AssessmentApp, Plan } from '@/types/assessment-app';
 import type { AccessMode } from '@/types';
+import { BrandedAuthChip } from '@/components/branded/BrandedAuthChip';
 import './lato-theme.css';
 
 /* Minimal inline icon set (line style). */
@@ -64,6 +65,7 @@ export function BrandedLanding({
   app,
   startHref = '#products',
   loginHref = '/login',
+  dashboardHref = '/dashboard',
   companyHref,
   redeemHref,
   accessMode,
@@ -72,6 +74,7 @@ export function BrandedLanding({
   app: AssessmentApp;
   startHref?: string;
   loginHref?: string;
+  dashboardHref?: string;
   companyHref?: string;
   redeemHref?: string;
   accessMode?: AccessMode | null;
@@ -125,9 +128,7 @@ export function BrandedLanding({
             <a href="#faq">FAQ</a>
           </nav>
           <div className="lato-nav__r">
-            <a href={loginHref} className="lato-login">
-              Log in
-            </a>
+            <BrandedAuthChip loginHref={loginHref} dashboardHref={dashboardHref} />
             <a href={primaryHref} className="lato-btn">
               {primaryLabel}
             </a>
@@ -140,7 +141,7 @@ export function BrandedLanding({
                 <a href="#why">About</a>
                 <a href="#process">How it works</a>
                 <a href="#faq">FAQ</a>
-                <a href={loginHref}>Log in</a>
+                <BrandedAuthChip loginHref={loginHref} dashboardHref={dashboardHref} />
                 <a href={primaryHref} className="lato-btn lato-btn--block">
                   {primaryLabel}
                 </a>
@@ -193,6 +194,20 @@ export function BrandedLanding({
               </div>
             </div>
             <div className="lato-hero__media">
+              {landing.hero.heroImageUrl ? (
+                // Mentor-provided landing photo.
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={landing.hero.heroImageUrl}
+                  alt={landing.hero.title}
+                  style={{
+                    width: '100%',
+                    borderRadius: 16,
+                    border: '1px solid var(--line)',
+                    objectFit: 'cover',
+                  }}
+                />
+              ) : (
               <div className="lato-preview">
                 <div className="lato-preview__top">
                   <span className="lato-preview__dot" />
@@ -231,6 +246,7 @@ export function BrandedLanding({
                   <span className="lato-chip">✓ Roadmap</span>
                 </div>
               </div>
+              )}
             </div>
           </div>
         </section>

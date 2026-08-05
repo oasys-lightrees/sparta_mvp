@@ -20,6 +20,7 @@ export type AppConfigPatch = {
       title?: string;
       subtitle?: string;
       description?: string;
+      heroImageUrl?: string | null;
       ctaPrimary?: string;
       ctaSecondary?: string;
     };

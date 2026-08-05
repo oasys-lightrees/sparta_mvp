@@ -32,6 +32,7 @@ type Form = {
   heroTitle: string;
   heroSubtitle: string;
   heroDescription: string;
+  heroImageUrl: string;
   ctaPrimary: string;
   ctaSecondary: string;
   finalTitle: string;
@@ -54,6 +55,7 @@ const fromConfig = (a: AssessmentApp): Form => ({
   heroTitle: a.landing.hero.title,
   heroSubtitle: a.landing.hero.subtitle,
   heroDescription: a.landing.hero.description,
+  heroImageUrl: a.landing.hero.heroImageUrl ?? '',
   ctaPrimary: a.landing.hero.ctaPrimary,
   ctaSecondary: a.landing.hero.ctaSecondary,
   finalTitle: a.landing.finalCta.title,
@@ -78,6 +80,7 @@ const toPatch = (f: Form): AppConfigPatch => ({
       title: f.heroTitle.trim(),
       subtitle: f.heroSubtitle,
       description: f.heroDescription,
+      heroImageUrl: f.heroImageUrl.trim() === '' ? null : f.heroImageUrl.trim(),
       ctaPrimary: f.ctaPrimary.trim(),
       ctaSecondary: f.ctaSecondary,
     },
@@ -362,6 +365,12 @@ export function LandingPageEditor({
                 value={form.heroDescription}
                 onChange={(v) => set({ heroDescription: v })}
                 textarea
+              />
+              <TextField
+                label="Landing page photo (URL, optional)"
+                value={form.heroImageUrl}
+                onChange={(v) => set({ heroImageUrl: v })}
+                placeholder="https://example.com/hero.jpg — replaces the default preview"
               />
               <div className="grid gap-3 sm:grid-cols-2">
                 <TextField label="Primary button" value={form.ctaPrimary} onChange={(v) => set({ ctaPrimary: v })} />
