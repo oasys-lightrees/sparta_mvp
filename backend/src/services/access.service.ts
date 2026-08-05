@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, gte, sql } from 'drizzle-orm';
 import { db } from '../db/client';
 import {
   assessmentAccess,
@@ -173,27 +173,40 @@ export const purchaseAccess = async (userId: string, assessmentId: string) => {
     throw new HttpError(400, 'This assessment does not require payment to start');
   }
 
+  // Fast path: already purchased (also enforced atomically below).
   if (await hasGrant(userId, assessmentId)) {
     return { charged: 0, already_purchased: true };
   }
 
   const cost = a.accessTokenCost;
-  const [wallet] = await db
-    .select({ balance: users.tokenBalance })
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
-  if (!wallet) throw new HttpError(404, 'User not found');
-  if (wallet.balance < cost) {
-    throw new HttpError(400, 'Not enough tokens');
-  }
 
-  await db.transaction(async (tx) => {
+  return db.transaction(async (tx) => {
+    // Claim the grant atomically. The unique (user, assessment) constraint means
+    // a concurrent double-purchase yields exactly one grant — the loser gets 0
+    // rows back and is charged nothing.
+    const granted = await tx
+      .insert(assessmentAccess)
+      .values({ userId, assessmentId, source: 'PAYMENT' })
+      .onConflictDoNothing({
+        target: [assessmentAccess.userId, assessmentAccess.assessmentId],
+      })
+      .returning({ id: assessmentAccess.id });
+    if (granted.length === 0) {
+      return { charged: 0, already_purchased: true };
+    }
+
     if (cost > 0) {
-      await tx
+      // Guarded debit: only succeeds when the balance covers the cost, so it can
+      // never go negative. If it fails, the whole transaction (grant included)
+      // rolls back, so access is never granted without a successful charge.
+      const debited = await tx
         .update(users)
         .set({ tokenBalance: sql`${users.tokenBalance} - ${cost}` })
-        .where(eq(users.id, userId));
+        .where(and(eq(users.id, userId), gte(users.tokenBalance, cost)))
+        .returning({ balance: users.tokenBalance });
+      if (debited.length === 0) {
+        throw new HttpError(400, 'Not enough tokens');
+      }
       await tx.insert(transactions).values({
         userId,
         mentorId: a.mentorId,
@@ -202,8 +215,6 @@ export const purchaseAccess = async (userId: string, assessmentId: string) => {
         type: 'ACCESS_PURCHASE',
       });
     }
-    await grantAccess(tx, userId, assessmentId, 'PAYMENT');
+    return { charged: cost, already_purchased: false };
   });
-
-  return { charged: cost, already_purchased: false };
 };

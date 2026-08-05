@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, gte, sql } from 'drizzle-orm';
 import { db } from '../db/client';
 import {
   assessments,
@@ -196,36 +196,77 @@ export const unlockPremium = async (userId: string, reportId: string) => {
     }
   }
 
-  return db.transaction(async (tx) => {
-    await tx
-      .update(users)
-      .set({ tokenBalance: sql`${users.tokenBalance} - ${cost}` })
-      .where(eq(users.id, userId));
+  try {
+    return await db.transaction(async (tx) => {
+      // Guarded debit: only succeeds when the balance covers the cost, so it can
+      // never go negative — even under concurrent unlocks.
+      const debited = await tx
+        .update(users)
+        .set({ tokenBalance: sql`${users.tokenBalance} - ${cost}` })
+        .where(and(eq(users.id, userId), gte(users.tokenBalance, cost)))
+        .returning({ balance: users.tokenBalance });
+      if (debited.length === 0) {
+        throw new HttpError(400, 'Not enough tokens');
+      }
 
-    const [premium] = await tx
-      .insert(reports)
-      .values({
-        attemptId: attempt.id,
-        reportType: 'PREMIUM',
-        content,
-      })
-      .returning({ id: reports.id, content: reports.content });
+      // The partial unique index (one PREMIUM per attempt) is the atomic
+      // idempotency point: if a concurrent unlock already inserted the premium
+      // report, this insert is rejected and the debit above rolls back.
+      const [premium] = await tx
+        .insert(reports)
+        .values({
+          attemptId: attempt.id,
+          reportType: 'PREMIUM',
+          content,
+        })
+        .returning({ id: reports.id, content: reports.content });
 
-    await tx.insert(transactions).values({
-      userId,
-      mentorId: assessment.mentorId,
-      assessmentId: assessment.id,
-      reportId: premium.id,
-      amount: cost,
-      type: 'PREMIUM_UNLOCK',
+      await tx.insert(transactions).values({
+        userId,
+        mentorId: assessment.mentorId,
+        assessmentId: assessment.id,
+        reportId: premium.id,
+        amount: cost,
+        type: 'PREMIUM_UNLOCK',
+      });
+
+      return {
+        report_id: premium.id,
+        type: 'PREMIUM' as const,
+        content: premium.content,
+        charged: cost,
+        already_unlocked: false,
+      };
     });
-
-    return {
-      report_id: premium.id,
-      type: 'PREMIUM' as const,
-      content: premium.content,
-      charged: cost,
-      already_unlocked: false,
-    };
-  });
+  } catch (err) {
+    // A concurrent unlock won the race and already created the premium report;
+    // our insert was rejected (unique violation) and the debit rolled back —
+    // so nothing was charged. Return the existing premium report.
+    if (isUniqueViolation(err)) {
+      const [existing] = await db
+        .select({ id: reports.id, content: reports.content })
+        .from(reports)
+        .where(
+          and(
+            eq(reports.attemptId, attempt.id),
+            eq(reports.reportType, 'PREMIUM'),
+          ),
+        )
+        .limit(1);
+      if (existing) {
+        return {
+          report_id: existing.id,
+          type: 'PREMIUM' as const,
+          content: existing.content,
+          charged: 0,
+          already_unlocked: true,
+        };
+      }
+    }
+    throw err;
+  }
 };
+
+/** True for a Postgres unique-constraint violation (SQLSTATE 23505). */
+const isUniqueViolation = (e: unknown): boolean =>
+  typeof e === 'object' && e !== null && (e as { code?: string }).code === '23505';

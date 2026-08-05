@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "reports_one_premium_per_attempt" ON "reports" USING btree ("attempt_id") WHERE "reports"."report_type" = 'PREMIUM';

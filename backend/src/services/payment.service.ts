@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { createHash, randomUUID } from 'node:crypto';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, ne, sql } from 'drizzle-orm';
 import { db } from '../db/client';
 import { tokenOrders, transactions, users } from '../db/schema';
 import { HttpError } from '../utils/http-error';
@@ -259,47 +259,68 @@ export const handleNotification = async (
 
   const next = resolveStatus(n);
 
-  return db.transaction(async (tx) => {
+  const currentStatus = async (
+    tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  ): Promise<string> => {
     const [order] = await tx
-      .select({
-        id: tokenOrders.id,
-        userId: tokenOrders.userId,
-        tokenAmount: tokenOrders.tokenAmount,
-        status: tokenOrders.status,
-      })
+      .select({ status: tokenOrders.status })
       .from(tokenOrders)
       .where(eq(tokenOrders.orderId, orderId))
       .limit(1);
+    if (!order) throw new HttpError(404, 'Order not found');
+    return order.status;
+  };
 
-    if (!order) {
-      throw new HttpError(404, 'Order not found');
+  return db.transaction(async (tx) => {
+    // Non-actionable status (pending / authorize / refund …) — acknowledge.
+    if (next === null) {
+      return { order_id: orderId, status: await currentStatus(tx) };
     }
 
-    // Already settled or nothing actionable -> acknowledge without side effects.
-    if (order.status === 'PAID' || next === null || next === order.status) {
-      return { order_id: orderId, status: order.status };
-    }
-
-    await tx
-      .update(tokenOrders)
-      .set({ status: next })
-      .where(eq(tokenOrders.id, order.id));
-
-    // Credit the wallet only on the first PAID transition.
     if (next === 'PAID') {
+      // Atomically claim the PAID transition. The `status != 'PAID'` guard +
+      // RETURNING means a duplicate/replayed webhook credits AT MOST ONCE: the
+      // second delivery matches 0 rows and is a no-op.
+      const claimed = await tx
+        .update(tokenOrders)
+        .set({ status: 'PAID' })
+        .where(
+          and(eq(tokenOrders.orderId, orderId), ne(tokenOrders.status, 'PAID')),
+        )
+        .returning({
+          userId: tokenOrders.userId,
+          tokenAmount: tokenOrders.tokenAmount,
+        });
+      if (claimed.length === 0) {
+        // Either no such order, or it was already PAID (already credited).
+        return { order_id: orderId, status: await currentStatus(tx) };
+      }
+      const { userId, tokenAmount } = claimed[0];
       await tx
         .update(users)
-        .set({ tokenBalance: sql`${users.tokenBalance} + ${order.tokenAmount}` })
-        .where(eq(users.id, order.userId));
-
+        .set({ tokenBalance: sql`${users.tokenBalance} + ${tokenAmount}` })
+        .where(eq(users.id, userId));
       await tx.insert(transactions).values({
-        userId: order.userId,
-        amount: order.tokenAmount,
+        userId,
+        amount: tokenAmount,
         type: 'TOKEN_TOPUP',
       });
+      return { order_id: orderId, status: 'PAID' };
     }
 
-    return { order_id: orderId, status: next };
+    // FAILED / EXPIRED — set the terminal status, but never override a PAID order
+    // (a late fail/expire after settlement is ignored).
+    const updated = await tx
+      .update(tokenOrders)
+      .set({ status: next })
+      .where(
+        and(eq(tokenOrders.orderId, orderId), ne(tokenOrders.status, 'PAID')),
+      )
+      .returning({ status: tokenOrders.status });
+    if (updated.length === 0) {
+      return { order_id: orderId, status: await currentStatus(tx) };
+    }
+    return { order_id: orderId, status: updated[0].status };
   });
 };
 
