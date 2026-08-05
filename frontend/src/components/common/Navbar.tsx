@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Coins } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useTokenBalance } from '@/hooks/useTokenBalance';
 import { roleHome } from '@/lib/roles';
 import { Button } from '@/components/ui/button';
 import { LatoMark } from '@/components/brand/LatoMark';
@@ -37,6 +39,7 @@ export function Navbar() {
   const { user, loading, logout } = useAuth();
   const { t } = useLanguage();
   const router = useRouter();
+  const balance = useTokenBalance();
 
   const onLogout = () => {
     logout();
@@ -56,6 +59,16 @@ export function Navbar() {
           <LanguageSwitcher />
           {loading ? null : user ? (
             <>
+              {balance !== null ? (
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center gap-1 rounded-full border bg-accent/40 px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-accent"
+                  title="Token balance"
+                >
+                  <Coins className="h-3.5 w-3.5 text-bronze" />
+                  {balance}
+                </Link>
+              ) : null}
               <Link
                 href={roleHome(user.role)}
                 className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline"
