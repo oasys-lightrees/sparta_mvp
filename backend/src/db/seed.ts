@@ -10,6 +10,12 @@ import {
 } from '../config/assessment-app.schema';
 import type { LearningResources } from '../config/learning-resources.schema';
 import {
+  normalizeMode,
+  policyFor,
+  type AccessMode,
+} from '../config/access';
+import {
+  assessmentAccess,
   assessments,
   attempts,
   blogs,
@@ -108,6 +114,9 @@ type AssessmentSeed = {
   baseKnowledge: string;
   studyVideoUrl?: string;
   learningResources?: LearningResources;
+  // Access model for the demo. Omit -> FREEMIUM (platform default).
+  accessMode?: AccessMode;
+  accessTokenCost?: number;
   questions: string[];
 };
 
@@ -321,6 +330,9 @@ const ASSESSMENTS: AssessmentSeed[] = [
       'An in-depth look at your leadership style: where you naturally lead, the blind spots that hold teams back, and a focused 30-day plan to grow your influence.',
     baseKnowledge:
       'This assessment measures leadership potential across initiative, composure, communication, accountability, decisiveness and people development. Higher scores indicate stronger leadership instincts. Beginners should focus on self-management and communication; intermediates on coaching and conflict; advanced leaders on vision and organizational influence.',
+    // PAID access: buyers unlock the whole assessment up front with tokens.
+    accessMode: 'PAID',
+    accessTokenCost: 30,
     questions: [
       'I naturally take initiative when no one else steps up.',
       'I stay calm and focused when the pressure is high.',
@@ -346,6 +358,8 @@ const ASSESSMENTS: AssessmentSeed[] = [
       'A tailored breakdown of your sales skills: the instincts that win deals, the habits that cost you, and a 30-day plan to sharpen your pipeline and close rate.',
     baseKnowledge:
       'This assessment measures sales aptitude across rapport, discovery, resilience, tailoring, closing, follow-up, product mastery, qualification, negotiation and drive. Higher scores indicate stronger natural selling ability. Beginners should focus on listening and follow-up; intermediates on qualification and objection handling; advanced sellers on negotiation and strategic accounts.',
+    // VOUCHER access: takers must redeem a company voucher code to start.
+    accessMode: 'VOUCHER',
     questions: [
       'I build rapport with new people quickly and naturally.',
       'I listen more than I talk during a discovery conversation.',
@@ -560,6 +574,8 @@ async function seed() {
           aiEnabled: true,
           studyVideoUrl: a.studyVideoUrl ?? null,
           learningResources: a.learningResources ?? null,
+          accessMode: a.accessMode ?? null,
+          accessTokenCost: a.accessTokenCost ?? 0,
           lowScoreThreshold: LOW,
           highScoreThreshold: HIGH,
           price: a.price,
@@ -583,6 +599,9 @@ async function seed() {
           })),
         );
       }
+
+      // Access policy for this assessment (drives demo grants + premium seeding).
+      const policy = policyFor(normalizeMode(a.accessMode));
 
       for (const spec of ATTEMPTS[ai]) {
         const isGuest = typeof spec.who === 'string';
@@ -612,8 +631,28 @@ async function seed() {
           content: renderFree(a.title, spec.score),
         });
 
-        // Premium unlocks (registered users only) → premium report + revenue.
-        if (spec.premium && userId) {
+        // Gated modes (PAID/VOUCHER): the registered taker holds an access
+        // grant. For PAID, also record the token purchase as mentor revenue.
+        if (policy.startRequiresGrant && userId) {
+          const source = policy.grantVia === 'voucher' ? 'VOUCHER' : 'PAYMENT';
+          await tx
+            .insert(assessmentAccess)
+            .values({ userId, assessmentId: assessment.id, source })
+            .onConflictDoNothing();
+          if (policy.grantVia === 'payment' && (a.accessTokenCost ?? 0) > 0) {
+            await tx.insert(transactions).values({
+              userId,
+              mentorId,
+              assessmentId: assessment.id,
+              amount: a.accessTokenCost ?? 0,
+              type: 'ACCESS_PURCHASE',
+              createdAt,
+            });
+          }
+        }
+
+        // Premium unlocks only exist in premium-unlockable (FREEMIUM) modes.
+        if (spec.premium && userId && policy.premiumUnlockable) {
           const [premium] = await tx
             .insert(reports)
             .values({

@@ -30,6 +30,14 @@ export const isPaymentConfigured = (): boolean =>
 const isProduction = (): boolean =>
   process.env.MIDTRANS_IS_PRODUCTION === 'true';
 
+/**
+ * Whether the no-gateway "demo credit" paths (immediate free tokens) are
+ * allowed. Enabled for local dev and the demo, but DISABLED in production so a
+ * live deployment can never mint free tokens — real purchases must go through
+ * the payment gateway. Production is signalled by MIDTRANS_IS_PRODUCTION=true.
+ */
+export const isDemoBillingAllowed = (): boolean => !isProduction();
+
 const snapBaseUrl = (): string =>
   isProduction()
     ? 'https://app.midtrans.com/snap/v1'
@@ -83,6 +91,11 @@ export const createTokenOrder = async (
   tokenAmount: number,
 ): Promise<CreateOrderResult> => {
   if (!isPaymentConfigured()) {
+    // No gateway: credit immediately for local/demo, but never in production —
+    // otherwise a live deployment would hand out free tokens.
+    if (!isDemoBillingAllowed()) {
+      throw new HttpError(503, 'Payments are temporarily unavailable');
+    }
     const { balance } = await topupDemo(userId, tokenAmount);
     return { mode: 'demo', balance };
   }

@@ -17,6 +17,13 @@ import tokenRoutes from './routes/token.routes';
 import voucherRoutes from './routes/voucher.routes';
 import { error, success } from './utils/response';
 
+// Fail fast on a misconfigured deployment: a missing JWT secret would otherwise
+// only surface on the first authenticated request. (DATABASE_URL is validated in
+// db/client on import.)
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET is not set — refusing to start');
+}
+
 const app = new Hono();
 
 // CORS allowlist. Defaults to the production domain + local dev; override with
@@ -60,8 +67,6 @@ app.route('/api/reports', reportRoutes);
 app.route('/api', contactRoutes);
 // Branded AssessmentApp config (public read + mentor edit).
 app.route('/api', configRoutes);
-//   app.route('/api/admin', adminRoutes);
-//   app.route('/api/mentor', mentorRoutes);
 
 // Fallback for unmatched routes.
 app.notFound((c) => c.json(error('Not found'), 404));

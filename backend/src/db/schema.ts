@@ -9,6 +9,7 @@ import {
   pgTable,
   text,
   timestamp,
+  unique,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
@@ -34,6 +35,22 @@ export const transactionType = pgEnum('transaction_type', [
   'ADMIN_GRANT',
   // Tokens granted to a user when they redeem a company voucher code.
   'VOUCHER_REDEEM',
+  // Tokens spent to purchase start access to a PAID assessment.
+  'ACCESS_PURCHASE',
+]);
+// How a taker obtained access to start a gated (PAID/VOUCHER) assessment.
+export const accessSource = pgEnum('access_source', [
+  'PAYMENT',
+  'VOUCHER',
+  'GRANT',
+]);
+// Per-assessment access model. Governs who may START the assessment (and whether
+// a premium tier exists). See config/access.ts for the policy semantics.
+export const accessMode = pgEnum('access_mode', [
+  'FREE',
+  'FREEMIUM',
+  'PAID',
+  'VOUCHER',
 ]);
 // Lifecycle of a single voucher code.
 export const voucherStatus = pgEnum('voucher_status', [
@@ -114,6 +131,12 @@ export const assessments = pgTable('assessments', {
   price: integer('price').notNull().default(0),
   // Token cost to unlock this assessment's premium report (0 = no premium).
   premiumTokenCost: integer('premium_token_cost').notNull().default(0),
+  // Access model (v6): how the assessment gates *starting*. Null -> FREEMIUM
+  // (the platform's original behavior), so existing rows are unaffected. See
+  // config/access.ts.
+  accessMode: accessMode('access_mode'),
+  // Token cost to purchase start access when accessMode is PAID (0 otherwise).
+  accessTokenCost: integer('access_token_cost').notNull().default(0),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')
     .notNull()
@@ -289,6 +312,41 @@ export const reportsRelations = relations(reports, ({ one }) => ({
   attempt: one(attempts, {
     fields: [reports.attemptId],
     references: [attempts.id],
+  }),
+}));
+
+/**
+ * assessment_access
+ * A per-user grant to START a gated assessment (accessMode PAID or VOUCHER).
+ * Created when the user purchases access (source PAYMENT), redeems a voucher for
+ * a VOUCHER-mode assessment (source VOUCHER), or is granted it directly (GRANT).
+ * One row per (user, assessment) — the unique constraint makes granting
+ * idempotent. Ungated modes (FREE/FREEMIUM) never need a row.
+ */
+export const assessmentAccess = pgTable(
+  'assessment_access',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    assessmentId: uuid('assessment_id')
+      .notNull()
+      .references(() => assessments.id, { onDelete: 'cascade' }),
+    source: accessSource('source').notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => [unique('assessment_access_user_assessment_unique').on(t.userId, t.assessmentId)],
+);
+
+export const assessmentAccessRelations = relations(assessmentAccess, ({ one }) => ({
+  user: one(users, {
+    fields: [assessmentAccess.userId],
+    references: [users.id],
+  }),
+  assessment: one(assessments, {
+    fields: [assessmentAccess.assessmentId],
+    references: [assessments.id],
   }),
 }));
 

@@ -2,6 +2,7 @@ import { and, desc, eq, inArray } from 'drizzle-orm';
 import { db } from '../db/client';
 import { assessments, attempts, reports } from '../db/schema';
 import { resolveLearningResources } from '../config/learning-resources.schema';
+import { normalizeMode, policyFor } from '../config/access';
 import { HttpError } from '../utils/http-error';
 
 /**
@@ -65,6 +66,7 @@ export const getReport = async (userId: string, attemptId: string) => {
       high: assessments.highScoreThreshold,
       studyVideoUrl: assessments.studyVideoUrl,
       learningResources: assessments.learningResources,
+      accessMode: assessments.accessMode,
     })
     .from(assessments)
     .where(eq(assessments.id, attempt.assessmentId))
@@ -91,9 +93,18 @@ export const getReport = async (userId: string, attemptId: string) => {
     attempt.categoryResult?.winner ??
     attempt.categoryResult?.dominant ??
     level;
+
+  // Access model governs whether a premium tier exists. In FREEMIUM the premium
+  // report is a separate token unlock (gated); in FREE/PAID/VOUCHER there is no
+  // premium paywall — anyone who could reach this result gets the full deal, so
+  // premium-tier resources/video are treated as already available.
+  const mode = normalizeMode(assessment?.accessMode);
+  const premiumUnlockable = policyFor(mode).premiumUnlockable;
+  const effectiveUnlocked = premiumUnlockable ? Boolean(premium) : true;
+
   const resources = resolveLearningResources(
     assessment?.learningResources ?? null,
-    { profileCode, premiumUnlocked: Boolean(premium) },
+    { profileCode, premiumUnlocked: effectiveUnlocked },
   );
 
   return {
@@ -101,19 +112,22 @@ export const getReport = async (userId: string, attemptId: string) => {
     score: attempt.totalScore,
     level,
     assessment_title: assessment?.title ?? null,
+    access_mode: mode,
     report_id: freeReport.id,
     report: { type: 'FREE' as const, content: freeReport.content },
     // Learning resources visible for this result now (free ones always; premium
-    // ones only after unlock — premium URLs are never included while locked).
+    // ones only when the tier is available — premium URLs are never included
+    // while locked).
     learning_resources: resources.items,
     premium: {
-      cost: assessment?.cost ?? 0,
+      // No premium paywall outside FREEMIUM (cost 0 hides the unlock card).
+      cost: premiumUnlockable ? (assessment?.cost ?? 0) : 0,
       description: assessment?.description ?? null,
       unlocked: Boolean(premium),
       content: premium?.content ?? null,
-      // Study video is a paid perk — only revealed once the premium report is
-      // unlocked, so the URL never leaks to non-purchasers.
-      study_video_url: premium ? (assessment?.studyVideoUrl ?? null) : null,
+      // Study video: revealed once the premium tier is available (unlocked in
+      // FREEMIUM, or always for the non-paywalled modes).
+      study_video_url: effectiveUnlocked ? (assessment?.studyVideoUrl ?? null) : null,
       // Count of premium learning resources still hidden behind the paywall, so
       // the UI can show "unlock for N more" without leaking their URLs.
       locked_resources: resources.locked,

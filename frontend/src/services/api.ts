@@ -17,6 +17,10 @@ export type ApiResponse<T> =
 
 type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
+// Cap every request so a hung connection surfaces a friendly timeout instead of
+// spinning forever.
+const REQUEST_TIMEOUT_MS = 20_000;
+
 async function request<T>(
   method: Method,
   path: string,
@@ -30,26 +34,39 @@ async function request<T>(
     headers.Authorization = `Bearer ${token}`;
   }
 
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
   let res: Response;
   try {
     res = await fetch(`${API_URL}${path}`, {
       method,
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
     });
-  } catch {
-    // Connection-level failure (offline, DNS, CORS, server down) — fetch itself
-    // rejected. Surface a friendly message instead of a raw "Failed to fetch".
+  } catch (err) {
+    // Network failure or timeout — never surface the raw "Failed to fetch".
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new Error('The request timed out. Please try again.');
+    }
     throw new Error(
       'Network error — please check your connection and try again.',
     );
+  } finally {
+    clearTimeout(timer);
   }
 
   let parsed: ApiResponse<T>;
   try {
     parsed = (await res.json()) as ApiResponse<T>;
   } catch {
-    throw new Error('Unexpected server response');
+    // Non-JSON response (e.g. a gateway 502/504 HTML page).
+    throw new Error(
+      res.ok
+        ? 'Unexpected server response'
+        : 'The server is temporarily unavailable. Please try again.',
+    );
   }
 
   if (!parsed.success) {

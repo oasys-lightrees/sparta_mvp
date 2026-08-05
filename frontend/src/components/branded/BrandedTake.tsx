@@ -1,14 +1,116 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { assessmentApi } from '@/services/assessment.api';
 import { useAuth } from '@/hooks/useAuth';
 import type { AssessmentApp } from '@/types/assessment-app';
-import type { AssessmentDetail } from '@/types';
+import type { AccessState, AssessmentDetail } from '@/types';
 import { BrandedShell, LatoIcon } from './shell';
 
 type Phase = 'intro' | 'taking' | 'submitting';
+
+/** Access gate shown in the intro when a gated mode (PAID/VOUCHER) needs a grant. */
+function AccessGate({
+  access,
+  needsAuth,
+  purchasing,
+  error,
+  assessmentId,
+  onPurchase,
+}: {
+  access: AccessState | null;
+  needsAuth: boolean;
+  purchasing: boolean;
+  error: string;
+  assessmentId: string;
+  onPurchase: () => void;
+}) {
+  if (!access) return null;
+  const next = encodeURIComponent(`/a/${assessmentId}/start`);
+
+  // Must be logged in to pay/redeem.
+  if (needsAuth) {
+    return (
+      <div className="lato-card" style={{ marginTop: 24, textAlign: 'center' }}>
+        <span className="lato-pill">
+          <LatoIcon name="lock" size={13} /> Sign in required
+        </span>
+        <p style={{ color: 'var(--muted)', margin: '12px 0 16px' }}>
+          {access.grant_via === 'voucher'
+            ? 'Log in to redeem your voucher and start this assessment.'
+            : 'Log in to get access and start this assessment.'}
+        </p>
+        <a href={`/login?next=${next}`} className="lato-btn lato-btn--grad lato-btn--lg">
+          Log in to continue
+        </a>
+      </div>
+    );
+  }
+
+  // VOUCHER: redeem a code to gain access.
+  if (access.grant_via === 'voucher') {
+    return (
+      <div className="lato-card" style={{ marginTop: 24, textAlign: 'center' }}>
+        <span className="lato-pill">
+          <LatoIcon name="lock" size={13} /> Voucher required
+        </span>
+        <p style={{ color: 'var(--muted)', margin: '12px 0 16px' }}>
+          This assessment is unlocked with a voucher code. Redeem yours to start.
+        </p>
+        <a
+          href={`/a/${assessmentId}/redeem`}
+          className="lato-btn lato-btn--grad lato-btn--lg"
+        >
+          Redeem a voucher
+        </a>
+      </div>
+    );
+  }
+
+  // PAID: purchase access with tokens.
+  const cost = access.access_token_cost;
+  const balance = access.token_balance ?? 0;
+  const affordable = balance >= cost;
+  return (
+    <div className="lato-card" style={{ marginTop: 24, textAlign: 'center' }}>
+      <span className="lato-pill">
+        <LatoIcon name="lock" size={13} /> Paid assessment
+      </span>
+      <h3 style={{ margin: '12px 0 6px', fontWeight: 750 }}>
+        Get access for {cost} tokens
+      </h3>
+      <p style={{ color: 'var(--muted)', fontSize: '.9rem' }}>
+        Your balance: {balance} token{balance === 1 ? '' : 's'}
+      </p>
+      {error ? (
+        <div className="lato-note" style={{ marginTop: 12 }}>
+          {error}
+        </div>
+      ) : null}
+      <div style={{ marginTop: 16 }}>
+        {affordable ? (
+          <button
+            className="lato-btn lato-btn--grad lato-btn--lg"
+            onClick={onPurchase}
+            disabled={purchasing}
+          >
+            {purchasing ? 'Processing…' : `Pay ${cost} tokens to start`}
+          </button>
+        ) : (
+          <>
+            <p style={{ color: 'var(--muted)', fontSize: '.9rem', marginBottom: 12 }}>
+              You need {cost - balance} more token{cost - balance === 1 ? '' : 's'}.
+            </p>
+            <a href="/dashboard" className="lato-btn lato-btn--grad lato-btn--lg">
+              Get tokens
+            </a>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export function BrandedTake({
   app,
@@ -18,13 +120,16 @@ export function BrandedTake({
   assessmentId: string;
 }) {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [detail, setDetail] = useState<AssessmentDetail | null>(null);
   const [error, setError] = useState('');
   const [phase, setPhase] = useState<Phase>('intro');
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [email, setEmail] = useState('');
+  const [access, setAccess] = useState<AccessState | null>(null);
+  const [purchasing, setPurchasing] = useState(false);
+  const [accessError, setAccessError] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -38,6 +143,39 @@ export function BrandedTake({
       active = false;
     };
   }, [assessmentId]);
+
+  // Resolve the viewer's access state (re-run once auth settles / user changes,
+  // and after redeeming/purchasing on return to this page).
+  const loadAccess = useCallback(async () => {
+    try {
+      const a = await assessmentApi.getAccess(assessmentId);
+      setAccess(a);
+    } catch {
+      /* non-fatal: fall back to the ungated flow, backend still enforces */
+    }
+  }, [assessmentId]);
+
+  useEffect(() => {
+    if (authLoading) return;
+    void loadAccess();
+  }, [authLoading, user, loadAccess]);
+
+  const purchaseAccess = async () => {
+    setPurchasing(true);
+    setAccessError('');
+    try {
+      const result = await assessmentApi.purchaseAccess(assessmentId);
+      setAccess(result);
+    } catch (e) {
+      setAccessError(e instanceof Error ? e.message : 'Purchase failed');
+    } finally {
+      setPurchasing(false);
+    }
+  };
+
+  // Gate: gated modes (PAID/VOUCHER) need a grant before starting.
+  const gated = Boolean(access?.start_requires_grant && !access?.has_access);
+  const needsAuth = Boolean(access?.requires_auth_to_start && !user);
 
   const questions = detail?.questions ?? [];
   const total = questions.length;
@@ -132,7 +270,7 @@ export function BrandedTake({
             </span>
             <span>{app.assessment.meta.audience}</span>
           </div>
-          {!user ? (
+          {!user && !gated ? (
             <label className="lato-field">
               Email for your results (optional)
               <input
@@ -143,15 +281,26 @@ export function BrandedTake({
               />
             </label>
           ) : null}
-          <div style={{ marginTop: 24 }}>
-            <button
-              className="lato-btn lato-btn--grad lato-btn--lg"
-              onClick={() => setPhase('taking')}
-              disabled={total === 0}
-            >
-              {total === 0 ? 'No questions yet' : 'Begin assessment'}
-            </button>
-          </div>
+          {gated ? (
+            <AccessGate
+              access={access}
+              needsAuth={needsAuth}
+              purchasing={purchasing}
+              error={accessError}
+              assessmentId={assessmentId}
+              onPurchase={purchaseAccess}
+            />
+          ) : (
+            <div style={{ marginTop: 24 }}>
+              <button
+                className="lato-btn lato-btn--grad lato-btn--lg"
+                onClick={() => setPhase('taking')}
+                disabled={total === 0}
+              >
+                {total === 0 ? 'No questions yet' : 'Begin assessment'}
+              </button>
+            </div>
+          )}
         </div>
       </BrandedShell>
     );

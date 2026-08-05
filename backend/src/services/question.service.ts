@@ -273,6 +273,8 @@ export const getMentorAssessmentDetail = async (
     result_categories: assessment.resultCategories,
     study_video_url: assessment.studyVideoUrl,
     learning_resources: assessment.learningResources,
+    access_mode: assessment.accessMode,
+    access_token_cost: assessment.accessTokenCost,
     created_at: assessment.createdAt,
     updated_at: assessment.updatedAt,
     questions: questionRows.map((q) => ({

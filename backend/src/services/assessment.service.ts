@@ -7,6 +7,7 @@ import {
   type ResultCategories,
 } from '../db/schema';
 import type { LearningResources } from '../config/learning-resources.schema';
+import type { AccessMode } from '../config/access';
 import { HttpError } from '../utils/http-error';
 
 export type AssessmentStatus = 'DRAFT' | 'PUBLISHED';
@@ -28,6 +29,8 @@ export type CreateInput = {
   result_categories?: ResultCategories | null;
   study_video_url?: string | null;
   learning_resources?: LearningResources | null;
+  access_mode?: AccessMode | null;
+  access_token_cost?: number;
 };
 
 export type UpdateInput = {
@@ -47,6 +50,8 @@ export type UpdateInput = {
   result_categories?: ResultCategories | null;
   study_video_url?: string | null;
   learning_resources?: LearningResources | null;
+  access_mode?: AccessMode | null;
+  access_token_cost?: number;
 };
 
 const publicColumns = {
@@ -55,6 +60,9 @@ const publicColumns = {
   description: assessments.description,
   imageUrl: assessments.imageUrl,
   price: assessments.price,
+  // Access model is public (drives the take-flow CTA); it never leaks scores.
+  accessMode: assessments.accessMode,
+  accessTokenCost: assessments.accessTokenCost,
 };
 
 /**
@@ -164,6 +172,8 @@ export const create = async (mentorId: string, input: CreateInput) => {
       resultCategories: input.result_categories ?? null,
       studyVideoUrl: input.study_video_url ?? null,
       learningResources: input.learning_resources ?? null,
+      accessMode: input.access_mode ?? null,
+      accessTokenCost: input.access_token_cost ?? 0,
     })
     .returning({ id: assessments.id, status: assessments.status });
 
@@ -197,6 +207,8 @@ export const update = async (
     resultCategories: ResultCategories | null;
     studyVideoUrl: string | null;
     learningResources: LearningResources | null;
+    accessMode: AccessMode | null;
+    accessTokenCost: number;
   }> = {};
   if (input.title !== undefined) values.title = input.title.trim();
   if (input.description !== undefined) values.description = input.description;
@@ -225,6 +237,9 @@ export const update = async (
     values.studyVideoUrl = input.study_video_url;
   if (input.learning_resources !== undefined)
     values.learningResources = input.learning_resources;
+  if (input.access_mode !== undefined) values.accessMode = input.access_mode;
+  if (input.access_token_cost !== undefined)
+    values.accessTokenCost = input.access_token_cost;
 
   const [updated] = await db
     .update(assessments)
@@ -249,6 +264,8 @@ export const update = async (
       result_categories: assessments.resultCategories,
       study_video_url: assessments.studyVideoUrl,
       learning_resources: assessments.learningResources,
+      access_mode: assessments.accessMode,
+      access_token_cost: assessments.accessTokenCost,
     });
 
   return updated;

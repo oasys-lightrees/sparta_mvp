@@ -195,6 +195,8 @@ function DetailView({ id }: { id: string }) {
                 result_categories: detail.result_categories,
                 study_video_url: detail.study_video_url,
                 learning_resources: detail.learning_resources,
+                access_mode: detail.access_mode,
+                access_token_cost: detail.access_token_cost,
               }}
               onSubmit={handleSave}
               onCancel={() => setEditing(false)}

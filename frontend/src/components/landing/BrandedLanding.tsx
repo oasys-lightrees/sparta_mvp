@@ -1,5 +1,6 @@
 import { Fragment, type CSSProperties } from 'react';
 import type { AssessmentApp, Plan } from '@/types/assessment-app';
+import type { AccessMode } from '@/types';
 import './lato-theme.css';
 
 /* Minimal inline icon set (line style). */
@@ -65,14 +66,29 @@ export function BrandedLanding({
   loginHref = '/login',
   companyHref,
   redeemHref,
+  accessMode,
+  accessTokenCost = 0,
 }: {
   app: AssessmentApp;
   startHref?: string;
   loginHref?: string;
   companyHref?: string;
   redeemHref?: string;
+  accessMode?: AccessMode | null;
+  accessTokenCost?: number;
 }) {
   const { brand, theme, landing, assessment, products, reports } = app;
+  // Primary CTA reflects the access model: paid shows the token cost, voucher
+  // routes to redemption, free/freemium keep the configured copy. The actual
+  // gate is enforced on the start page + backend — this only labels the door.
+  const primaryLabel =
+    accessMode === 'VOUCHER'
+      ? 'Redeem a voucher to start'
+      : accessMode === 'PAID'
+        ? `Get access · ${accessTokenCost} tokens`
+        : landing.hero.ctaPrimary;
+  const primaryHref =
+    accessMode === 'VOUCHER' ? (redeemHref ?? startHref) : startHref;
   const comps = reports.competencies.slice(0, 3);
   const codes = [`${brand.monogram}9F-2K`, `${brand.monogram}7Q-4X`, `${brand.monogram}1B-8M`];
   const flow = [
@@ -112,8 +128,8 @@ export function BrandedLanding({
             <a href={loginHref} className="lato-login">
               Log in
             </a>
-            <a href={startHref} className="lato-btn">
-              {landing.hero.ctaPrimary}
+            <a href={primaryHref} className="lato-btn">
+              {primaryLabel}
             </a>
             <details className="lato-mnav">
               <summary aria-label="Menu">
@@ -125,8 +141,8 @@ export function BrandedLanding({
                 <a href="#process">How it works</a>
                 <a href="#faq">FAQ</a>
                 <a href={loginHref}>Log in</a>
-                <a href={startHref} className="lato-btn lato-btn--block">
-                  {landing.hero.ctaPrimary}
+                <a href={primaryHref} className="lato-btn lato-btn--block">
+                  {primaryLabel}
                 </a>
               </div>
             </details>
@@ -152,8 +168,8 @@ export function BrandedLanding({
                 <p className="lato-hero__desc">{landing.hero.description}</p>
               ) : null}
               <div className="lato-hero__cta">
-                <a href={startHref} className="lato-btn lato-btn--grad lato-btn--lg">
-                  {landing.hero.ctaPrimary}
+                <a href={primaryHref} className="lato-btn lato-btn--grad lato-btn--lg">
+                  {primaryLabel}
                 </a>
                 {landing.hero.ctaSecondary ? (
                   <a href="#process" className="lato-btn lato-btn--ghost lato-btn--lg">
@@ -418,8 +434,8 @@ export function BrandedLanding({
             <div className="lato-final">
               <h2>{landing.finalCta.title}</h2>
               {landing.finalCta.subtitle ? <p>{landing.finalCta.subtitle}</p> : null}
-              <a href={startHref} className="lato-btn lato-btn--lg">
-                {landing.finalCta.button}
+              <a href={primaryHref} className="lato-btn lato-btn--lg">
+                {accessMode === 'VOUCHER' ? primaryLabel : landing.finalCta.button}
               </a>
               {landing.finalCta.fineprint ? (
                 <p className="fp">{landing.finalCta.fineprint}</p>

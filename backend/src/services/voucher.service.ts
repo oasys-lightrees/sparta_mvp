@@ -9,6 +9,8 @@ import {
   voucherBatches,
   vouchers,
 } from '../db/schema';
+import { normalizeMode, policyFor } from '../config/access';
+import { grantAccess } from './access.service';
 import { HttpError } from '../utils/http-error';
 
 const MAX_CREDITS = 1000;
@@ -223,13 +225,22 @@ export const redeem = async (userId: string, rawCode: string) => {
   if (!batch) throw new HttpError(404, 'That voucher code is not valid');
 
   const [assessment] = await db
-    .select({ title: assessments.title, cost: assessments.premiumTokenCost })
+    .select({
+      title: assessments.title,
+      cost: assessments.premiumTokenCost,
+      accessMode: assessments.accessMode,
+    })
     .from(assessments)
     .where(eq(assessments.id, batch.assessmentId))
     .limit(1);
   if (!assessment) throw new HttpError(404, 'Assessment not found');
 
-  const grant = assessment.cost;
+  // A voucher always grants start-access to its assessment (this is what makes
+  // VOUCHER-mode assessments takeable). It additionally tops up the premium
+  // tokens only when the assessment actually has a premium tier (FREEMIUM) —
+  // preserving the original "company funds premium unlocks" use case.
+  const premiumUnlockable = policyFor(normalizeMode(assessment.accessMode)).premiumUnlockable;
+  const grant = premiumUnlockable ? assessment.cost : 0;
 
   return db.transaction(async (tx) => {
     // Claim the code atomically — the WHERE status='ACTIVE' guards against a
@@ -242,6 +253,8 @@ export const redeem = async (userId: string, rawCode: string) => {
     if (claimed.length === 0) {
       throw new HttpError(409, 'That voucher code has already been used');
     }
+
+    await grantAccess(tx, userId, batch.assessmentId, 'VOUCHER');
 
     if (grant > 0) {
       await tx

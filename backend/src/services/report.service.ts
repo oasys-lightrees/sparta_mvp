@@ -8,6 +8,7 @@ import {
   transactions,
   users,
 } from '../db/schema';
+import { normalizeMode, policyFor } from '../config/access';
 import { HttpError } from '../utils/http-error';
 import * as aiService from './ai.service';
 
@@ -63,12 +64,20 @@ export const unlockPremium = async (userId: string, reportId: string) => {
       aiEnabled: assessments.aiEnabled,
       lowScoreThreshold: assessments.lowScoreThreshold,
       highScoreThreshold: assessments.highScoreThreshold,
+      accessMode: assessments.accessMode,
     })
     .from(assessments)
     .where(eq(assessments.id, attempt.assessmentId))
     .limit(1);
   if (!assessment) {
     throw new HttpError(404, 'Assessment not found');
+  }
+
+  // Only FREEMIUM assessments have a separate premium unlock. In the other
+  // modes the result is either fully free or already paid for at the door, so
+  // there is nothing to unlock here.
+  if (!policyFor(normalizeMode(assessment.accessMode)).premiumUnlockable) {
+    throw new HttpError(400, 'This assessment has no premium report to unlock');
   }
 
   // Already unlocked -> return the existing premium report (no charge).

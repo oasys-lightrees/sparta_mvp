@@ -77,8 +77,12 @@ token.post('/midtrans/notification', async (c) => {
 });
 
 // POST /api/tokens/topup-demo — dummy top-up (no payment gateway). Kept for
-// local dev / the MVP demo.
+// local dev / the MVP demo, and DISABLED in production (MIDTRANS_IS_PRODUCTION=
+// true) so a live deployment can never mint free tokens.
 token.post('/topup-demo', authMiddleware, async (c) => {
+  if (!paymentService.isDemoBillingAllowed()) {
+    return c.json(error('Demo top-up is disabled'), 403);
+  }
   const body = await c.req.json().catch(() => null);
   if (!body || !Number.isInteger(body.amount) || body.amount <= 0) {
     return c.json(error('amount must be a positive integer'), 400);

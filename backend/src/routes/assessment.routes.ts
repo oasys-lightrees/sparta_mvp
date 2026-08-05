@@ -3,10 +3,13 @@ import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { authMiddleware, type AppEnv } from '../middleware/auth.middleware';
 import { requireRole } from '../middleware/role.middleware';
 import * as assessmentService from '../services/assessment.service';
+import * as accessService from '../services/access.service';
 import {
   LearningResourcesSchema,
   type LearningResources,
 } from '../config/learning-resources.schema';
+import { ACCESS_MODES, isAccessMode } from '../config/access';
+import { verify } from 'hono/jwt';
 import { HttpError } from '../utils/http-error';
 import { error, success } from '../utils/response';
 
@@ -96,6 +99,29 @@ const validateConfigFields = (body: Record<string, unknown>): string | null => {
   if (!isNullableResultCategories(body.result_categories)) {
     return 'result_categories must be a map of { name, knowledge } strings';
   }
+  if (
+    body.access_mode !== undefined &&
+    body.access_mode !== null &&
+    !isAccessMode(body.access_mode)
+  ) {
+    return `access_mode must be one of ${ACCESS_MODES.join(', ')}`;
+  }
+  if (
+    body.access_token_cost !== undefined &&
+    (!Number.isInteger(body.access_token_cost) ||
+      (body.access_token_cost as number) < 0)
+  ) {
+    return 'access_token_cost must be a non-negative integer';
+  }
+  // A PAID assessment needs a positive access cost, otherwise it is effectively
+  // free and no payment could ever be completed.
+  if (
+    body.access_mode === 'PAID' &&
+    body.access_token_cost !== undefined &&
+    (body.access_token_cost as number) <= 0
+  ) {
+    return 'PAID assessments require a positive access_token_cost';
+  }
   return null;
 };
 
@@ -159,6 +185,59 @@ assessment.get('/:id', async (c) => {
   }
 });
 
+// --- Access model (start gating) ------------------------------------------
+
+// Best-effort user id from an optional Bearer token (guests are allowed to
+// query access state — they just see has_access=false on gated modes).
+const optionalUserId = async (c: Context<AppEnv>): Promise<string | null> => {
+  const header = c.req.header('Authorization');
+  if (!header || !header.startsWith('Bearer ')) return null;
+  const secret = process.env.JWT_SECRET;
+  if (!secret) return null;
+  try {
+    const payload = await verify(header.slice('Bearer '.length).trim(), secret, 'HS256');
+    return String(payload.sub);
+  } catch {
+    return null;
+  }
+};
+
+// GET /api/assessments/:id/access — access state for the current viewer.
+// Drives the take-flow CTA (start / purchase / redeem). Optional auth.
+assessment.get('/:id/access', async (c) => {
+  const id = c.req.param('id');
+  if (!UUID_REGEX.test(id)) {
+    return c.json(error('Invalid assessment id'), 400);
+  }
+  try {
+    const userId = await optionalUserId(c);
+    const state = await accessService.getAccessState(id, userId);
+    return c.json(success(state), 200);
+  } catch (err) {
+    return handleError(c, err);
+  }
+});
+
+// POST /api/assessments/:id/access/purchase — buy start access with tokens
+// (PAID mode only). Idempotent. Requires auth.
+assessment.post(
+  '/:id/access/purchase',
+  authMiddleware,
+  async (c) => {
+    const id = c.req.param('id');
+    if (!UUID_REGEX.test(id)) {
+      return c.json(error('Invalid assessment id'), 400);
+    }
+    try {
+      const result = await accessService.purchaseAccess(c.get('user').id, id);
+      const state = await accessService.getAccessState(id, c.get('user').id);
+      return c.json(success({ ...state, ...result }), 200);
+    } catch (err) {
+      return handleError(c, err);
+    }
+  },
+);
+
 // --- Mentor (authenticated, MENTOR role) ----------------------------------
 
 // POST /api/assessments — create (starts as DRAFT)
@@ -198,6 +277,8 @@ assessment.post('/', authMiddleware, requireRole('MENTOR'), async (c) => {
       result_categories: body.result_categories,
       study_video_url: body.study_video_url,
       learning_resources: resources.value,
+      access_mode: body.access_mode,
+      access_token_cost: body.access_token_cost,
     });
     return c.json(success(created), 201);
   } catch (err) {
@@ -247,6 +328,8 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
     'result_categories',
     'study_video_url',
     'learning_resources',
+    'access_mode',
+    'access_token_cost',
   ];
   if (!updatableKeys.some((k) => body[k] !== undefined)) {
     return c.json(error('Nothing to update'), 400);
@@ -270,6 +353,8 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
       result_categories: body.result_categories,
       study_video_url: body.study_video_url,
       learning_resources: resources.value,
+      access_mode: body.access_mode,
+      access_token_cost: body.access_token_cost,
     });
     return c.json(success(updated), 200);
   } catch (err) {

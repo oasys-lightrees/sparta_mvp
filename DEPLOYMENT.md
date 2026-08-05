@@ -51,7 +51,7 @@ Create a root `.env` (from `.env.example`) used by `docker compose`:
 | `OPENAI_BASE_URL` | backend (optional) | `https://api.openai.com/v1` | override for Azure / OpenAI-compatible proxies |
 | `MIDTRANS_SERVER_KEY` | backend (optional) | `Mid-server-…` | **real payments disabled when unset** — token purchase falls back to an instant demo credit. Backend-only, never sent to the browser. Signs/verifies the notification webhook |
 | `MIDTRANS_CLIENT_KEY` | backend (optional) | `Mid-client-…` | returned to the browser for the Snap checkout |
-| `MIDTRANS_IS_PRODUCTION` | backend | `false` | `true` uses live Midtrans endpoints; anything else (default) uses sandbox |
+| `MIDTRANS_IS_PRODUCTION` | backend | `false` | `true` uses live Midtrans endpoints **and disables the demo/no-gateway token credit** (so a live deployment can never mint free tokens); anything else (default) uses sandbox + allows the demo credit |
 | `TOKEN_PRICE_IDR` | backend (optional) | `1000` | price of one token in IDR (Midtrans charges whole rupiah); default `1000` |
 | `NEXT_PUBLIC_API_URL` | frontend (optional) | `https://lato.example.com` | **build-time** — compose defaults it to `https://${DOMAIN}`; override only for non-standard setups (see note) |
 
@@ -120,6 +120,14 @@ docker compose exec backend npm run db:migrate
 # 4. (optional) demo content
 docker compose exec backend npm run db:seed
 ```
+
+> **Schema migrations.** `npm run db:migrate` applies every pending migration in
+> [`backend/drizzle/`](backend/drizzle) in order and is idempotent — already-applied
+> migrations are skipped. Whenever you pull changes that add a migration (for
+> example the `learning_resources` column added in `0014`), just re-run step 3;
+> new columns are additive and nullable, so existing rows and configs stay valid
+> with no manual backfill. Run it **before** the new backend serves traffic (the
+> automated `scripts/deploy.sh` does this for you).
 
 `init-letsencrypt.sh` always applies both compose files itself, so it works even
 before you set `COMPOSE_FILE`. It reads `DOMAIN`/`CERTBOT_EMAIL` from `.env`,
@@ -320,9 +328,10 @@ This is intentionally deferred; no auth code is changed in this deployment prep.
 - [ ] Cloudflare SSL mode = **Full (strict)**; Always Use HTTPS on (if using Cloudflare).
 - [ ] Let's Encrypt auto-renewal verified (`docker compose exec certbot certbot renew --dry-run`).
 - [ ] `docker compose exec backend npm run db:migrate` run after each deploy with schema changes.
-- [ ] First admin promoted (`UPDATE users SET role='ADMIN' WHERE email='…';`) or demo seed run.
+- [ ] First admin promoted (`UPDATE users SET role='ADMIN' WHERE email='…';`). **Do not run `npm run db:seed` on a real production DB** — it creates demo accounts with a well-known password; it is for demo/staging environments only.
 - [ ] SMTP_* configured if result emails are wanted (otherwise email is cleanly skipped — submission still works).
 - [ ] `MIDTRANS_*` configured if real payments are wanted (otherwise purchase falls back to a demo credit); `MIDTRANS_IS_PRODUCTION=true` only with live keys.
+- [ ] For a **real production** deployment set `MIDTRANS_IS_PRODUCTION=true` — this disables the demo/no-gateway token credit and the `/api/tokens/topup-demo` endpoint, so tokens can only be obtained through the payment gateway (no free-token minting). Leave it unset/false only for a throwaway demo environment.
 - [ ] Midtrans **Payment Notification URL** set to `https://<domain>/api/tokens/midtrans/notification` and reachable; verified end-to-end in sandbox before going live.
 - [ ] Backups configured for the `postgres_data` volume.
 - [ ] Container logs monitored (`docker compose logs`); restart policy is `unless-stopped`.

@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import { setPendingAttempt } from '@/lib/storage';
 import { QuestionStep } from '@/components/assessment/QuestionStep';
+import { AccessGate } from '@/components/assessment/AccessGate';
 import { Loading } from '@/components/common/Loading';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import {
@@ -15,7 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import type { AssessmentDetail } from '@/types';
+import type { AccessState, AssessmentDetail } from '@/types';
 
 export default function TakeAssessmentPage() {
   const { id } = useParams<{ id: string }>();
@@ -30,13 +31,21 @@ export default function TakeAssessmentPage() {
   const [index, setIndex] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [access, setAccess] = useState<AccessState | null>(null);
+  const [purchasing, setPurchasing] = useState(false);
+  const [accessError, setAccessError] = useState('');
 
   useEffect(() => {
     let active = true;
     (async () => {
       try {
-        const data = await assessmentApi.getPublic(id);
-        if (active) setAssessment(data);
+        const [data, acc] = await Promise.all([
+          assessmentApi.getPublic(id),
+          assessmentApi.getAccess(id).catch(() => null),
+        ]);
+        if (!active) return;
+        setAssessment(data);
+        setAccess(acc);
       } catch (err) {
         if (active)
           setLoadError(
@@ -50,6 +59,18 @@ export default function TakeAssessmentPage() {
       active = false;
     };
   }, [id]);
+
+  const purchaseAccess = async () => {
+    setPurchasing(true);
+    setAccessError('');
+    try {
+      setAccess(await assessmentApi.purchaseAccess(id));
+    } catch (err) {
+      setAccessError(err instanceof Error ? err.message : 'Purchase failed');
+    } finally {
+      setPurchasing(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -79,6 +100,23 @@ export default function TakeAssessmentPage() {
             </CardDescription>
           </CardHeader>
         </Card>
+      </div>
+    );
+  }
+
+  // Access gate: gated modes (PAID/VOUCHER) need a grant before starting.
+  if (access && access.start_requires_grant && !access.has_access) {
+    return (
+      <div className="container max-w-2xl py-10">
+        <h1 className="mb-4 text-2xl font-bold">{assessment.title}</h1>
+        <AccessGate
+          access={access}
+          assessmentId={id}
+          isLoggedIn={Boolean(user)}
+          purchasing={purchasing}
+          error={accessError}
+          onPurchase={purchaseAccess}
+        />
       </div>
     );
   }
