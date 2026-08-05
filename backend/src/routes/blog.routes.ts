@@ -136,14 +136,19 @@ blog.patch('/:id', authMiddleware, requireRole('ADMIN', 'MENTOR'), async (c) => 
   }
 
   try {
-    const updated = await blogService.update(id, {
-      title: body.title,
-      slug: body.slug,
-      excerpt: body.excerpt,
-      content: body.content,
-      cover_image_url: body.cover_image_url,
-      status: body.status,
-    });
+    const user = c.get('user');
+    const updated = await blogService.update(
+      id,
+      {
+        title: body.title,
+        slug: body.slug,
+        excerpt: body.excerpt,
+        content: body.content,
+        cover_image_url: body.cover_image_url,
+        status: body.status,
+      },
+      { id: user.id, role: user.role },
+    );
     return c.json(success(updated), 200);
   } catch (err) {
     return handleError(c, err);
@@ -158,7 +163,8 @@ blog.delete('/:id', authMiddleware, requireRole('ADMIN', 'MENTOR'), async (c) =>
   }
 
   try {
-    await blogService.remove(id);
+    const user = c.get('user');
+    await blogService.remove(id, { id: user.id, role: user.role });
     return c.json(success({ id }), 200);
   } catch (err) {
     return handleError(c, err);

@@ -11,6 +11,7 @@ import {
 } from '../db/schema';
 import { normalizeMode, policyFor } from '../config/access';
 import { grantAccess } from './access.service';
+import { isDemoBillingAllowed } from './payment.service';
 import { HttpError } from '../utils/http-error';
 
 const MAX_CREDITS = 1000;
@@ -32,10 +33,15 @@ export type CreateBatchInput = {
 
 /**
  * Purchase a voucher batch: generate `credits` unique codes for a published
- * assessment. (No real charge in the MVP — payment is wired separately, like
- * the token demo top-up.)
+ * assessment. Batch creation is not yet wired to a real charge, so — exactly
+ * like the demo token top-up — it is DISABLED in production (redeeming a code
+ * grants tokens/access, so free batch creation would be a token-economy bypass).
+ * It stays available for local dev and the demo (MIDTRANS_IS_PRODUCTION != true).
  */
 export const createBatch = async (buyerId: string, input: CreateBatchInput) => {
+  if (!isDemoBillingAllowed()) {
+    throw new HttpError(503, 'Voucher purchase is temporarily unavailable');
+  }
   if (!Number.isInteger(input.credits) || input.credits < 1 || input.credits > MAX_CREDITS) {
     throw new HttpError(400, `credits must be an integer between 1 and ${MAX_CREDITS}`);
   }
