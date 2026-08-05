@@ -81,16 +81,24 @@ const RESOURCE_LABEL: Record<LearningResource['type'], string> = {
 function BrandedResources({
   resources,
   lockedCount,
+  profileName,
 }: {
   resources: LearningResource[];
   lockedCount: number;
+  profileName?: string | null;
 }) {
   if (resources.length === 0 && lockedCount === 0) return null;
   return (
     <div className="lato-card" style={{ marginTop: 20 }}>
       <span className="lato-eyebrow">
-        <LatoIcon name="spark" size={14} /> Learning Resources
+        <LatoIcon name="spark" size={14} />{' '}
+        {profileName ? 'Your Personalized Learning Path' : 'Learning Resources'}
       </span>
+      {profileName ? (
+        <p style={{ color: 'var(--muted)', fontSize: '.9rem', marginTop: 8 }}>
+          Because your result is {profileName}, here&apos;s what to explore next.
+        </p>
+      ) : null}
       <div style={{ display: 'grid', gap: 12, marginTop: 14 }}>
         {resources.map((r) => {
           const embed = r.type === 'video' ? embedUrl(r.url) : null;
@@ -375,6 +383,7 @@ export function BrandedReport({
         <BrandedResources
           resources={report.learning_resources}
           lockedCount={premium.unlocked ? 0 : premium.locked_resources}
+          profileName={report.result_profile?.name ?? null}
         />
 
         <div style={{ marginTop: 26 }}>

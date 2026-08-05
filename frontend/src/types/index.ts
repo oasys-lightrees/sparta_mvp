@@ -60,6 +60,7 @@ export type LearningResourceType =
   | 'link'
   | 'course';
 export type LearningResourceAccess = 'free' | 'premium';
+export type VideoProvider = 'youtube' | 'vimeo' | 'mp4' | 'file' | 'external';
 export type LearningResource = {
   id: string;
   type: LearningResourceType;
@@ -67,6 +68,10 @@ export type LearningResource = {
   description: string;
   url: string;
   access: LearningResourceAccess;
+  // Optional video metadata (ignored for non-video types).
+  provider?: VideoProvider | null;
+  thumbnailUrl?: string | null;
+  durationLabel?: string;
   meta?: Record<string, unknown>;
 };
 // The mentor-authored library attached to an assessment: shared resources shown
@@ -109,6 +114,9 @@ export type AttemptReport = {
   level: string;
   assessment_title: string | null;
   access_mode: AccessMode;
+  // Winning result profile for personality assessments (code + name); null for
+  // score-based assessments. Powers the personalized learning header.
+  result_profile: { code: string; name: string } | null;
   report_id: string;
   report: Report;
   // Learning resources visible for this result (free always; premium after unlock).

@@ -25,6 +25,8 @@ import {
   reports,
   transactions,
   users,
+  type CategoryResult,
+  type ResultCategories,
 } from './schema';
 
 /**
@@ -668,6 +670,261 @@ async function seed() {
             assessmentId: assessment.id,
             reportId: premium.id,
             amount: a.premiumTokenCost,
+            type: 'PREMIUM_UNLOCK',
+            createdAt: new Date(createdAt.getTime() + 60 * 60 * 1000),
+          });
+          premiumUnlocks++;
+        }
+      }
+    }
+
+    // --- DISC personality assessment (per-result learning resources demo) ---
+    // A dedicated block (not part of the score-based loop above) that shows how
+    // each personality result gets its OWN learning library via byProfile, while
+    // shared resources apply to everyone.
+    {
+      const DISC_CATEGORIES: ResultCategories = {
+        D: {
+          name: 'Dominant',
+          knowledge:
+            'Direct, results-driven and decisive. You take charge, move fast, and thrive on challenge — growth comes from patience and listening.',
+        },
+        I: {
+          name: 'Influencer',
+          knowledge:
+            'Outgoing, persuasive and optimistic. You energize people and build relationships — growth comes from follow-through and detail.',
+        },
+        S: {
+          name: 'Steady',
+          knowledge:
+            'Patient, dependable and supportive. You bring calm and consistency to teams — growth comes from embracing change and speaking up.',
+        },
+        C: {
+          name: 'Conscientious',
+          knowledge:
+            'Analytical, precise and quality-focused. You value accuracy and structure — growth comes from decisiveness and flexibility.',
+        },
+      };
+
+      // Each result profile gets a DIFFERENT set of resources (the whole point).
+      const vid = (
+        id: string,
+        title: string,
+        description: string,
+        url: string,
+        provider: 'youtube' | 'vimeo' | 'mp4',
+        durationLabel: string,
+        access: 'free' | 'premium',
+      ) => ({
+        id,
+        type: 'video' as const,
+        title,
+        description,
+        url,
+        access,
+        provider,
+        durationLabel,
+        meta: {},
+      });
+      const doc = (
+        type: 'pdf' | 'article' | 'course' | 'link',
+        id: string,
+        title: string,
+        description: string,
+        url: string,
+        access: 'free' | 'premium',
+      ) => ({ id, type, title, description, url, access, meta: {} });
+
+      const discResources: LearningResources = {
+        version: 1,
+        shared: [
+          doc(
+            'article',
+            'disc-shared-1',
+            'Understanding the DISC model',
+            'A quick primer on the four DISC styles and how to read your result.',
+            'https://example.com/disc/primer',
+            'free',
+          ),
+        ],
+        byProfile: {
+          D: [
+            vid('d-1', 'Leadership Introduction', 'Lead with clarity and drive.', 'https://www.youtube.com/watch?v=aircAruvnKk', 'youtube', '9 min', 'free'),
+            vid('d-2', 'Managing Teams', 'Get the best from the people around you.', 'https://vimeo.com/76979871', 'vimeo', '14 min', 'premium'),
+            doc('pdf', 'd-3', 'Leadership Workbook', 'Exercises to channel your drive productively.', 'https://example.com/disc/d-workbook.pdf', 'premium'),
+            doc('course', 'd-4', 'Decisive Leadership', 'A short course on high-impact decision making.', 'https://example.com/disc/d-course', 'premium'),
+          ],
+          I: [
+            vid('i-1', 'Communication Mastery', 'Turn your energy into influence.', 'https://www.youtube.com/watch?v=aircAruvnKk', 'youtube', '11 min', 'free'),
+            vid('i-2', 'Public Speaking', 'Command a room with confidence.', 'https://vimeo.com/76979871', 'vimeo', '18 min', 'premium'),
+            doc('article', 'i-3', 'Sales Psychology', 'Why people say yes — and how to help them.', 'https://example.com/disc/i-sales', 'free'),
+            doc('course', 'i-4', 'Networking that Sticks', 'Build a network that compounds.', 'https://example.com/disc/i-course', 'premium'),
+          ],
+          S: [
+            vid('s-1', 'Collaboration Skills', 'Make teamwork your superpower.', 'https://www.youtube.com/watch?v=aircAruvnKk', 'youtube', '10 min', 'free'),
+            vid('s-2', 'Emotional Intelligence', 'Read the room and respond well.', 'https://vimeo.com/76979871', 'vimeo', '16 min', 'premium'),
+            doc('pdf', 's-3', 'Team Dynamics Guide', 'Bring calm and consistency to any team.', 'https://example.com/disc/s-guide.pdf', 'premium'),
+          ],
+          C: [
+            vid('c-1', 'Critical Thinking', 'Sharpen your analytical edge.', 'https://www.youtube.com/watch?v=aircAruvnKk', 'youtube', '12 min', 'free'),
+            vid('c-2', 'Analytical Decision Making', 'Decide with rigor and speed.', 'https://vimeo.com/76979871', 'vimeo', '15 min', 'premium'),
+            doc('pdf', 'c-3', 'Productivity Systems', 'Structure your work for quality at scale.', 'https://example.com/disc/c-systems.pdf', 'premium'),
+          ],
+        },
+      };
+
+      const DISC_QUESTIONS: { q: string; options: { text: string; code: keyof typeof DISC_CATEGORIES }[] }[] = [
+        { q: 'On a new project, I first…', options: [
+          { text: 'Set the goal and drive us toward it', code: 'D' },
+          { text: 'Rally people and build excitement', code: 'I' },
+          { text: 'Make sure everyone is aligned and comfortable', code: 'S' },
+          { text: 'Map out the plan and the details', code: 'C' },
+        ]},
+        { q: 'Under pressure, I tend to…', options: [
+          { text: 'Take charge and decide fast', code: 'D' },
+          { text: 'Talk it through and stay upbeat', code: 'I' },
+          { text: 'Stay calm and steady the team', code: 'S' },
+          { text: 'Slow down and check the facts', code: 'C' },
+        ]},
+        { q: 'People would describe me as…', options: [
+          { text: 'Direct and determined', code: 'D' },
+          { text: 'Enthusiastic and persuasive', code: 'I' },
+          { text: 'Patient and dependable', code: 'S' },
+          { text: 'Precise and analytical', code: 'C' },
+        ]},
+        { q: 'I am most motivated by…', options: [
+          { text: 'Winning and results', code: 'D' },
+          { text: 'Recognition and people', code: 'I' },
+          { text: 'Stability and belonging', code: 'S' },
+          { text: 'Accuracy and mastery', code: 'C' },
+        ]},
+        { q: 'In a meeting, I usually…', options: [
+          { text: 'Push for a decision', code: 'D' },
+          { text: 'Keep the energy high', code: 'I' },
+          { text: 'Make sure everyone is heard', code: 'S' },
+          { text: 'Question assumptions', code: 'C' },
+        ]},
+        { q: 'My biggest strength is…', options: [
+          { text: 'Getting things done', code: 'D' },
+          { text: 'Connecting with people', code: 'I' },
+          { text: 'Being reliable', code: 'S' },
+          { text: 'Getting things right', code: 'C' },
+        ]},
+        { q: 'When plans change, I…', options: [
+          { text: 'Adapt fast and push on', code: 'D' },
+          { text: 'Sell the new direction', code: 'I' },
+          { text: 'Prefer time to adjust', code: 'S' },
+          { text: 'Want to understand why', code: 'C' },
+        ]},
+        { q: 'I make decisions by…', options: [
+          { text: 'Trusting my gut and moving', code: 'D' },
+          { text: 'Talking to people I trust', code: 'I' },
+          { text: 'Seeking consensus', code: 'S' },
+          { text: 'Analyzing the data', code: 'C' },
+        ]},
+      ];
+
+      const [discAssessment] = await tx
+        .insert(assessments)
+        .values({
+          mentorId,
+          title: 'DISC Personality Profile',
+          description:
+            'Discover your dominant working style — Dominant, Influencer, Steady or Conscientious — and get a learning path tailored to your result.',
+          imageUrl:
+            'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80',
+          status: 'PUBLISHED',
+          freeReportText: 'Here is your DISC profile.',
+          premiumReportDescription:
+            'A personalized deep-dive into your DISC style: your strengths, your blind spots, and a 30-day plan to grow.',
+          baseKnowledge:
+            'DISC classifies working style into Dominant (D), Influencer (I), Steady (S) and Conscientious (C). Report on the dominant style with warmth and concrete, style-specific growth advice.',
+          aiEnabled: true,
+          resultCategories: DISC_CATEGORIES,
+          learningResources: discResources,
+          accessMode: 'FREEMIUM',
+          premiumTokenCost: 25,
+          price: 0,
+        })
+        .returning({ id: assessments.id });
+
+      for (const dq of DISC_QUESTIONS) {
+        const [question] = await tx
+          .insert(questions)
+          .values({ assessmentId: discAssessment.id, questionText: dq.q })
+          .returning({ id: questions.id });
+        await tx.insert(choices).values(
+          dq.options.map((o, i) => ({
+            questionId: question.id,
+            choiceText: o.text,
+            score: 0,
+            position: i,
+            categoryCodes: [o.code],
+          })),
+        );
+      }
+
+      const discResult = (dominant: keyof typeof DISC_CATEGORIES): CategoryResult => {
+        const scores: Record<string, number> = { D: 2, I: 2, S: 2, C: 2 };
+        scores[dominant] = 6;
+        const total = Object.values(scores).reduce((x, y) => x + y, 0);
+        return {
+          distribution: scores,
+          total,
+          dominant,
+          dominantName: DISC_CATEGORIES[dominant].name,
+          categories: DISC_CATEGORIES,
+          scores,
+          winner: dominant,
+        };
+      };
+      const discFree = (dominant: keyof typeof DISC_CATEGORIES): string => {
+        const c = DISC_CATEGORIES[dominant];
+        return `Your dominant style is ${c.name}.\n\n${c.knowledge}\n\nExplore your personalized learning path below to build on this style.`;
+      };
+
+      // A spread of results so the demo shows different learning paths.
+      const discAttempts: { who: number; dominant: keyof typeof DISC_CATEGORIES; daysAgo: number; premium?: boolean }[] = [
+        { who: 0, dominant: 'D', daysAgo: 2, premium: true },
+        { who: 1, dominant: 'I', daysAgo: 5 },
+        { who: 2, dominant: 'S', daysAgo: 9, premium: true },
+        { who: 3, dominant: 'C', daysAgo: 14 },
+        { who: 4, dominant: 'D', daysAgo: 20 },
+        { who: 5, dominant: 'I', daysAgo: 27 },
+      ];
+      for (const spec of discAttempts) {
+        const createdAt = daysAgo(spec.daysAgo);
+        const [attempt] = await tx
+          .insert(attempts)
+          .values({
+            assessmentId: discAssessment.id,
+            userId: userIds[spec.who],
+            totalScore: 0,
+            categoryResult: discResult(spec.dominant),
+            createdAt,
+          })
+          .returning({ id: attempts.id });
+        totalAttempts++;
+        await tx.insert(reports).values({
+          attemptId: attempt.id,
+          reportType: 'FREE',
+          content: discFree(spec.dominant),
+        });
+        if (spec.premium) {
+          const [premium] = await tx
+            .insert(reports)
+            .values({
+              attemptId: attempt.id,
+              reportType: 'PREMIUM',
+              content: renderPremium('DISC Personality Profile', 20),
+            })
+            .returning({ id: reports.id });
+          await tx.insert(transactions).values({
+            userId: userIds[spec.who],
+            mentorId,
+            assessmentId: discAssessment.id,
+            reportId: premium.id,
+            amount: 25,
             type: 'PREMIUM_UNLOCK',
             createdAt: new Date(createdAt.getTime() + 60 * 60 * 1000),
           });

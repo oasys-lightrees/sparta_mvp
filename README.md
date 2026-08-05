@@ -180,7 +180,14 @@ to the result they actually got. The document lives on the assessment
 it from a dedicated editor in the assessment form, and the report resolves the
 visible set server-side (premium URLs are never sent while locked). Videos accept
 external URLs (YouTube/Vimeo, embedded) or direct file URLs (uploaded/hosted,
-played natively).
+played natively), with optional `provider`, `thumbnail` and `duration` metadata.
+
+For **personality assessments** this becomes a personalized learning path: each
+result profile (e.g. the DISC `D`/`I`/`S`/`C` styles) has its own independent
+resource library, the mentor editor organizes resources per result, and the
+taker sees a grouped path (Videos → Downloads → Articles → Courses → Links)
+headed by their result. When a profile has no resources it falls back to the
+shared set, so existing assessments keep working with no migration.
 
 ---
 
