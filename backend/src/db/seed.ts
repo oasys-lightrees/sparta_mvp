@@ -156,7 +156,8 @@ const SHOWCASE: Record<string, Showcase> = {
   'Leadership Potential Assessment': {
     brandName: 'Meridian',
     monogram: 'MD',
-    colors: { primary: '#0f9d77', secondary: '#0d9488', accent: '#84cc16' },
+    // Deep emerald/teal so white button text stays high-contrast.
+    colors: { primary: '#0a7d5c', secondary: '#0b8f83', accent: '#65a30d' },
     competencies: ['Vision', 'Decisiveness', 'Empathy', 'Communication', 'Accountability'],
     companies: ['Everline', 'Harborlight', 'Terra', 'Solstice', 'Meadowbrook', 'Ironwood'],
     stats: [
@@ -173,7 +174,8 @@ const SHOWCASE: Record<string, Showcase> = {
   'Sales Skill Assessment': {
     brandName: 'Ember',
     monogram: 'EM',
-    colors: { primary: '#e0492f', secondary: '#f59e0b', accent: '#f43f5e' },
+    // Deeper coral/orange so white button text stays legible (amber was too light).
+    colors: { primary: '#d23f28', secondary: '#dd6510', accent: '#f43f5e' },
     competencies: ['Discovery', 'Qualifying', 'Objections', 'Closing', 'Follow-up'],
     companies: ['Pipeline', 'Quota', 'Velocity', 'Apex', 'Frontier', 'Momentum'],
     stats: [
