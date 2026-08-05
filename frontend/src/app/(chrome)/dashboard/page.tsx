@@ -10,6 +10,7 @@ import { assessmentApi } from '@/services/assessment.api';
 import { tokenApi } from '@/services/token.api';
 import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import { AssessmentCard } from '@/components/assessment/AssessmentCard';
+import { TopUpDialog } from '@/components/wallet/TopUpDialog';
 import { LatoMark } from '@/components/brand/LatoMark';
 import { Loading } from '@/components/common/Loading';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -69,6 +70,8 @@ function DashboardHome() {
   const [busy, setBusy] = useState<string | null>(null);
   const [actionError, setActionError] = useState('');
   const [actionNotice, setActionNotice] = useState('');
+  const [topUpOpen, setTopUpOpen] = useState(false);
+  const [topUpError, setTopUpError] = useState('');
 
   const loadWallet = useCallback(async () => {
     const [mine, wallet] = await Promise.all([
@@ -140,15 +143,9 @@ function DashboardHome() {
     })();
   }, []);
 
-  const topUp = async () => {
-    const input = window.prompt('How many tokens would you like to buy?', '10');
-    if (input === null) return;
-    const amount = Number(input);
-    if (!Number.isInteger(amount) || amount <= 0) {
-      setActionError('Amount must be a positive whole number');
-      return;
-    }
+  const purchaseTokens = async (amount: number) => {
     setBusy('topup');
+    setTopUpError('');
     setActionError('');
     setActionNotice('');
     try {
@@ -161,9 +158,10 @@ function DashboardHome() {
       }
       // Demo fallback (gateway not configured): credited immediately.
       setBalance(result.balance);
+      setTopUpOpen(false);
       setActionNotice(`Added ${amount} tokens — your balance is now ${result.balance}.`);
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Purchase failed');
+      setTopUpError(err instanceof Error ? err.message : 'Purchase failed');
     } finally {
       setBusy(null);
     }
@@ -221,7 +219,10 @@ function DashboardHome() {
             <Button
               size="sm"
               variant="bronze"
-              onClick={topUp}
+              onClick={() => {
+                setTopUpError('');
+                setTopUpOpen(true);
+              }}
               disabled={busy === 'topup'}
             >
               {busy === 'topup' ? t('dashboard.toppingUp') : t('dashboard.topUp')}
@@ -338,6 +339,14 @@ function DashboardHome() {
           </div>
         )}
       </section>
+
+      <TopUpDialog
+        open={topUpOpen}
+        onClose={() => setTopUpOpen(false)}
+        onConfirm={purchaseTokens}
+        submitting={busy === 'topup'}
+        error={topUpError}
+      />
     </div>
   );
 }

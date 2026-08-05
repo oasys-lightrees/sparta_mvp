@@ -48,6 +48,16 @@ const tokenPriceIdr = (): number => {
   return Number.isFinite(raw) && raw > 0 ? Math.round(raw) : DEFAULT_TOKEN_PRICE_IDR;
 };
 
+/**
+ * Public pricing info for the wallet UI: the per-token price and whether a real
+ * gateway is configured (so the UI can show a price vs. an instant demo credit).
+ */
+export const getPricing = () => ({
+  token_price_idr: tokenPriceIdr(),
+  currency: 'IDR',
+  payment_configured: isPaymentConfigured(),
+});
+
 export type CreateOrderResult =
   | { mode: 'demo'; balance: number }
   | {

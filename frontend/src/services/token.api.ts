@@ -1,8 +1,16 @@
 import { apiClient } from '@/services/api';
-import type { PurchaseResult, TokenBalance, TokenOrderStatus } from '@/types';
+import type {
+  PurchaseResult,
+  TokenBalance,
+  TokenOrderStatus,
+  TokenPricing,
+} from '@/types';
 
 export const tokenApi = {
   getBalance: () => apiClient.get<TokenBalance>('/api/tokens/me'),
+
+  // Per-token price + whether a real gateway is configured (for the top-up UI).
+  getPricing: () => apiClient.get<TokenPricing>('/api/tokens/pricing'),
 
   // Start a real (Midtrans) token purchase. Falls back to a demo credit when
   // the gateway is not configured — see the discriminated PurchaseResult.

@@ -15,6 +15,12 @@ const handleError = (c: Context<AppEnv>, err: unknown) => {
   throw err;
 };
 
+// GET /api/tokens/pricing — per-token price + whether the gateway is live.
+// Drives the wallet top-up dialog (price display / demo-mode copy).
+token.get('/pricing', authMiddleware, (c) => {
+  return c.json(success(paymentService.getPricing()), 200);
+});
+
 // GET /api/tokens/me — current balance
 token.get('/me', authMiddleware, async (c) => {
   try {
