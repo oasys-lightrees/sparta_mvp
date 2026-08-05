@@ -294,6 +294,14 @@ export function LearningResourcesEditor({
         </p>
       </div>
 
+      {profiles.length === 0 ? (
+        <p className="rounded-md border border-dashed bg-accent/20 px-3 py-2 text-xs text-muted-foreground">
+          Only shared resources are available right now. Define this
+          assessment&apos;s result categories (above) to give each personality
+          result its own resource library.
+        </p>
+      ) : null}
+
       {sections.map((section) => {
         const sectionRows = rows.filter((r) => r.bucket === section.code);
         return (
