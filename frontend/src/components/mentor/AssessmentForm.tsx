@@ -83,7 +83,6 @@ export function AssessmentForm({
   const [title, setTitle] = useState(str(initial?.title));
   const [description, setDescription] = useState(str(initial?.description));
   const [imageUrl, setImageUrl] = useState(str(initial?.image_url));
-  const [price, setPrice] = useState(numStr(initial?.price));
   const [premiumCost, setPremiumCost] = useState(
     numStr(initial?.premium_token_cost),
   );
@@ -192,11 +191,18 @@ export function AssessmentForm({
       title: title.trim(),
       description: description.trim() === '' ? null : description,
       image_url: imageUrl.trim() === '' ? null : imageUrl.trim(),
-      price: price.trim() === '' ? 0 : Number(price),
+      // Price is no longer edited in the form; preserve any existing value.
+      price: initial?.price ?? 0,
       low_score_threshold: lowNum,
       high_score_threshold: highNum,
       free_report_text: freeText.trim() === '' ? null : freeText,
-      premium_token_cost: premiumCost.trim() === '' ? 0 : Number(premiumCost),
+      // Premium report cost only applies to Freemium; force 0 for other modes.
+      premium_token_cost:
+        accessMode === 'FREEMIUM'
+          ? premiumCost.trim() === ''
+            ? 0
+            : Number(premiumCost)
+          : 0,
       // Score template is a skill-mode field.
       free_report_template:
         isPersonality || freeTemplate.trim() === '' ? null : freeTemplate,
@@ -319,31 +325,9 @@ export function AssessmentForm({
           </p>
         )}
       </div>
-      {/* Price + premium cost apply to BOTH modes (both use premium reports). */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="price">Price</Label>
-          <Input
-            id="price"
-            type="number"
-            min={0}
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="premium_token_cost">Premium cost (tokens)</Label>
-          <Input
-            id="premium_token_cost"
-            type="number"
-            min={0}
-            value={premiumCost}
-            onChange={(e) => setPremiumCost(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {/* Access model — how takers get to start this assessment. */}
+      {/* Access model — how takers get to start this assessment. Any cost the
+          mode needs (premium unlock for Freemium, access cost for Paid) is set
+          inside the card, so mentors only see the field relevant to their mode. */}
       <div className="space-y-3 rounded-md border p-4">
         <div className="space-y-1">
           <Label>Access model</Label>
@@ -380,6 +364,23 @@ export function AssessmentForm({
             </button>
           ))}
         </div>
+        {accessMode === 'FREEMIUM' ? (
+          <div className="space-y-2">
+            <Label htmlFor="premium_token_cost">Premium report cost (tokens)</Label>
+            <Input
+              id="premium_token_cost"
+              type="number"
+              min={0}
+              value={premiumCost}
+              onChange={(e) => setPremiumCost(e.target.value)}
+              placeholder="e.g. 40"
+            />
+            <p className="text-xs text-muted-foreground">
+              Tokens a taker spends to unlock the premium report after taking the
+              assessment for free. 0 means no premium report is offered.
+            </p>
+          </div>
+        ) : null}
         {accessMode === 'PAID' ? (
           <div className="space-y-2">
             <Label htmlFor="access_token_cost">Access cost (tokens)</Label>
@@ -392,16 +393,27 @@ export function AssessmentForm({
               placeholder="e.g. 30"
             />
             <p className="text-xs text-muted-foreground">
-              Tokens a taker spends to unlock access. They fund their wallet via
-              payment (Midtrans) or the demo top-up, then spend it here.
+              Tokens a taker spends to unlock access before starting. They fund
+              their wallet via payment (Midtrans) or the demo top-up, then spend
+              it here. The full result is included — no separate premium unlock.
             </p>
           </div>
         ) : null}
         {accessMode === 'VOUCHER' ? (
-          <p className="text-xs text-muted-foreground">
-            Takers redeem a code from a voucher batch (see the Company/Vouchers
-            flow) to start. Redeeming grants access automatically.
-          </p>
+          <div className="space-y-1 rounded-md border border-dashed bg-accent/20 p-3">
+            <p className="text-xs font-medium text-foreground">
+              How voucher access works
+            </p>
+            <p className="text-xs text-muted-foreground">
+              You don&apos;t set a price here. Instead, a company buys a batch of
+              seats for this assessment on the branded Company page
+              (<code>/a/&lt;id&gt;/company</code>), which generates unique voucher
+              codes. A taker enters a code on the Redeem page
+              (<code>/a/&lt;id&gt;/redeem</code>); redeeming grants them access to
+              start — one code = one seat. Publish the assessment first so those
+              pages are live.
+            </p>
+          </div>
         ) : null}
       </div>
 
