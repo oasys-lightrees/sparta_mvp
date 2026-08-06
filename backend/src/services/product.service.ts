@@ -2,7 +2,7 @@ import { and, desc, eq } from 'drizzle-orm';
 import { db } from '../db/client';
 import { assessments, products } from '../db/schema';
 import type { ProductTiers } from '../db/schema';
-import { ProductTiersSchema } from '../config/product.schema';
+import { ProductTiersSchema, VoucherPackagesSchema } from '../config/product.schema';
 import { HttpError } from '../utils/http-error';
 
 // The caller's identity + role, used to authorize mentor operations.
@@ -15,6 +15,7 @@ export type UpsertProductInput = {
   description?: string | null;
   status?: 'DRAFT' | 'PUBLISHED';
   tiers?: unknown;
+  voucherPackages?: unknown;
 };
 
 const defaultTiers = (): ProductTiers =>
@@ -87,6 +88,7 @@ const toDto = (p: ProductRow) => ({
   description: p.description,
   status: p.status,
   tiers: p.tiers ?? defaultTiers(),
+  voucher_packages: p.voucherPackages ?? [],
   created_at: p.createdAt,
   updated_at: p.updatedAt,
 });
@@ -134,6 +136,7 @@ export const getPublicForAssessment = async (assessmentId: string) => {
     name: p.name,
     description: p.description,
     tiers: p.tiers ?? defaultTiers(),
+    voucher_packages: p.voucherPackages ?? [],
   };
 };
 
@@ -216,6 +219,7 @@ export const upsertForAssessment = async (
   const assessment = await loadManageableAssessment(assessmentId, caller);
 
   const tiers = ProductTiersSchema.parse(input.tiers ?? {});
+  const voucherPackages = VoucherPackagesSchema.parse(input.voucherPackages ?? []);
   const name = (input.name ?? '').trim() || assessment.title;
   const status = input.status === 'PUBLISHED' ? 'PUBLISHED' : 'DRAFT';
   const description =
@@ -239,7 +243,7 @@ export const upsertForAssessment = async (
     if (existing) {
       [saved] = await tx
         .update(products)
-        .set({ name, description, tiers, status })
+        .set({ name, description, tiers, voucherPackages, status })
         .where(eq(products.id, existing.id))
         .returning();
     } else {
@@ -254,6 +258,7 @@ export const upsertForAssessment = async (
           slug: slug as string,
           description,
           tiers,
+          voucherPackages,
           status,
         })
         .returning();

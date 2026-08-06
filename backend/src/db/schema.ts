@@ -38,6 +38,8 @@ export const transactionType = pgEnum('transaction_type', [
   'VOUCHER_REDEEM',
   // Tokens spent to purchase start access to a PAID assessment.
   'ACCESS_PURCHASE',
+  // Tokens spent by a company/buyer to purchase a voucher batch (seat package).
+  'VOUCHER_PURCHASE',
 ]);
 // How a taker obtained access to start a gated (PAID/VOUCHER) assessment.
 export const accessSource = pgEnum('access_source', [
@@ -555,6 +557,19 @@ export type PricingTier = {
 export type ProductTiers = PricingTier[];
 
 /**
+ * A company/batch voucher package: buying it charges `tokenCost` tokens and
+ * issues `seats` unique voucher codes. Priced per-package (typically cheaper
+ * per seat than the individual token cost) — see config/product.schema.ts.
+ */
+export type VoucherPackage = {
+  id: string;
+  label: string;
+  seats: number;
+  tokenCost: number;
+};
+export type VoucherPackages = VoucherPackage[];
+
+/**
  * products
  * A sellable wrapper around exactly one assessment (1:1). Gives the mentor a
  * place to name the offering, publish it, and configure its three tiers
@@ -577,6 +592,9 @@ export const products = pgTable('products', {
   slug: varchar('slug', { length: 255 }).notNull().unique(),
   description: text('description'),
   tiers: jsonb('tiers').$type<ProductTiers>(),
+  // Company/batch seat packages a buyer can purchase with tokens (each yields
+  // that many voucher codes). Null/empty -> batch buying is not offered.
+  voucherPackages: jsonb('voucher_packages').$type<VoucherPackages>(),
   status: productStatus('status').notNull().default('DRAFT'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')

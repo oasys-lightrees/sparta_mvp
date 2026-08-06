@@ -24,7 +24,7 @@ const handleError = (c: Context<AppEnv>, err: unknown) => {
   throw err;
 };
 
-// Buy a voucher batch.
+// Buy a voucher batch (purchase a seat package with tokens).
 voucher.post('/batches', authMiddleware, async (c) => {
   const body = await c.req.json().catch(() => null);
   if (!body || typeof body.assessment_id !== 'string' || !UUID_REGEX.test(body.assessment_id)) {
@@ -33,15 +33,15 @@ voucher.post('/batches', authMiddleware, async (c) => {
   if (typeof body.company_name !== 'string' || body.company_name.trim() === '') {
     return c.json(error('company_name is required'), 400);
   }
-  if (!Number.isInteger(body.credits)) {
-    return c.json(error('credits must be an integer'), 400);
+  if (typeof body.package_id !== 'string' || body.package_id.trim() === '') {
+    return c.json(error('package_id is required'), 400);
   }
 
   try {
     const result = await voucherService.createBatch(c.get('user').id, {
       assessmentId: body.assessment_id,
       companyName: body.company_name,
-      credits: body.credits,
+      packageId: body.package_id,
     });
     return c.json(success(result), 201);
   } catch (err) {

@@ -99,6 +99,7 @@ product.post(
           description: body.description,
           status: body.status,
           tiers: body.tiers,
+          voucherPackages: body.voucherPackages,
         },
       );
       return c.json(success(result), 200);

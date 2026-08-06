@@ -1,11 +1,18 @@
 import { apiClient } from '@/services/api';
-import type { MentorProduct, ProductStatus, ProductTiers, PublicProduct } from '@/types';
+import type {
+  MentorProduct,
+  ProductStatus,
+  ProductTiers,
+  PublicProduct,
+  VoucherPackage,
+} from '@/types';
 
 export type UpsertProductInput = {
   name?: string;
   description?: string | null;
   status?: ProductStatus;
   tiers?: ProductTiers;
+  voucherPackages?: VoucherPackage[];
 };
 
 export const productApi = {

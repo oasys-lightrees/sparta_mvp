@@ -22,11 +22,11 @@ import type {
   PricingTier,
   ProductStatus,
   ProductTierKind,
+  VoucherPackage,
 } from '@/types';
 
 const KIND_OPTIONS: { value: ProductTierKind; label: string }[] = [
   { value: 'FREE', label: 'Free' },
-  { value: 'FREEMIUM', label: 'Freemium (free + premium upsell)' },
   { value: 'PAID', label: 'Paid (tokens)' },
   { value: 'VOUCHER', label: 'Voucher (redeem a code)' },
 ];
@@ -83,11 +83,23 @@ const DEFAULT_TIERS = (): PricingTier[] => [
 const normalizeTiers = (tiers: unknown): PricingTier[] =>
   Array.isArray(tiers) && tiers.length > 0 ? (tiers as PricingTier[]) : DEFAULT_TIERS();
 
+const makePackage = (over: Partial<VoucherPackage> = {}): VoucherPackage => ({
+  id: newId(),
+  label: '',
+  seats: 10,
+  tokenCost: 0,
+  ...over,
+});
+
+const normalizePackages = (packages: unknown): VoucherPackage[] =>
+  Array.isArray(packages) ? (packages as VoucherPackage[]) : [];
+
 type Form = {
   name: string;
   description: string;
   status: ProductStatus;
   tiers: PricingTier[];
+  voucherPackages: VoucherPackage[];
 };
 
 const fromProduct = (p: MentorProduct): Form => ({
@@ -95,6 +107,7 @@ const fromProduct = (p: MentorProduct): Form => ({
   description: p.description ?? '',
   status: p.status,
   tiers: normalizeTiers(p.tiers),
+  voucherPackages: normalizePackages(p.voucher_packages),
 });
 
 /**
@@ -146,6 +159,7 @@ export function ProductEditor({
             description: '',
             status: 'DRAFT',
             tiers: DEFAULT_TIERS(),
+            voucherPackages: [],
           },
     );
     setSaveError('');
@@ -165,11 +179,36 @@ export function ProductEditor({
   const removeTier = (index: number) =>
     setForm((f) => (f ? { ...f, tiers: f.tiers.filter((_, i) => i !== index) } : f));
 
+  const setPackage = (index: number, patch: Partial<VoucherPackage>) =>
+    setForm((f) =>
+      f
+        ? {
+            ...f,
+            voucherPackages: f.voucherPackages.map((p, i) =>
+              i === index ? { ...p, ...patch } : p,
+            ),
+          }
+        : f,
+    );
+
+  const addPackage = () =>
+    setForm((f) =>
+      f && f.voucherPackages.length < 10
+        ? { ...f, voucherPackages: [...f.voucherPackages, makePackage()] }
+        : f,
+    );
+
+  const removePackage = (index: number) =>
+    setForm((f) =>
+      f ? { ...f, voucherPackages: f.voucherPackages.filter((_, i) => i !== index) } : f,
+    );
+
   const persist = async (payload: {
     name: string;
     description: string | null;
     status: ProductStatus;
     tiers: PricingTier[];
+    voucherPackages: VoucherPackage[];
   }) => {
     const saved = await productApi.upsert(assessmentId, payload);
     setProduct(saved);
@@ -187,6 +226,7 @@ export function ProductEditor({
         description: form.description.trim() === '' ? null : form.description.trim(),
         status: form.status,
         tiers: form.tiers,
+        voucherPackages: form.voucherPackages,
       });
       setForm(fromProduct(saved));
       setEditing(false);
@@ -214,6 +254,7 @@ export function ProductEditor({
         description: product.description,
         status: next,
         tiers: normalizeTiers(product.tiers),
+        voucherPackages: normalizePackages(product.voucher_packages),
       });
       setNotice(next === 'PUBLISHED' ? 'Product published.' : 'Product unpublished.');
     } catch (e) {
@@ -457,6 +498,91 @@ export function ProductEditor({
               {form.tiers.length === 0 ? (
                 <p className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">
                   No tiers. Add at least one to show pricing on the landing page.
+                </p>
+              ) : null}
+            </div>
+
+            {/* Company / batch voucher packages */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Company voucher packages
+                </h4>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addPackage}
+                  disabled={form.voucherPackages.length >= 10}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add package
+                </Button>
+              </div>
+              <p className="rounded-md border border-dashed bg-accent/20 px-3 py-2 text-xs text-muted-foreground">
+                Batch/seat packages a company buys with tokens to get voucher codes.
+                Price each package in tokens — set it cheaper per seat than the
+                individual cost. Buyers purchase these from their dashboard&apos;s
+                Team-vouchers section.
+              </p>
+
+              {form.voucherPackages.map((pkg, i) => (
+                <div key={pkg.id} className="grid gap-3 rounded-md border p-3 sm:grid-cols-[1fr_auto_auto_auto]">
+                  <div className="space-y-1.5">
+                    <Label>Package name</Label>
+                    <Input
+                      value={pkg.label}
+                      onChange={(e) => setPackage(i, { label: e.target.value })}
+                      placeholder="e.g. Team 10-pack"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Seats</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={1000}
+                      className="w-24"
+                      value={pkg.seats}
+                      onChange={(e) =>
+                        setPackage(i, { seats: Math.max(1, Number(e.target.value) || 1) })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Price (tokens)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      className="w-28"
+                      value={pkg.tokenCost}
+                      onChange={(e) =>
+                        setPackage(i, { tokenCost: Math.max(0, Number(e.target.value) || 0) })
+                      }
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removePackage(i)}
+                      aria-label="Remove package"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                  {pkg.seats > 0 && pkg.tokenCost > 0 ? (
+                    <p className="text-xs text-muted-foreground sm:col-span-4">
+                      {(pkg.tokenCost / pkg.seats).toFixed(1)} tokens per seat
+                    </p>
+                  ) : null}
+                </div>
+              ))}
+
+              {form.voucherPackages.length === 0 ? (
+                <p className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">
+                  No packages. Add one to let companies buy voucher codes in bulk.
                 </p>
               ) : null}
             </div>
