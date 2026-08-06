@@ -157,10 +157,56 @@ export const listForMentor = async (mentorId: string) => {
   return rows;
 };
 
+type AssessmentPricing = {
+  accessMode: 'FREE' | 'FREEMIUM' | 'PAID' | 'VOUCHER';
+  accessTokenCost: number;
+  premiumTokenCost: number;
+};
+
+/**
+ * Derive the assessment's access model + token costs from the product's enabled
+ * tiers, so the price a mentor sets on a tier is the price actually charged (and
+ * shown on the landing/report). Returns null when there are no enabled tiers, so
+ * the assessment is left untouched.
+ *
+ * Mapping:
+ *  - A FREEMIUM tier's token cost -> the premium-report unlock cost.
+ *  - A PAID tier's token cost     -> the start-access cost.
+ *  - Start gating: a FREE/FREEMIUM tier lets anyone start for free (FREEMIUM
+ *    when a paid premium upsell exists, else FREE); otherwise the entry is gated
+ *    by PAID, or by VOUCHER (redeem a code).
+ */
+const deriveAssessmentPricing = (tiers: ProductTiers): AssessmentPricing | null => {
+  const enabled = tiers.filter((t) => t.enabled);
+  if (enabled.length === 0) return null;
+
+  const premiumTokenCost = enabled.find((t) => t.kind === 'FREEMIUM')?.tokenCost ?? 0;
+  const paid = enabled.find((t) => t.kind === 'PAID');
+  const hasFreeEntry = enabled.some((t) => t.kind === 'FREE' || t.kind === 'FREEMIUM');
+
+  if (hasFreeEntry) {
+    return {
+      accessMode: premiumTokenCost > 0 ? 'FREEMIUM' : 'FREE',
+      accessTokenCost: 0,
+      premiumTokenCost,
+    };
+  }
+  if (paid) {
+    return { accessMode: 'PAID', accessTokenCost: paid.tokenCost, premiumTokenCost };
+  }
+  if (enabled.some((t) => t.kind === 'VOUCHER')) {
+    return { accessMode: 'VOUCHER', accessTokenCost: 0, premiumTokenCost };
+  }
+  return { accessMode: 'FREE', accessTokenCost: 0, premiumTokenCost };
+};
+
 /**
  * Create or update the product for an assessment (1:1). Verifies the caller
  * owns the assessment, validates the tiers, and generates a unique slug on
- * first create. Returns the saved product.
+ * first create. The product is the source of truth for pricing, so saving it
+ * also syncs the derived access model + token costs onto the assessment (in one
+ * transaction) — the tier's token price is what actually gets charged. Returns
+ * the saved product.
  */
 export const upsertForAssessment = async (
   caller: Caller,
@@ -177,37 +223,55 @@ export const upsertForAssessment = async (
       ? null
       : String(input.description);
 
+  const pricing = deriveAssessmentPricing(tiers);
+
   const [existing] = await db
     .select({ id: products.id })
     .from(products)
     .where(eq(products.assessmentId, assessmentId))
     .limit(1);
+  // 1:1 unique constraint means no concurrent second product, so a slug picked
+  // here can't be claimed between now and the insert below.
+  const slug = existing ? null : await uniqueSlug(slugify(name));
 
-  if (existing) {
-    const [updated] = await db
-      .update(products)
-      .set({ name, description, tiers, status })
-      .where(eq(products.id, existing.id))
-      .returning();
-    return toDto(updated);
-  }
+  return db.transaction(async (tx) => {
+    let saved: ProductRow;
+    if (existing) {
+      [saved] = await tx
+        .update(products)
+        .set({ name, description, tiers, status })
+        .where(eq(products.id, existing.id))
+        .returning();
+    } else {
+      [saved] = await tx
+        .insert(products)
+        // The product's owner is always the assessment's mentor (not necessarily
+        // the caller, who may be an admin acting on their behalf).
+        .values({
+          mentorId: assessment.mentorId,
+          assessmentId,
+          name,
+          slug: slug as string,
+          description,
+          tiers,
+          status,
+        })
+        .returning();
+    }
 
-  const slug = await uniqueSlug(slugify(name));
-  const [created] = await db
-    .insert(products)
-    // The product's owner is always the assessment's mentor (not necessarily the
-    // caller, who may be an admin acting on their behalf).
-    .values({
-      mentorId: assessment.mentorId,
-      assessmentId,
-      name,
-      slug,
-      description,
-      tiers,
-      status,
-    })
-    .returning();
-  return toDto(created);
+    if (pricing) {
+      await tx
+        .update(assessments)
+        .set({
+          accessMode: pricing.accessMode,
+          accessTokenCost: pricing.accessTokenCost,
+          premiumTokenCost: pricing.premiumTokenCost,
+        })
+        .where(eq(assessments.id, assessmentId));
+    }
+
+    return toDto(saved);
+  });
 };
 
 /** Delete the product for an assessment (owner/admin). No-op if none. */

@@ -274,6 +274,9 @@ export function BrandedReport({
   }
 
   const pct = Math.max(0, Math.min(100, report.score));
+  // Personality/diagnostic assessments don't produce a numeric score — they
+  // resolve to a result category. Hide the score ring and show the category.
+  const isPersonality = Boolean(report.result_profile);
   const premium = report.premium;
   const embed = premium.study_video_url ? embedUrl(premium.study_video_url) : null;
 
@@ -285,16 +288,25 @@ export function BrandedReport({
           {report.assessment_title ?? app.brand.brandName}
         </h2>
 
-        <div className="lato-rhero">
-          <div className="lato-rring" style={{ ['--v' as string]: `${pct}%` }}>
-            <b>
-              {report.score}
-              <small>/100</small>
-            </b>
-          </div>
+        <div
+          className="lato-rhero"
+          style={isPersonality ? { gridTemplateColumns: '1fr' } : undefined}
+        >
+          {!isPersonality ? (
+            <div className="lato-rring" style={{ ['--v' as string]: `${pct}%` }}>
+              <b>
+                {report.score}
+                <small>/100</small>
+              </b>
+            </div>
+          ) : null}
           <div>
-            <span className="lato-pill">● {report.level}</span>
-            <div className="lato-rlvl">{report.level}</div>
+            <span className="lato-pill">
+              ● {isPersonality ? 'Your result' : report.level}
+            </span>
+            <div className="lato-rlvl">
+              {isPersonality ? (report.result_profile?.name ?? 'Your result') : report.level}
+            </div>
             <Prose text={report.report.content} />
           </div>
         </div>
