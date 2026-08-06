@@ -339,6 +339,13 @@ export function ProductEditor({
                   Add tier
                 </Button>
               </div>
+              <p className="rounded-md border border-dashed bg-accent/20 px-3 py-2 text-xs text-muted-foreground">
+                Token prices are charged for real. Saving sets this assessment&apos;s
+                access from the tiers: a <strong>Freemium</strong> tier&apos;s tokens
+                become the premium-report cost, a <strong>Paid</strong> tier&apos;s
+                tokens the start-access cost, and a <strong>Voucher</strong> tier makes
+                the assessment voucher-gated.
+              </p>
 
               {form.tiers.map((tier, i) => (
                 <div key={tier.id} className="space-y-3 rounded-md border p-3">
