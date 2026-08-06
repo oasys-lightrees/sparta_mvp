@@ -24,6 +24,7 @@ type Form = {
   brandName: string;
   monogram: string;
   logoUrl: string;
+  faviconUrl: string;
   primary: string;
   secondary: string;
   accent: string;
@@ -48,6 +49,7 @@ const fromConfig = (a: AssessmentApp): Form => ({
   brandName: a.brand.brandName,
   monogram: a.brand.monogram,
   logoUrl: a.brand.logoUrl ?? '',
+  faviconUrl: a.brand.faviconUrl ?? '',
   primary: a.brand.colors.primary,
   secondary: a.brand.colors.secondary,
   accent: a.brand.colors.accent,
@@ -74,6 +76,7 @@ const toPatch = (f: Form): AppConfigPatch => ({
     brandName: f.brandName.trim(),
     monogram: f.monogram.trim(),
     logoUrl: f.logoUrl.trim() === '' ? null : f.logoUrl.trim(),
+    faviconUrl: f.faviconUrl.trim() === '' ? null : f.faviconUrl.trim(),
     colors: { primary: f.primary, secondary: f.secondary, accent: f.accent },
   },
   theme: { mode: f.mode, radius: f.radius },
@@ -322,6 +325,13 @@ export function LandingPageEditor({
                 value={form.logoUrl}
                 onChange={(v) => set({ logoUrl: v })}
                 placeholder="https://example.com/logo.svg"
+              />
+              <ImageSourceField
+                label="Favicon (browser tab icon)"
+                value={form.faviconUrl}
+                onChange={(v) => set({ faviconUrl: v })}
+                placeholder="https://example.com/favicon.png"
+                helpText="Shown in the browser tab for your landing page. A square PNG, SVG or ICO-style image works best. PNG, SVG, JPG, JPEG or WEBP · up to 5 MB."
               />
               <div className="grid gap-3 sm:grid-cols-3">
                 <ColorField label="Primary" value={form.primary} onChange={(v) => set({ primary: v })} />
