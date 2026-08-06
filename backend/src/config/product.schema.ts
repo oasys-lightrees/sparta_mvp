@@ -41,3 +41,23 @@ export type ProductTiersInput = z.input<typeof ProductTiersSchema>;
 
 /** Validate an unknown value as ProductTiers, filling per-tier defaults. */
 export const parseTiers = (value: unknown) => ProductTiersSchema.parse(value);
+
+/**
+ * Company/batch voucher packages. Buying a package charges `tokenCost` tokens
+ * (typically cheaper per seat than the individual cost) and issues `seats`
+ * voucher codes.
+ */
+const VoucherPackageSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().default(''),
+  seats: z.number().int().positive().max(1000),
+  tokenCost: z.number().int().nonnegative().max(1_000_000),
+});
+
+export const VoucherPackagesSchema = z.array(VoucherPackageSchema).max(10).default([]);
+
+export type VoucherPackageInput = z.input<typeof VoucherPackageSchema>;
+
+/** Validate an unknown value as VoucherPackages. */
+export const parseVoucherPackages = (value: unknown) =>
+  VoucherPackagesSchema.parse(value);

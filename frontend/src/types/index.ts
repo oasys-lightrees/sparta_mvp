@@ -217,6 +217,8 @@ export type CreateBatchResult = {
   assessment_title: string;
   company_name: string;
   credits: number;
+  charged: number;
+  balance: number | null;
   created_at: string;
 };
 export type RedeemResult = {
@@ -243,6 +245,14 @@ export type PricingTier = {
 };
 export type ProductTiers = PricingTier[];
 export type ProductStatus = 'DRAFT' | 'PUBLISHED';
+// A company/batch seat package: buying it charges `tokenCost` tokens and issues
+// `seats` voucher codes.
+export type VoucherPackage = {
+  id: string;
+  label: string;
+  seats: number;
+  tokenCost: number;
+};
 // Full product as seen by its owning mentor.
 export type MentorProduct = {
   id: string;
@@ -252,6 +262,7 @@ export type MentorProduct = {
   description: string | null;
   status: ProductStatus;
   tiers: ProductTiers;
+  voucher_packages: VoucherPackage[];
   created_at: string;
   updated_at: string;
 };
@@ -260,6 +271,7 @@ export type PublicProduct = {
   name: string;
   description: string | null;
   tiers: ProductTiers;
+  voucher_packages: VoucherPackage[];
 };
 
 // --- Mentor ---

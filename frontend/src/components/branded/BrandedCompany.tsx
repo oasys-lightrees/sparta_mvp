@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { voucherApi } from '@/services/voucher.api';
+import { productApi } from '@/services/product.api';
+import { tokenApi } from '@/services/token.api';
 import { useAuth } from '@/hooks/useAuth';
 import type { AssessmentApp } from '@/types/assessment-app';
-import type { VoucherBatchDetail, VoucherBatchSummary } from '@/types';
+import type { VoucherBatchDetail, VoucherBatchSummary, VoucherPackage } from '@/types';
 import { BrandedShell, LatoIcon } from './shell';
 
 export function BrandedCompany({
@@ -17,10 +19,13 @@ export function BrandedCompany({
   const { user, loading: authLoading } = useAuth();
   const [batches, setBatches] = useState<VoucherBatchSummary[] | null>(null);
   const [selected, setSelected] = useState<VoucherBatchDetail | null>(null);
+  const [packages, setPackages] = useState<VoucherPackage[]>([]);
   const [company, setCompany] = useState('');
-  const [credits, setCredits] = useState(10);
+  const [packageId, setPackageId] = useState('');
+  const [balance, setBalance] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [copied, setCopied] = useState('');
 
   const load = useCallback(async () => {
@@ -31,7 +36,16 @@ export function BrandedCompany({
   useEffect(() => {
     if (authLoading || !user) return;
     load().catch((e) => setError(e instanceof Error ? e.message : 'Failed to load'));
-  }, [authLoading, user, load]);
+    // Available seat packages (published product) + the buyer's token balance.
+    productApi
+      .getPublic(assessmentId)
+      .then((p) => setPackages(p?.voucher_packages ?? []))
+      .catch(() => setPackages([]));
+    tokenApi
+      .getBalance()
+      .then((w) => setBalance(w.balance))
+      .catch(() => {});
+  }, [authLoading, user, load, assessmentId]);
 
   const open = async (batchId: string) => {
     setError('');
@@ -44,16 +58,22 @@ export function BrandedCompany({
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!company.trim() || credits < 1) return;
+    if (!company.trim() || !packageId) return;
     setBusy(true);
     setError('');
+    setNotice('');
     try {
       const res = await voucherApi.createBatch({
         assessment_id: assessmentId,
         company_name: company.trim(),
-        credits,
+        package_id: packageId,
       });
       setCompany('');
+      setBalance(res.balance);
+      setNotice(
+        `Purchased ${res.credits} codes for ${res.charged} tokens.` +
+          (res.balance !== null ? ` Balance: ${res.balance} tokens.` : ''),
+      );
       await load();
       await open(res.batch_id);
     } catch (e) {
@@ -105,7 +125,6 @@ export function BrandedCompany({
     );
   }
 
-  const packs = app.products.voucherPackages;
   const a = selected?.analytics;
 
   return (
@@ -122,59 +141,71 @@ export function BrandedCompany({
         </div>
 
         {error ? <div className="lato-note" style={{ marginBottom: 16 }}>{error}</div> : null}
+        {notice ? (
+          <div
+            className="lato-note"
+            style={{ marginBottom: 16, borderColor: 'var(--b1)', color: 'var(--ink)' }}
+          >
+            {notice}
+          </div>
+        ) : null}
 
         {/* Buy a package */}
         <div className="lato-card">
-          <h3 style={{ fontWeight: 700 }}>Buy a voucher package</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+            <h3 style={{ fontWeight: 700 }}>Buy voucher codes</h3>
+            <span style={{ fontSize: '.85rem', color: 'var(--muted)' }}>
+              Your balance: <b style={{ color: 'var(--ink)' }}>{balance ?? '—'} tokens</b>{' '}
+              · <a href="/dashboard" style={{ color: 'var(--b1)', fontWeight: 600 }}>Top up</a>
+            </span>
+          </div>
           <p style={{ color: 'var(--muted)', fontSize: '.92rem', marginTop: 4 }}>
-            We generate one unique code per credit. Share them with employees — each
-            covers a full assessment and premium report, and results roll up here.
+            Buy a seat package with tokens. We generate one unique code per seat —
+            share them with employees; each code unlocks one assessment and results
+            roll up here.
           </p>
-          <form
-            onSubmit={create}
-            style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end', marginTop: 16 }}
-          >
-            <label className="lato-field" style={{ margin: 0, flex: '1 1 220px' }}>
-              Company / team name
-              <input
-                value={company}
-                onChange={(e) => setCompany(e.target.value)}
-                placeholder="Acme Inc."
-              />
-            </label>
-            <label className="lato-field" style={{ margin: 0, width: 130 }}>
-              Credits
-              <input
-                type="number"
-                min={1}
-                max={1000}
-                value={credits}
-                onChange={(e) => setCredits(Math.max(1, Number(e.target.value) || 1))}
-              />
-            </label>
-            <button
-              type="submit"
-              className="lato-btn lato-btn--grad"
-              disabled={busy || !company.trim()}
+
+          {packages.length === 0 ? (
+            <p
+              className="lato-note"
+              style={{ marginTop: 16 }}
             >
-              {busy ? 'Generating…' : 'Generate codes'}
-            </button>
-          </form>
-          {packs.length ? (
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 14 }}>
-              {packs.map((p) => (
-                <button
-                  key={p.credits}
-                  type="button"
-                  className="lato-pill"
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => setCredits(p.credits)}
-                >
-                  {p.credits} seats · {p.price}
-                </button>
-              ))}
-            </div>
-          ) : null}
+              No voucher packages are offered for this assessment yet. The mentor
+              sets these up in the product editor.
+            </p>
+          ) : (
+            <form
+              onSubmit={create}
+              style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end', marginTop: 16 }}
+            >
+              <label className="lato-field" style={{ margin: 0, flex: '1 1 220px' }}>
+                Company / team name
+                <input
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  placeholder="Acme Inc."
+                />
+              </label>
+              <label className="lato-field" style={{ margin: 0, flex: '1 1 240px' }}>
+                Package
+                <select value={packageId} onChange={(e) => setPackageId(e.target.value)}>
+                  <option value="">Select a package…</option>
+                  {packages.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {(p.label || `${p.seats} seats`)} · {p.seats} seats · {p.tokenCost} tokens
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="submit"
+                className="lato-btn lato-btn--grad"
+                disabled={busy || !company.trim() || !packageId}
+              >
+                {busy ? 'Purchasing…' : 'Buy with tokens'}
+              </button>
+            </form>
+          )}
         </div>
 
         {/* Batches */}

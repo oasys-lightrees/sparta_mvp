@@ -1,9 +1,10 @@
 import { randomInt } from 'node:crypto';
-import { and, count, eq, inArray, sql } from 'drizzle-orm';
+import { and, count, eq, gte, inArray, sql } from 'drizzle-orm';
 import { db } from '../db/client';
 import {
   assessments,
   attempts,
+  products,
   transactions,
   users,
   voucherBatches,
@@ -11,7 +12,6 @@ import {
 } from '../db/schema';
 import { normalizeMode, policyFor } from '../config/access';
 import { grantAccess } from './access.service';
-import { isDemoBillingAllowed } from './payment.service';
 import { HttpError } from '../utils/http-error';
 
 const MAX_CREDITS = 1000;
@@ -28,30 +28,29 @@ const generateCode = (): string => {
 export type CreateBatchInput = {
   assessmentId: string;
   companyName: string;
-  credits: number;
+  packageId: string;
 };
 
 /**
- * Purchase a voucher batch: generate `credits` unique codes for a published
- * assessment. Batch creation is not yet wired to a real charge, so — exactly
- * like the demo token top-up — it is DISABLED in production (redeeming a code
- * grants tokens/access, so free batch creation would be a token-economy bypass).
- * It stays available for local dev and the demo (MIDTRANS_IS_PRODUCTION != true).
+ * Purchase a voucher batch by buying one of the assessment product's seat
+ * packages. Charges the buyer's token wallet the package's `tokenCost` (guarded,
+ * so it can never go negative) and issues `seats` unique voucher codes — all in
+ * one transaction. Redeeming a code only grants start-access (no tokens are
+ * minted), so this is a straightforward token spend, safe in production.
  */
 export const createBatch = async (buyerId: string, input: CreateBatchInput) => {
-  if (!isDemoBillingAllowed()) {
-    throw new HttpError(503, 'Voucher purchase is temporarily unavailable');
-  }
-  if (!Number.isInteger(input.credits) || input.credits < 1 || input.credits > MAX_CREDITS) {
-    throw new HttpError(400, `credits must be an integer between 1 and ${MAX_CREDITS}`);
-  }
   const companyName = input.companyName.trim();
   if (!companyName) {
     throw new HttpError(400, 'companyName is required');
   }
 
   const [assessment] = await db
-    .select({ id: assessments.id, status: assessments.status, title: assessments.title })
+    .select({
+      id: assessments.id,
+      status: assessments.status,
+      title: assessments.title,
+      mentorId: assessments.mentorId,
+    })
     .from(assessments)
     .where(eq(assessments.id, input.assessmentId))
     .limit(1);
@@ -59,26 +58,78 @@ export const createBatch = async (buyerId: string, input: CreateBatchInput) => {
     throw new HttpError(404, 'Assessment not found');
   }
 
+  // Seat packages (and their token prices) are defined by the mentor on the
+  // assessment's product. The server is the source of truth for price/size.
+  const [product] = await db
+    .select({ voucherPackages: products.voucherPackages })
+    .from(products)
+    .where(eq(products.assessmentId, input.assessmentId))
+    .limit(1);
+  const pkg = (product?.voucherPackages ?? []).find((p) => p.id === input.packageId);
+  if (!pkg) {
+    throw new HttpError(404, 'That voucher package is not available');
+  }
+  const seats = pkg.seats;
+  const cost = pkg.tokenCost;
+  if (!Number.isInteger(seats) || seats < 1 || seats > MAX_CREDITS) {
+    throw new HttpError(400, 'Invalid package size');
+  }
+
   // Unique-within-batch codes; the global unique constraint is the backstop.
   const codes = new Set<string>();
-  while (codes.size < input.credits) codes.add(generateCode());
+  while (codes.size < seats) codes.add(generateCode());
 
   return db.transaction(async (tx) => {
+    // Charge the buyer for the package. Guarded debit: only succeeds when the
+    // balance covers the cost, so it can never go negative — and if it fails the
+    // whole transaction (codes included) rolls back.
+    let balance: number | null = null;
+    if (cost > 0) {
+      const debited = await tx
+        .update(users)
+        .set({ tokenBalance: sql`${users.tokenBalance} - ${cost}` })
+        .where(and(eq(users.id, buyerId), gte(users.tokenBalance, cost)))
+        .returning({ balance: users.tokenBalance });
+      if (debited.length === 0) {
+        throw new HttpError(400, 'Not enough tokens. Top up your wallet and try again.');
+      }
+      balance = debited[0].balance;
+    } else {
+      const [wallet] = await tx
+        .select({ balance: users.tokenBalance })
+        .from(users)
+        .where(eq(users.id, buyerId))
+        .limit(1);
+      balance = wallet?.balance ?? null;
+    }
+
     const [batch] = await tx
       .insert(voucherBatches)
-      .values({ assessmentId: input.assessmentId, buyerId, companyName, credits: input.credits })
+      .values({ assessmentId: input.assessmentId, buyerId, companyName, credits: seats })
       .returning({ id: voucherBatches.id, createdAt: voucherBatches.createdAt });
 
     await tx
       .insert(vouchers)
       .values([...codes].map((code) => ({ batchId: batch.id, code })));
 
+    if (cost > 0) {
+      await tx.insert(transactions).values({
+        userId: buyerId,
+        mentorId: assessment.mentorId,
+        assessmentId: input.assessmentId,
+        amount: cost,
+        type: 'VOUCHER_PURCHASE',
+      });
+    }
+
     return {
       batch_id: batch.id,
       assessment_id: input.assessmentId,
       assessment_title: assessment.title,
       company_name: companyName,
-      credits: input.credits,
+      credits: seats,
+      charged: cost,
+      balance,
       created_at: batch.createdAt,
     };
   });
