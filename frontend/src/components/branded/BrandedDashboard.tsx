@@ -136,7 +136,6 @@ export function BrandedDashboard({
                 <tr>
                   <th>Date</th>
                   <th>Score</th>
-                  <th>Premium</th>
                   <th style={{ textAlign: 'right' }}>Report</th>
                 </tr>
               </thead>
@@ -145,17 +144,6 @@ export function BrandedDashboard({
                   <tr key={a.attempt_id}>
                     <td className="n">{new Date(a.created_at).toLocaleDateString()}</td>
                     <td>{a.score}</td>
-                    <td>
-                      {a.premium_unlocked ? (
-                        <span className="lato-st lato-st--ok">✓ Unlocked</span>
-                      ) : a.premium_token_cost > 0 ? (
-                        <span className="lato-st lato-st--wait">
-                          {a.premium_token_cost} tokens
-                        </span>
-                      ) : (
-                        <span className="lato-st lato-st--off">—</span>
-                      )}
-                    </td>
                     <td style={{ textAlign: 'right' }}>
                       <a
                         href={`/a/${assessmentId}/report/${a.attempt_id}`}

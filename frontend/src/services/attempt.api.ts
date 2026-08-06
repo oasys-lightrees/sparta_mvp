@@ -1,10 +1,5 @@
 import { apiClient } from '@/services/api';
-import type {
-  AttemptReport,
-  ClaimResult,
-  MyAttempt,
-  UnlockResult,
-} from '@/types';
+import type { AttemptReport, ClaimResult, MyAttempt } from '@/types';
 
 export const attemptApi = {
   claim: (attemptId: string) =>
@@ -14,9 +9,5 @@ export const attemptApi = {
     apiClient.get<AttemptReport>(`/api/attempts/${attemptId}/report`),
 
   listMine: () => apiClient.get<MyAttempt[]>('/api/attempts/me'),
-
-  // Unlock the premium report for a given (FREE) report id.
-  unlockPremium: (reportId: string) =>
-    apiClient.post<UnlockResult>(`/api/reports/${reportId}/unlock`),
 };
 

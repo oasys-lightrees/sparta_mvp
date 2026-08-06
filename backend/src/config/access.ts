@@ -5,13 +5,16 @@
  * directly, so adding or tuning a mode is a config change, not scattered edits.
  *
  * Modes:
- *  - FREE     — anyone can start immediately; no premium tier.
- *  - FREEMIUM — anyone can start for free; premium report unlockable with tokens.
- *  - PAID     — must purchase access (tokens) before starting; full report included.
- *  - VOUCHER  — must redeem a valid voucher before starting; full report included.
+ *  - FREE     — anyone can start immediately; full result included.
+ *  - FREEMIUM — anyone can start for free; full result included (kept as a
+ *               distinct mode for backward compatibility; behaves like FREE now
+ *               that the separate premium report has been removed).
+ *  - PAID     — must purchase access (tokens) before starting; full result included.
+ *  - VOUCHER  — must redeem a valid voucher before starting; full result included.
  *
- * Backward compatibility: existing rows default to FREEMIUM, which reproduces the
- * platform's original behavior (free to take, premium unlockable).
+ * Backward compatibility: existing rows default to FREEMIUM. There is no longer a
+ * paid premium report, so every mode delivers the full result to anyone who can
+ * start (premiumUnlockable is false everywhere).
  */
 
 export const ACCESS_MODES = ['FREE', 'FREEMIUM', 'PAID', 'VOUCHER'] as const;
@@ -51,7 +54,9 @@ export const ACCESS_POLICIES: Record<AccessMode, AccessPolicy> = {
     startRequiresGrant: false,
     grantVia: null,
     requiresAuthToStart: false,
-    premiumUnlockable: true,
+    // The separate premium report has been removed — FREEMIUM now delivers the
+    // full result for free, like FREE.
+    premiumUnlockable: false,
   },
   PAID: {
     startRequiresGrant: true,

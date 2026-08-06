@@ -98,16 +98,6 @@ export type Answer = { question_id: string; choice_id: string };
 export type SubmitResult = { attempt_id: string; requires_auth: boolean };
 export type ClaimResult = { attempt_id: string };
 export type Report = { type: ReportType; content: string };
-export type PremiumInfo = {
-  cost: number;
-  description: string | null;
-  unlocked: boolean;
-  content: string | null;
-  // Mentor-provided study video, revealed only once premium is unlocked.
-  study_video_url: string | null;
-  // Count of premium learning resources still hidden behind the paywall.
-  locked_resources: number;
-};
 export type AttemptReport = {
   attempt_id: string;
   score: number;
@@ -119,9 +109,10 @@ export type AttemptReport = {
   result_profile: { code: string; name: string } | null;
   report_id: string;
   report: Report;
-  // Learning resources visible for this result (free always; premium after unlock).
+  // Mentor-provided study video shown alongside the result (no paywall).
+  study_video_url: string | null;
+  // Learning resources for this result.
   learning_resources: LearningResource[];
-  premium: PremiumInfo;
 };
 
 export type MyAttempt = {

@@ -182,8 +182,6 @@ export function BrandedReport({
   const [report, setReport] = useState<AttemptReport | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [unlocking, setUnlocking] = useState(false);
-  const [unlockError, setUnlockError] = useState('');
 
   useEffect(() => {
     if (authLoading) return;
@@ -207,20 +205,6 @@ export function BrandedReport({
       active = false;
     };
   }, [attemptId, user, authLoading]);
-
-  const unlock = async () => {
-    if (!report) return;
-    setUnlocking(true);
-    setUnlockError('');
-    try {
-      await attemptApi.unlockPremium(report.report_id);
-      setReport(await attemptApi.getReport(attemptId));
-    } catch (e) {
-      setUnlockError(e instanceof Error ? e.message : 'Unlock failed');
-    } finally {
-      setUnlocking(false);
-    }
-  };
 
   const dashRight = (
     <a href={`/a/${assessmentId}`} style={{ color: 'inherit' }}>
@@ -277,8 +261,7 @@ export function BrandedReport({
   // Personality/diagnostic assessments don't produce a numeric score — they
   // resolve to a result category. Hide the score ring and show the category.
   const isPersonality = Boolean(report.result_profile);
-  const premium = report.premium;
-  const embed = premium.study_video_url ? embedUrl(premium.study_video_url) : null;
+  const embed = report.study_video_url ? embedUrl(report.study_video_url) : null;
 
   return (
     <BrandedShell app={app} right={dashRight}>
@@ -311,30 +294,24 @@ export function BrandedReport({
           </div>
         </div>
 
-        {/* Premium */}
-        {premium.unlocked ? (
+        {/* Study video (shown when the mentor provided one) */}
+        {report.study_video_url ? (
           <div className="lato-card" style={{ marginTop: 20 }}>
             <span className="lato-eyebrow">
-              <LatoIcon name="spark" size={14} /> {app.reports.premium.title}
+              <LatoIcon name="play" size={14} /> Study video
             </span>
-            <div style={{ marginTop: 14 }}>
-              <Prose text={premium.content ?? ''} />
-            </div>
             {embed ? (
-              <div style={{ marginTop: 20 }}>
-                <h3 style={{ fontWeight: 700, marginBottom: 10 }}>Study video</h3>
-                <div className="lato-video">
-                  <iframe
-                    src={embed}
-                    title="Study video"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
+              <div className="lato-video" style={{ marginTop: 14 }}>
+                <iframe
+                  src={embed}
+                  title="Study video"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
               </div>
-            ) : premium.study_video_url ? (
+            ) : (
               <a
-                href={premium.study_video_url}
+                href={report.study_video_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="lato-btn lato-btn--ghost"
@@ -342,59 +319,13 @@ export function BrandedReport({
               >
                 <LatoIcon name="play" size={15} /> Open study video
               </a>
-            ) : null}
-          </div>
-        ) : premium.cost > 0 ? (
-          <div className="lato-locked">
-            <div className="lato-locked__b">
-              <h3 style={{ fontWeight: 750 }}>{app.reports.premium.title}</h3>
-              <p style={{ color: 'var(--muted)', marginTop: 8 }}>
-                {premium.description ??
-                  'A personalized deep-dive into your strengths, gaps, recommendations, and a roadmap generated from your answers…'}
-              </p>
-            </div>
-            <div className="lato-locked__o">
-              <div className="lato-locked__c">
-                <span className="lato-pill">
-                  <LatoIcon name="lock" size={13} /> Premium
-                </span>
-                <h3 style={{ margin: '14px 0 6px', fontWeight: 750 }}>
-                  Unlock your {app.reports.premium.title}
-                </h3>
-                <p style={{ color: 'var(--muted)', fontSize: '.9rem' }}>
-                  {premium.cost} tokens · personalized AI analysis
-                </p>
-                {unlockError ? (
-                  <div className="lato-note" style={{ marginTop: 12 }}>
-                    {unlockError}
-                  </div>
-                ) : null}
-                <div className="lato-unlockrow">
-                  <button
-                    className="lato-btn lato-btn--grad"
-                    onClick={unlock}
-                    disabled={unlocking}
-                  >
-                    {unlocking ? 'Unlocking…' : `Unlock (${premium.cost} tokens)`}
-                  </button>
-                </div>
-                <p style={{ marginTop: 12, fontSize: '.85rem', color: 'var(--muted)' }}>
-                  Have a company voucher?{' '}
-                  <a
-                    href={`/a/${assessmentId}/redeem`}
-                    style={{ color: 'var(--b1)', fontWeight: 600 }}
-                  >
-                    Redeem it
-                  </a>
-                </p>
-              </div>
-            </div>
+            )}
           </div>
         ) : null}
 
         <BrandedResources
           resources={report.learning_resources}
-          lockedCount={premium.unlocked ? 0 : premium.locked_resources}
+          lockedCount={0}
           profileName={report.result_profile?.name ?? null}
         />
 
