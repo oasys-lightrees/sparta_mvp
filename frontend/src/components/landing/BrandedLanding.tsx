@@ -1,6 +1,6 @@
 import { Fragment, type CSSProperties } from 'react';
 import type { AssessmentApp, Plan } from '@/types/assessment-app';
-import type { AccessMode, ProductTiers, PublicProduct } from '@/types';
+import type { AccessMode, PricingTier, PublicProduct } from '@/types';
 import { BrandedAuthChip } from '@/components/branded/BrandedAuthChip';
 import './lato-theme.css';
 
@@ -98,10 +98,10 @@ export function BrandedLanding({
   const codes = [`${brand.monogram}9F-2K`, `${brand.monogram}7Q-4X`, `${brand.monogram}1B-8M`];
   // A published product (with at least one enabled tier) replaces the static
   // plans in the Products section with real, wired tier cards.
-  const t = product?.tiers;
-  const hasProductTiers = Boolean(
-    t && (t.individualBasic.enabled || t.individualPremium.enabled || t.companyPremium.enabled),
+  const productTiers = (Array.isArray(product?.tiers) ? product.tiers : []).filter(
+    (tier) => tier.enabled,
   );
+  const hasProductTiers = productTiers.length > 0;
   const flow = [
     { t: 'Company buys', d: 'Pick a seat package', icon: 'building', alt: false },
     { t: 'Get vouchers', d: 'Unique codes generated', icon: 'ticket', alt: true },
@@ -338,9 +338,8 @@ export function BrandedLanding({
           <div className="lato-wrap">
             {hasProductTiers && product ? (
               <ProductTierCards
-                tiers={product.tiers}
+                tiers={productTiers}
                 startHref={startHref}
-                companyHref={companyHref}
                 redeemHref={redeemHref}
               />
             ) : (
@@ -516,84 +515,67 @@ export function BrandedLanding({
 }
 
 /**
- * Renders a published product's three tiers as wired pricing cards. Individual
- * tiers start the assessment (the start page enforces the access gate); the
- * Company tier routes to the voucher-purchase portal.
+ * Renders a published product's pricing tiers as wired cards. The tier's `kind`
+ * decides where its button routes: a VOUCHER tier accepts a voucher (the redeem
+ * flow); every other kind starts the assessment (the start page enforces the
+ * real access gate). Each card shows the price, an optional token price, and an
+ * optional image placed between the title and the button.
  */
 function ProductTierCards({
   tiers,
   startHref,
-  companyHref,
   redeemHref,
 }: {
-  tiers: ProductTiers;
+  tiers: PricingTier[];
   startHref: string;
-  companyHref?: string;
   redeemHref?: string;
 }) {
-  const cards = [
-    tiers.individualBasic.enabled
-      ? {
-          key: 'basic',
-          name: 'Individual · Basic',
-          price: tiers.individualBasic.priceLabel || 'Free',
-          blurb: tiers.individualBasic.blurb,
-          href: startHref,
-          cta: 'Start assessment',
-          highlight: false,
-          note: null as string | null,
-        }
-      : null,
-    tiers.individualPremium.enabled
-      ? {
-          key: 'premium',
-          name: 'Individual · Premium',
-          price: tiers.individualPremium.priceLabel || '—',
-          blurb: tiers.individualPremium.blurb,
-          href: startHref,
-          cta: 'Get premium',
-          highlight: true,
-          note: null,
-        }
-      : null,
-    tiers.companyPremium.enabled
-      ? {
-          key: 'company',
-          name: 'Company · Premium',
-          price: tiers.companyPremium.priceLabel || '—',
-          blurb: tiers.companyPremium.blurb,
-          href: companyHref ?? redeemHref ?? startHref,
-          cta: 'Buy team vouchers',
-          highlight: false,
-          note: `${tiers.companyPremium.seats} voucher seats included`,
-        }
-      : null,
-  ].filter((c): c is NonNullable<typeof c> => c !== null);
+  const hrefFor = (tier: PricingTier): string =>
+    tier.kind === 'VOUCHER' ? (redeemHref ?? startHref) : startHref;
 
   return (
     <div className="lato-plans">
-      {cards.map((c) => (
-        <div key={c.key} className={`lato-plan${c.highlight ? ' lato-plan--hot' : ''}`}>
-          {c.highlight ? <span className="lato-plan__badge">Most popular</span> : null}
-          <div className="lato-plan__name">{c.name}</div>
-          {c.blurb ? <div className="lato-plan__tag">{c.blurb}</div> : null}
+      {tiers.map((tier) => (
+        <div
+          key={tier.id}
+          className={`lato-plan${tier.highlight ? ' lato-plan--hot' : ''}`}
+        >
+          {tier.highlight ? <span className="lato-plan__badge">Most popular</span> : null}
+          <div className="lato-plan__name">{tier.title || '—'}</div>
+          {tier.description ? <div className="lato-plan__tag">{tier.description}</div> : null}
           <div className="lato-plan__price">
-            <b>{c.price}</b>
+            <b>{tier.priceLabel || (tier.tokenCost > 0 ? '' : 'Free')}</b>
           </div>
-          {c.note ? (
-            <div className="lato-voucher">
-              <div className="lato-voucher__l">{c.note}</div>
+          {tier.tokenCost > 0 ? (
+            <div style={{ fontSize: '.82rem', color: 'var(--muted)', marginTop: 2 }}>
+              {tier.tokenCost} token{tier.tokenCost === 1 ? '' : 's'}
             </div>
           ) : null}
+          {tier.imageUrl ? (
+            // Mentor-provided tier image, shown between the title and the button.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={tier.imageUrl}
+              alt=""
+              style={{
+                display: 'block',
+                width: '100%',
+                maxHeight: 140,
+                objectFit: 'contain',
+                borderRadius: 12,
+                margin: '16px 0',
+              }}
+            />
+          ) : null}
           <a
-            href={c.href}
+            href={hrefFor(tier)}
             className={
-              c.highlight
+              tier.highlight
                 ? 'lato-btn lato-btn--grad lato-btn--block'
                 : 'lato-btn lato-btn--ghost lato-btn--block'
             }
           >
-            {c.cta}
+            {tier.ctaLabel || 'Get started'}
           </a>
         </div>
       ))}

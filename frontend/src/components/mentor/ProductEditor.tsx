@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Plus, Trash2 } from 'lucide-react';
 import { productApi } from '@/services/product.api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,52 +16,93 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import type { MentorProduct, ProductStatus, ProductTiers } from '@/types';
+import { ImageSourceField } from '@/components/mentor/ImageSourceField';
+import type {
+  MentorProduct,
+  PricingTier,
+  ProductStatus,
+  ProductTierKind,
+} from '@/types';
 
-const DEFAULT_TIERS: ProductTiers = {
-  individualBasic: {
-    enabled: true,
+const KIND_OPTIONS: { value: ProductTierKind; label: string }[] = [
+  { value: 'FREE', label: 'Free' },
+  { value: 'FREEMIUM', label: 'Freemium (free + premium upsell)' },
+  { value: 'PAID', label: 'Paid (tokens)' },
+  { value: 'VOUCHER', label: 'Voucher (redeem a code)' },
+];
+
+const selectClass =
+  'h-9 w-full rounded-md border border-input bg-background px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring';
+
+const newId = (): string =>
+  typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `tier-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+const makeTier = (over: Partial<PricingTier> = {}): PricingTier => ({
+  id: newId(),
+  enabled: true,
+  title: 'New tier',
+  description: '',
+  kind: 'FREE',
+  priceLabel: '',
+  tokenCost: 0,
+  ctaLabel: 'Get started',
+  imageUrl: null,
+  highlight: false,
+  ...over,
+});
+
+const DEFAULT_TIERS = (): PricingTier[] => [
+  makeTier({
+    id: 'basic',
+    title: 'Basic',
+    description: 'Take the assessment and get your instant report.',
+    kind: 'FREE',
     priceLabel: 'Free',
-    blurb: 'Take the assessment and get your instant report.',
-  },
-  individualPremium: {
-    enabled: true,
-    priceLabel: '',
-    blurb: 'Unlock the full personalized AI report.',
-  },
-  companyPremium: {
-    enabled: true,
-    priceLabel: '',
-    blurb: 'Buy seats for your team and see everyone’s results in one place.',
-    seats: 10,
-  },
-};
+    ctaLabel: 'Start assessment',
+  }),
+  makeTier({
+    id: 'premium',
+    title: 'Premium',
+    description: 'Unlock the full personalized AI report.',
+    kind: 'FREEMIUM',
+    ctaLabel: 'Get premium',
+    highlight: true,
+  }),
+  makeTier({
+    id: 'voucher',
+    title: 'Team / Voucher',
+    description: 'Have a company voucher? Redeem it to unlock access.',
+    kind: 'VOUCHER',
+    ctaLabel: 'Redeem a voucher',
+  }),
+];
+
+// Guard against any legacy/empty shape — always work with an array.
+const normalizeTiers = (tiers: unknown): PricingTier[] =>
+  Array.isArray(tiers) && tiers.length > 0 ? (tiers as PricingTier[]) : DEFAULT_TIERS();
 
 type Form = {
   name: string;
   description: string;
   status: ProductStatus;
-  tiers: ProductTiers;
+  tiers: PricingTier[];
 };
 
 const fromProduct = (p: MentorProduct): Form => ({
   name: p.name,
   description: p.description ?? '',
   status: p.status,
-  tiers: p.tiers,
+  tiers: normalizeTiers(p.tiers),
 });
 
-const TIER_LABELS: Record<keyof ProductTiers, string> = {
-  individualBasic: 'Individual · Basic',
-  individualPremium: 'Individual · Premium',
-  companyPremium: 'Company · Premium',
-};
-
 /**
- * Mentor editor for an assessment's product — the sellable wrapper exposing the
- * three tiers (Individual Basic / Premium, Company Premium). Reuses the existing
- * access model + voucher flow; this just configures the pricing/packaging that
- * renders on the assessment's landing page once PUBLISHED.
+ * Mentor editor for an assessment's product — a list of pricing tiers, each a
+ * marketing card (title, description, price, token cost, button, image) with a
+ * pricing kind (free / freemium / paid / voucher) that decides where its button
+ * routes on the landing page. Purchase mechanics still reuse the assessment's
+ * access model and voucher flow; this configures the presentation.
  */
 export function ProductEditor({
   assessmentId,
@@ -99,30 +141,53 @@ export function ProductEditor({
     setForm(
       product
         ? fromProduct(product)
-        : { name: assessmentTitle, description: '', status: 'DRAFT', tiers: DEFAULT_TIERS },
+        : {
+            name: assessmentTitle,
+            description: '',
+            status: 'DRAFT',
+            tiers: DEFAULT_TIERS(),
+          },
     );
     setSaveError('');
     setEditing(true);
   };
 
-  const setTier = <K extends keyof ProductTiers>(key: K, patch: Partial<ProductTiers[K]>) =>
+  const setTier = (index: number, patch: Partial<PricingTier>) =>
     setForm((f) =>
-      f ? { ...f, tiers: { ...f.tiers, [key]: { ...f.tiers[key], ...patch } } } : f,
+      f
+        ? { ...f, tiers: f.tiers.map((t, i) => (i === index ? { ...t, ...patch } : t)) }
+        : f,
     );
 
-  const save = async (statusOverride?: ProductStatus) => {
+  const addTier = () =>
+    setForm((f) => (f && f.tiers.length < 6 ? { ...f, tiers: [...f.tiers, makeTier()] } : f));
+
+  const removeTier = (index: number) =>
+    setForm((f) => (f ? { ...f, tiers: f.tiers.filter((_, i) => i !== index) } : f));
+
+  const persist = async (payload: {
+    name: string;
+    description: string | null;
+    status: ProductStatus;
+    tiers: PricingTier[];
+  }) => {
+    const saved = await productApi.upsert(assessmentId, payload);
+    setProduct(saved);
+    return saved;
+  };
+
+  const save = async () => {
     if (!form) return;
     setSaving(true);
     setSaveError('');
     setNotice('');
     try {
-      const saved = await productApi.upsert(assessmentId, {
+      const saved = await persist({
         name: form.name.trim() || assessmentTitle,
         description: form.description.trim() === '' ? null : form.description.trim(),
-        status: statusOverride ?? form.status,
+        status: form.status,
         tiers: form.tiers,
       });
-      setProduct(saved);
       setForm(fromProduct(saved));
       setEditing(false);
       setNotice(
@@ -137,7 +202,6 @@ export function ProductEditor({
     }
   };
 
-  // Publish/unpublish directly from the summary (no full edit needed).
   const togglePublish = async () => {
     if (!product) return;
     setSaving(true);
@@ -145,13 +209,12 @@ export function ProductEditor({
     setNotice('');
     try {
       const next: ProductStatus = product.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED';
-      const saved = await productApi.upsert(assessmentId, {
+      await persist({
         name: product.name,
         description: product.description,
         status: next,
-        tiers: product.tiers,
+        tiers: normalizeTiers(product.tiers),
       });
-      setProduct(saved);
       setNotice(next === 'PUBLISHED' ? 'Product published.' : 'Product unpublished.');
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : 'Failed to update');
@@ -160,20 +223,15 @@ export function ProductEditor({
     }
   };
 
-  const tierKeys: (keyof ProductTiers)[] = [
-    'individualBasic',
-    'individualPremium',
-    'companyPremium',
-  ];
-
   return (
     <Card>
       <CardHeader className="flex-row items-start justify-between space-y-0">
         <div className="space-y-1">
           <CardTitle>Product &amp; pricing</CardTitle>
           <CardDescription>
-            Package this assessment into three tiers — Individual Basic, Individual
-            Premium, and Company Premium (team vouchers).
+            Package this assessment into pricing tiers — each a card with its own
+            title, price, token cost, button and image, and a pricing type (free,
+            freemium, paid, or voucher).
           </CardDescription>
         </div>
         <div className="flex shrink-0 gap-2">
@@ -220,11 +278,10 @@ export function ProductEditor({
               </span>
             </div>
             <p className="text-muted-foreground">
-              Tiers:{' '}
-              {tierKeys
-                .filter((k) => product.tiers[k].enabled)
-                .map((k) => TIER_LABELS[k])
-                .join(' · ') || 'none enabled'}
+              {normalizeTiers(product.tiers)
+                .filter((t) => t.enabled)
+                .map((t) => t.title || t.kind)
+                .join(' · ') || 'No tiers enabled'}
             </p>
           </div>
         ) : null}
@@ -243,7 +300,7 @@ export function ProductEditor({
               <div className="space-y-1.5">
                 <Label>Status</Label>
                 <select
-                  className="h-9 rounded-md border border-input bg-background px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className={selectClass}
                   value={form.status}
                   onChange={(e) =>
                     setForm((f) => (f ? { ...f, status: e.target.value as ProductStatus } : f))
@@ -267,64 +324,140 @@ export function ProductEditor({
 
             {/* Tiers */}
             <div className="space-y-4">
-              {tierKeys.map((key) => {
-                const tier = form.tiers[key];
-                return (
-                  <div key={key} className="space-y-3 rounded-md border p-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-semibold">{TIER_LABELS[key]}</h4>
-                      <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Pricing tiers
+                </h4>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addTier}
+                  disabled={form.tiers.length >= 6}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add tier
+                </Button>
+              </div>
+
+              {form.tiers.map((tier, i) => (
+                <div key={tier.id} className="space-y-3 rounded-md border p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <label className="flex items-center gap-1.5">
                         <input
                           type="checkbox"
                           checked={tier.enabled}
-                          onChange={(e) => setTier(key, { enabled: e.target.checked })}
+                          onChange={(e) => setTier(i, { enabled: e.target.checked })}
                         />
                         Enabled
                       </label>
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="space-y-1.5">
-                        <Label>Price label</Label>
-                        <Input
-                          value={tier.priceLabel}
-                          onChange={(e) => setTier(key, { priceLabel: e.target.value })}
-                          placeholder={key === 'individualBasic' ? 'Free' : 'e.g. $29'}
+                      <label className="flex items-center gap-1.5">
+                        <input
+                          type="checkbox"
+                          checked={tier.highlight}
+                          onChange={(e) => setTier(i, { highlight: e.target.checked })}
                         />
-                      </div>
-                      {key === 'companyPremium' ? (
-                        <div className="space-y-1.5">
-                          <Label>Seats (voucher codes)</Label>
-                          <Input
-                            type="number"
-                            min={1}
-                            max={1000}
-                            value={form.tiers.companyPremium.seats}
-                            onChange={(e) =>
-                              setTier('companyPremium', {
-                                seats: Math.max(1, Number(e.target.value) || 1),
-                              })
-                            }
-                          />
-                        </div>
-                      ) : null}
+                        Highlight
+                      </label>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeTier(i)}
+                      aria-label="Remove tier"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label>Title</Label>
+                      <Input
+                        value={tier.title}
+                        onChange={(e) => setTier(i, { title: e.target.value })}
+                        placeholder="e.g. Premium"
+                      />
                     </div>
                     <div className="space-y-1.5">
-                      <Label>Blurb</Label>
+                      <Label>Pricing type</Label>
+                      <select
+                        className={selectClass}
+                        value={tier.kind}
+                        onChange={(e) => setTier(i, { kind: e.target.value as ProductTierKind })}
+                      >
+                        {KIND_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label>Price label</Label>
                       <Input
-                        value={tier.blurb}
-                        onChange={(e) => setTier(key, { blurb: e.target.value })}
-                        placeholder="One line describing this tier."
+                        value={tier.priceLabel}
+                        onChange={(e) => setTier(i, { priceLabel: e.target.value })}
+                        placeholder="e.g. $29 or Free"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Token price (0 = hide)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={tier.tokenCost}
+                        onChange={(e) =>
+                          setTier(i, { tokenCost: Math.max(0, Number(e.target.value) || 0) })
+                        }
                       />
                     </div>
                   </div>
-                );
-              })}
+
+                  <div className="space-y-1.5">
+                    <Label>Description</Label>
+                    <Input
+                      value={tier.description}
+                      onChange={(e) => setTier(i, { description: e.target.value })}
+                      placeholder="One line describing this tier."
+                    />
+                  </div>
+
+                  {/* Image shown between the title and the button on the card. */}
+                  <ImageSourceField
+                    label="Tier image / logo (optional)"
+                    value={tier.imageUrl ?? ''}
+                    onChange={(v) => setTier(i, { imageUrl: v.trim() === '' ? null : v.trim() })}
+                    helpText="Shown between the title and the button. PNG, SVG, JPG, JPEG or WEBP · up to 5 MB."
+                  />
+
+                  <div className="space-y-1.5">
+                    <Label>Button label</Label>
+                    <Input
+                      value={tier.ctaLabel}
+                      onChange={(e) => setTier(i, { ctaLabel: e.target.value })}
+                      placeholder="e.g. Get started"
+                    />
+                  </div>
+                </div>
+              ))}
+
+              {form.tiers.length === 0 ? (
+                <p className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">
+                  No tiers. Add at least one to show pricing on the landing page.
+                </p>
+              ) : null}
             </div>
 
             <ErrorMessage message={saveError} />
 
             <div className="flex flex-wrap gap-2">
-              <Button onClick={() => save()} disabled={saving}>
+              <Button onClick={save} disabled={saving}>
                 {saving ? 'Saving…' : 'Save product'}
               </Button>
               <Button
