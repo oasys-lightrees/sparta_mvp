@@ -43,7 +43,7 @@ export const en = {
 
   // Assessment cards (a challenge you accept)
   'assessment.free': 'Free',
-  'assessment.start': 'Start Challenge',
+  'assessment.start': 'View assessment',
   'assessment.challengeTag': 'Challenge',
   'assessment.availableTitle': 'Training Challenges',
 

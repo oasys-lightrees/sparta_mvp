@@ -44,7 +44,7 @@ export const id: Record<TranslationKey, string> = {
 
   // Assessment cards (tantangan yang Anda terima)
   'assessment.free': 'Gratis',
-  'assessment.start': 'Mulai Tantangan',
+  'assessment.start': 'Lihat asesmen',
   'assessment.challengeTag': 'Tantangan',
   'assessment.availableTitle': 'Tantangan Latihan',
 

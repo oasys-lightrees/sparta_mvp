@@ -51,7 +51,9 @@ function themeVars(app: AssessmentApp): CSSProperties {
 }
 
 const BrandMark = ({ app }: { app: AssessmentApp }) => (
-  <span className="lato-brand__m">
+  // With a real logo, drop the gradient badge background so the uploaded image
+  // shows on its own; the monogram fallback keeps the badge look.
+  <span className={`lato-brand__m${app.brand.logoUrl ? ' lato-brand__m--img' : ''}`}>
     {app.brand.logoUrl ? (
       // eslint-disable-next-line @next/next/no-img-element
       <img src={app.brand.logoUrl} alt={app.brand.brandName} />
