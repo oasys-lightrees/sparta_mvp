@@ -51,8 +51,13 @@ services:
       MIDTRANS_CLIENT_KEY: ${MIDTRANS_CLIENT_KEY:-}
       MIDTRANS_IS_PRODUCTION: ${MIDTRANS_IS_PRODUCTION:-false}
       TOKEN_PRICE_IDR: ${TOKEN_PRICE_IDR:-1000}
+      # Where mentor-uploaded landing-page images are written. Backed by the
+      # `uploads` volume below so assets survive container rebuilds/redeploys.
+      UPLOAD_DIR: ${UPLOAD_DIR:-/app/uploads}
     ports:
       - "3001:3001"
+    volumes:
+      - uploads:/app/uploads
     depends_on:
       database:
         condition: service_healthy
@@ -75,3 +80,4 @@ services:
 
 volumes:
   postgres_data:
+  uploads:
