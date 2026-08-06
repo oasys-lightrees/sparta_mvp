@@ -8,6 +8,7 @@ export type AppConfigPatch = {
     brandName?: string;
     monogram?: string;
     logoUrl?: string | null;
+    faviconUrl?: string | null;
     colors?: { primary?: string; secondary?: string; accent?: string };
   };
   theme?: {
