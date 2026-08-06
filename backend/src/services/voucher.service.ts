@@ -11,6 +11,7 @@ import {
 } from '../db/schema';
 import { normalizeMode, policyFor } from '../config/access';
 import { grantAccess } from './access.service';
+import { isDemoBillingAllowed } from './payment.service';
 import { HttpError } from '../utils/http-error';
 
 const MAX_CREDITS = 1000;
@@ -32,10 +33,15 @@ export type CreateBatchInput = {
 
 /**
  * Purchase a voucher batch: generate `credits` unique codes for a published
- * assessment. (No real charge in the MVP — payment is wired separately, like
- * the token demo top-up.)
+ * assessment. Batch creation is not yet wired to a real charge, so — exactly
+ * like the demo token top-up — it is DISABLED in production (redeeming a code
+ * grants tokens/access, so free batch creation would be a token-economy bypass).
+ * It stays available for local dev and the demo (MIDTRANS_IS_PRODUCTION != true).
  */
 export const createBatch = async (buyerId: string, input: CreateBatchInput) => {
+  if (!isDemoBillingAllowed()) {
+    throw new HttpError(503, 'Voucher purchase is temporarily unavailable');
+  }
   if (!Number.isInteger(input.credits) || input.credits < 1 || input.credits > MAX_CREDITS) {
     throw new HttpError(400, `credits must be an integer between 1 and ${MAX_CREDITS}`);
   }
@@ -118,7 +124,7 @@ const loadOwnedBatch = async (buyerId: string, batchId: string) => {
   return batch;
 };
 
-/** Batch detail: the codes + aggregated analytics. Owner only. */
+/** Batch detail: the codes + aggregated analytics + per-person results. Owner only. */
 export const getBatch = async (buyerId: string, batchId: string) => {
   const batch = await loadOwnedBatch(buyerId, batchId);
 
@@ -133,6 +139,7 @@ export const getBatch = async (buyerId: string, batchId: string) => {
     .orderBy(vouchers.createdAt);
 
   const analytics = await computeAnalytics(batch.id, batch.assessmentId, batch.credits);
+  const redeemers = await computeRedeemers(batch.id, batch.assessmentId);
 
   return {
     batch_id: batch.id,
@@ -141,12 +148,75 @@ export const getBatch = async (buyerId: string, batchId: string) => {
     credits: batch.credits,
     created_at: batch.createdAt,
     analytics,
+    redeemers,
     codes: codeRows.map((c) => ({
       code: c.code,
       status: c.status,
       redeemed_at: c.redeemedAt,
     })),
   };
+};
+
+/**
+ * Per-person results for a batch: who redeemed each code, and — if they've taken
+ * the assessment — their score and completion. Visible only to the batch owner
+ * (enforced by getBatch's loadOwnedBatch). The company funded these seats, so it
+ * may review individual outcomes; we expose the redeemer's name/email + score,
+ * never their answers. A redeemer who hasn't taken it yet shows as not completed.
+ */
+const computeRedeemers = async (batchId: string, assessmentId: string) => {
+  const rows = await db
+    .select({
+      userId: vouchers.redeemedByUserId,
+      code: vouchers.code,
+      redeemedAt: vouchers.redeemedAt,
+      name: users.name,
+      email: users.email,
+    })
+    .from(vouchers)
+    .innerJoin(users, eq(users.id, vouchers.redeemedByUserId))
+    .where(and(eq(vouchers.batchId, batchId), eq(vouchers.status, 'REDEEMED')))
+    .orderBy(vouchers.redeemedAt);
+
+  const userIds = rows
+    .map((r) => r.userId)
+    .filter((id): id is string => Boolean(id));
+
+  // Latest attempt per redeemer on this assessment (rows ordered ascending, so
+  // the last one written to the map wins).
+  const attemptByUser = new Map<string, { attemptId: string; score: number }>();
+  if (userIds.length) {
+    const attemptRows = await db
+      .select({
+        userId: attempts.userId,
+        attemptId: attempts.id,
+        score: attempts.totalScore,
+      })
+      .from(attempts)
+      .where(
+        and(
+          eq(attempts.assessmentId, assessmentId),
+          inArray(attempts.userId, userIds),
+        ),
+      )
+      .orderBy(attempts.createdAt);
+    for (const a of attemptRows) {
+      if (a.userId) attemptByUser.set(a.userId, { attemptId: a.attemptId, score: a.score });
+    }
+  }
+
+  return rows.map((r) => {
+    const attempt = r.userId ? attemptByUser.get(r.userId) : undefined;
+    return {
+      name: r.name,
+      email: r.email,
+      code: r.code,
+      redeemed_at: r.redeemedAt,
+      completed: Boolean(attempt),
+      score: attempt?.score ?? null,
+      attempt_id: attempt?.attemptId ?? null,
+    };
+  });
 };
 
 /**

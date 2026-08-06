@@ -196,6 +196,16 @@ export type VoucherCode = {
   status: 'ACTIVE' | 'REDEEMED' | 'REVOKED';
   redeemed_at: string | null;
 };
+// One person who redeemed a code in the batch, with their result (if taken).
+export type VoucherRedeemer = {
+  name: string | null;
+  email: string;
+  code: string;
+  redeemed_at: string | null;
+  completed: boolean;
+  score: number | null;
+  attempt_id: string | null;
+};
 export type VoucherBatchDetail = {
   batch_id: string;
   assessment_id: string;
@@ -203,6 +213,7 @@ export type VoucherBatchDetail = {
   credits: number;
   created_at: string;
   analytics: VoucherAnalytics;
+  redeemers: VoucherRedeemer[];
   codes: VoucherCode[];
 };
 export type CreateBatchResult = {
@@ -217,6 +228,38 @@ export type RedeemResult = {
   assessment_id: string;
   assessment_title: string;
   granted_tokens: number;
+};
+
+// --- Products (sellable 1:1 wrapper around an assessment) ---
+export type ProductTier = {
+  enabled: boolean;
+  priceLabel: string;
+  blurb: string;
+};
+export type ProductCompanyTier = ProductTier & { seats: number };
+export type ProductTiers = {
+  individualBasic: ProductTier;
+  individualPremium: ProductTier;
+  companyPremium: ProductCompanyTier;
+};
+export type ProductStatus = 'DRAFT' | 'PUBLISHED';
+// Full product as seen by its owning mentor.
+export type MentorProduct = {
+  id: string;
+  assessment_id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  status: ProductStatus;
+  tiers: ProductTiers;
+  created_at: string;
+  updated_at: string;
+};
+// Public tiers surfaced on the landing page (PUBLISHED products only).
+export type PublicProduct = {
+  name: string;
+  description: string | null;
+  tiers: ProductTiers;
 };
 
 // --- Mentor ---

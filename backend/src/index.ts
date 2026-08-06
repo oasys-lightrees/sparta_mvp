@@ -10,10 +10,12 @@ import blogRoutes from './routes/blog.routes';
 import configRoutes from './routes/config.routes';
 import contactRoutes from './routes/contact.routes';
 import mentorRoutes from './routes/mentor.routes';
+import productRoutes from './routes/product.routes';
 import questionRoutes from './routes/question.routes';
 import reportRoutes from './routes/report.routes';
 import submissionRoutes from './routes/submission.routes';
 import tokenRoutes from './routes/token.routes';
+import uploadRoutes from './routes/upload.routes';
 import voucherRoutes from './routes/voucher.routes';
 import { error, success } from './utils/response';
 
@@ -63,6 +65,10 @@ app.route('/api/blogs', blogRoutes);
 app.route('/api/tokens', tokenRoutes);
 app.route('/api/vouchers', voucherRoutes);
 app.route('/api/reports', reportRoutes);
+// Products — sellable 1:1 wrapper around an assessment (tiers/pricing).
+app.route('/api/products', productRoutes);
+// Mentor image uploads (POST) + public serving (GET /api/uploads/:name).
+app.route('/api/uploads', uploadRoutes);
 // Contact routes (public POST /api/contact + admin /api/admin/contacts).
 app.route('/api', contactRoutes);
 // Branded AssessmentApp config (public read + mentor edit).

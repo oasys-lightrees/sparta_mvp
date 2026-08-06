@@ -111,19 +111,41 @@ export const create = async (authorId: string, input: CreateBlogInput) => {
   return created;
 };
 
+// The caller's identity + role, used to authorize edits/deletes.
+type Caller = { id: string; role: string };
+
 /**
- * Update a blog. 404 if missing, 409 if changing to a slug another blog uses.
+ * Authorize a blog mutation: admins may modify any post; a mentor may only
+ * modify their own. Returns the blog's author on success. 404 if missing,
+ * 403 if a non-admin tries to touch someone else's post.
  */
-export const update = async (id: string, input: UpdateBlogInput) => {
+const assertBlogEditable = async (
+  id: string,
+  caller: Caller,
+): Promise<void> => {
   const [current] = await db
-    .select({ id: blogs.id })
+    .select({ id: blogs.id, authorId: blogs.authorId })
     .from(blogs)
     .where(eq(blogs.id, id))
     .limit(1);
-
   if (!current) {
     throw new HttpError(404, 'Blog not found');
   }
+  if (caller.role !== 'ADMIN' && current.authorId !== caller.id) {
+    throw new HttpError(403, 'You can only edit your own blog posts');
+  }
+};
+
+/**
+ * Update a blog. 404 if missing, 403 if not the author (non-admin), 409 if
+ * changing to a slug another blog uses.
+ */
+export const update = async (
+  id: string,
+  input: UpdateBlogInput,
+  caller: Caller,
+) => {
+  await assertBlogEditable(id, caller);
 
   if (input.slug !== undefined) {
     const clash = await db
@@ -162,18 +184,9 @@ export const update = async (id: string, input: UpdateBlogInput) => {
 };
 
 /**
- * Delete a blog. 404 if missing.
+ * Delete a blog. 404 if missing, 403 if not the author (non-admin).
  */
-export const remove = async (id: string) => {
-  const [current] = await db
-    .select({ id: blogs.id })
-    .from(blogs)
-    .where(eq(blogs.id, id))
-    .limit(1);
-
-  if (!current) {
-    throw new HttpError(404, 'Blog not found');
-  }
-
+export const remove = async (id: string, caller: Caller) => {
+  await assertBlogEditable(id, caller);
   await db.delete(blogs).where(eq(blogs.id, id));
 };

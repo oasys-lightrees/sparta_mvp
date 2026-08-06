@@ -1,6 +1,6 @@
 import { Fragment, type CSSProperties } from 'react';
 import type { AssessmentApp, Plan } from '@/types/assessment-app';
-import type { AccessMode } from '@/types';
+import type { AccessMode, ProductTiers, PublicProduct } from '@/types';
 import { BrandedAuthChip } from '@/components/branded/BrandedAuthChip';
 import './lato-theme.css';
 
@@ -63,6 +63,7 @@ const BrandMark = ({ app }: { app: AssessmentApp }) => (
 
 export function BrandedLanding({
   app,
+  product = null,
   startHref = '#products',
   loginHref = '/login',
   dashboardHref = '/dashboard',
@@ -72,6 +73,7 @@ export function BrandedLanding({
   accessTokenCost = 0,
 }: {
   app: AssessmentApp;
+  product?: PublicProduct | null;
   startHref?: string;
   loginHref?: string;
   dashboardHref?: string;
@@ -94,6 +96,12 @@ export function BrandedLanding({
     accessMode === 'VOUCHER' ? (redeemHref ?? startHref) : startHref;
   const comps = reports.competencies.slice(0, 3);
   const codes = [`${brand.monogram}9F-2K`, `${brand.monogram}7Q-4X`, `${brand.monogram}1B-8M`];
+  // A published product (with at least one enabled tier) replaces the static
+  // plans in the Products section with real, wired tier cards.
+  const t = product?.tiers;
+  const hasProductTiers = Boolean(
+    t && (t.individualBasic.enabled || t.individualPremium.enabled || t.companyPremium.enabled),
+  );
   const flow = [
     { t: 'Company buys', d: 'Pick a seat package', icon: 'building', alt: false },
     { t: 'Get vouchers', d: 'Unique codes generated', icon: 'ticket', alt: true },
@@ -124,14 +132,9 @@ export function BrandedLanding({
           <nav className="lato-links" aria-label="Primary">
             <a href="#products">Products</a>
             <a href="#why">About</a>
-            <a href="#process">How it works</a>
-            <a href="#faq">FAQ</a>
           </nav>
           <div className="lato-nav__r">
             <BrandedAuthChip loginHref={loginHref} dashboardHref={dashboardHref} />
-            <a href={primaryHref} className="lato-btn">
-              {primaryLabel}
-            </a>
             <details className="lato-mnav">
               <summary aria-label="Menu">
                 <Icon name="arrow" size={18} />
@@ -139,12 +142,7 @@ export function BrandedLanding({
               <div className="lato-mnav__panel">
                 <a href="#products">Products</a>
                 <a href="#why">About</a>
-                <a href="#process">How it works</a>
-                <a href="#faq">FAQ</a>
                 <BrandedAuthChip loginHref={loginHref} dashboardHref={dashboardHref} />
-                <a href={primaryHref} className="lato-btn lato-btn--block">
-                  {primaryLabel}
-                </a>
               </div>
             </details>
           </div>
@@ -330,15 +328,28 @@ export function BrandedLanding({
         <section className="lato-section" id="products">
           <div className="lato-wrap lato-center">
             <span className="lato-eyebrow">{products.eyebrow}</span>
-            <h2 className="lato-h">{products.title}</h2>
-            {products.subtitle ? <p className="lato-sub">{products.subtitle}</p> : null}
+            <h2 className="lato-h">{(hasProductTiers && product?.name) || products.title}</h2>
+            {(hasProductTiers ? product?.description : products.subtitle) ? (
+              <p className="lato-sub">
+                {hasProductTiers ? product?.description : products.subtitle}
+              </p>
+            ) : null}
           </div>
           <div className="lato-wrap">
-            <div className="lato-plans">
-              {products.plans.map((p, i) => (
-                <PlanCard key={i} plan={p} codes={codes} />
-              ))}
-            </div>
+            {hasProductTiers && product ? (
+              <ProductTierCards
+                tiers={product.tiers}
+                startHref={startHref}
+                companyHref={companyHref}
+                redeemHref={redeemHref}
+              />
+            ) : (
+              <div className="lato-plans">
+                {products.plans.map((p, i) => (
+                  <PlanCard key={i} plan={p} codes={codes} />
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
@@ -500,6 +511,92 @@ export function BrandedLanding({
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+/**
+ * Renders a published product's three tiers as wired pricing cards. Individual
+ * tiers start the assessment (the start page enforces the access gate); the
+ * Company tier routes to the voucher-purchase portal.
+ */
+function ProductTierCards({
+  tiers,
+  startHref,
+  companyHref,
+  redeemHref,
+}: {
+  tiers: ProductTiers;
+  startHref: string;
+  companyHref?: string;
+  redeemHref?: string;
+}) {
+  const cards = [
+    tiers.individualBasic.enabled
+      ? {
+          key: 'basic',
+          name: 'Individual · Basic',
+          price: tiers.individualBasic.priceLabel || 'Free',
+          blurb: tiers.individualBasic.blurb,
+          href: startHref,
+          cta: 'Start assessment',
+          highlight: false,
+          note: null as string | null,
+        }
+      : null,
+    tiers.individualPremium.enabled
+      ? {
+          key: 'premium',
+          name: 'Individual · Premium',
+          price: tiers.individualPremium.priceLabel || '—',
+          blurb: tiers.individualPremium.blurb,
+          href: startHref,
+          cta: 'Get premium',
+          highlight: true,
+          note: null,
+        }
+      : null,
+    tiers.companyPremium.enabled
+      ? {
+          key: 'company',
+          name: 'Company · Premium',
+          price: tiers.companyPremium.priceLabel || '—',
+          blurb: tiers.companyPremium.blurb,
+          href: companyHref ?? redeemHref ?? startHref,
+          cta: 'Buy team vouchers',
+          highlight: false,
+          note: `${tiers.companyPremium.seats} voucher seats included`,
+        }
+      : null,
+  ].filter((c): c is NonNullable<typeof c> => c !== null);
+
+  return (
+    <div className="lato-plans">
+      {cards.map((c) => (
+        <div key={c.key} className={`lato-plan${c.highlight ? ' lato-plan--hot' : ''}`}>
+          {c.highlight ? <span className="lato-plan__badge">Most popular</span> : null}
+          <div className="lato-plan__name">{c.name}</div>
+          {c.blurb ? <div className="lato-plan__tag">{c.blurb}</div> : null}
+          <div className="lato-plan__price">
+            <b>{c.price}</b>
+          </div>
+          {c.note ? (
+            <div className="lato-voucher">
+              <div className="lato-voucher__l">{c.note}</div>
+            </div>
+          ) : null}
+          <a
+            href={c.href}
+            className={
+              c.highlight
+                ? 'lato-btn lato-btn--grad lato-btn--block'
+                : 'lato-btn lato-btn--ghost lato-btn--block'
+            }
+          >
+            {c.cta}
+          </a>
+        </div>
+      ))}
     </div>
   );
 }

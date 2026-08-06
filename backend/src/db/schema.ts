@@ -67,6 +67,8 @@ export const paymentStatus = pgEnum('payment_status', [
   'FAILED',
   'EXPIRED',
 ]);
+// Publication state of a product (the sellable wrapper around an assessment).
+export const productStatus = pgEnum('product_status', ['DRAFT', 'PUBLISHED']);
 
 /**
  * users
@@ -527,5 +529,66 @@ export const vouchersRelations = relations(vouchers, ({ one }) => ({
   redeemedBy: one(users, {
     fields: [vouchers.redeemedByUserId],
     references: [users.id],
+  }),
+}));
+
+/**
+ * Product tiers — the three purchasable options a mentor offers for a product.
+ * Presentational + enablement only: the actual mechanics reuse the assessment's
+ * existing access model (Individual Premium => the assessment's premium unlock;
+ * Company Premium => a voucher batch of `seats` codes). Prices are display
+ * strings (no checkout is wired to these labels).
+ */
+export type ProductTier = {
+  enabled: boolean;
+  priceLabel: string;
+  blurb: string;
+};
+export type ProductTiers = {
+  individualBasic: ProductTier;
+  individualPremium: ProductTier;
+  // Company tier additionally carries the default number of voucher seats.
+  companyPremium: ProductTier & { seats: number };
+};
+
+/**
+ * products
+ * A sellable wrapper around exactly one assessment (1:1). Gives the mentor a
+ * place to name the offering, publish it, and configure its three tiers
+ * (Individual Basic / Individual Premium / Company Premium). The assessment,
+ * its questions, access model and voucher flow are unchanged — a product only
+ * adds the pricing/packaging layer rendered on the assessment's landing page.
+ */
+export const products = pgTable('products', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  mentorId: uuid('mentor_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  // 1:1 with an assessment — the unique constraint enforces one product per
+  // assessment.
+  assessmentId: uuid('assessment_id')
+    .notNull()
+    .unique()
+    .references(() => assessments.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  slug: varchar('slug', { length: 255 }).notNull().unique(),
+  description: text('description'),
+  tiers: jsonb('tiers').$type<ProductTiers>(),
+  status: productStatus('status').notNull().default('DRAFT'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+export const productsRelations = relations(products, ({ one }) => ({
+  mentor: one(users, {
+    fields: [products.mentorId],
+    references: [users.id],
+  }),
+  assessment: one(assessments, {
+    fields: [products.assessmentId],
+    references: [assessments.id],
   }),
 }));
