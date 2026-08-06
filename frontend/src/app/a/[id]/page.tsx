@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { BrandedLanding } from '@/components/landing/BrandedLanding';
 import type { AssessmentApp } from '@/types/assessment-app';
-import type { AccessState } from '@/types';
+import type { AccessState, PublicProduct } from '@/types';
 
 // Branded per-assessment landing ("the assessment as its own product").
 // Renders entirely from the assessment's AssessmentApp config (backend
@@ -40,6 +40,21 @@ async function fetchAccess(id: string): Promise<AccessState | null> {
   }
 }
 
+// Published product tiers (if the mentor has set up + published a product).
+// Null -> the landing falls back to its configured plans.
+async function fetchProduct(id: string): Promise<PublicProduct | null> {
+  try {
+    const res = await fetch(`${API_URL}/api/products/by-assessment/${id}`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) return null;
+    const body = (await res.json()) as Envelope<PublicProduct | null>;
+    return body.success ? body.data : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -67,11 +82,16 @@ export default async function BrandedAssessmentPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [app, access] = await Promise.all([fetchConfig(id), fetchAccess(id)]);
+  const [app, access, product] = await Promise.all([
+    fetchConfig(id),
+    fetchAccess(id),
+    fetchProduct(id),
+  ]);
   if (!app) notFound();
   return (
     <BrandedLanding
       app={app}
+      product={product}
       startHref={`/a/${id}/start`}
       loginHref="/login"
       dashboardHref={`/a/${id}/dashboard`}

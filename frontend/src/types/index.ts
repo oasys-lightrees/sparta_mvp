@@ -230,6 +230,38 @@ export type RedeemResult = {
   granted_tokens: number;
 };
 
+// --- Products (sellable 1:1 wrapper around an assessment) ---
+export type ProductTier = {
+  enabled: boolean;
+  priceLabel: string;
+  blurb: string;
+};
+export type ProductCompanyTier = ProductTier & { seats: number };
+export type ProductTiers = {
+  individualBasic: ProductTier;
+  individualPremium: ProductTier;
+  companyPremium: ProductCompanyTier;
+};
+export type ProductStatus = 'DRAFT' | 'PUBLISHED';
+// Full product as seen by its owning mentor.
+export type MentorProduct = {
+  id: string;
+  assessment_id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  status: ProductStatus;
+  tiers: ProductTiers;
+  created_at: string;
+  updated_at: string;
+};
+// Public tiers surfaced on the landing page (PUBLISHED products only).
+export type PublicProduct = {
+  name: string;
+  description: string | null;
+  tiers: ProductTiers;
+};
+
 // --- Mentor ---
 export type MentorStats = {
   totalAssessments: number;
