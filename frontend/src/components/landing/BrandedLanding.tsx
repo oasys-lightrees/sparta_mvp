@@ -2,6 +2,7 @@ import { type CSSProperties } from 'react';
 import type { AssessmentApp, Plan } from '@/types/assessment-app';
 import type { AccessMode, PricingTier, PublicProduct } from '@/types';
 import { BrandedAuthChip } from '@/components/branded/BrandedAuthChip';
+import { VoucherRedeemBox } from '@/components/branded/VoucherRedeemBox';
 import './lato-theme.css';
 
 /* Minimal inline icon set (line style). */
@@ -269,6 +270,20 @@ export function BrandedLanding({
             )}
           </div>
         </section>
+
+        {/* VOUCHER REDEEM — enter a company voucher code */}
+        {redeemHref ? (
+          <section className="lato-section lato-section--tint" id="redeem">
+            <div className="lato-wrap lato-center">
+              <span className="lato-eyebrow">Have a voucher?</span>
+              <h2 className="lato-h">Redeem your voucher code</h2>
+              <p className="lato-sub" style={{ marginBottom: 24 }}>
+                Got a code from your company? Enter it to unlock this assessment.
+              </p>
+              <VoucherRedeemBox redeemHref={redeemHref} />
+            </div>
+          </section>
+        ) : null}
 
         {/* FINAL CTA (optional) */}
         {landing.finalCta.enabled ? (
