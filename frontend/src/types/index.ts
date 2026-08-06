@@ -196,6 +196,16 @@ export type VoucherCode = {
   status: 'ACTIVE' | 'REDEEMED' | 'REVOKED';
   redeemed_at: string | null;
 };
+// One person who redeemed a code in the batch, with their result (if taken).
+export type VoucherRedeemer = {
+  name: string | null;
+  email: string;
+  code: string;
+  redeemed_at: string | null;
+  completed: boolean;
+  score: number | null;
+  attempt_id: string | null;
+};
 export type VoucherBatchDetail = {
   batch_id: string;
   assessment_id: string;
@@ -203,6 +213,7 @@ export type VoucherBatchDetail = {
   credits: number;
   created_at: string;
   analytics: VoucherAnalytics;
+  redeemers: VoucherRedeemer[];
   codes: VoucherCode[];
 };
 export type CreateBatchResult = {

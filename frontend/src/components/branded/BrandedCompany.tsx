@@ -256,6 +256,56 @@ export function BrandedCompany({
               </div>
             </div>
 
+            {/* Per-person results */}
+            <div className="lato-panel" style={{ marginTop: 16 }}>
+              <div className="lato-panel__h">Individual results</div>
+              {selected.redeemers.length === 0 ? (
+                <div className="lato-empty">
+                  <p style={{ fontWeight: 600, color: 'var(--ink)' }}>No redemptions yet</p>
+                  <p style={{ marginTop: 6 }}>
+                    Once employees redeem their codes and take the assessment, their
+                    results appear here.
+                  </p>
+                </div>
+              ) : (
+                <table className="lato-table">
+                  <thead>
+                    <tr>
+                      <th>Employee</th>
+                      <th>Code</th>
+                      <th>Redeemed</th>
+                      <th>Status</th>
+                      <th style={{ textAlign: 'right' }}>Score</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selected.redeemers.map((r) => (
+                      <tr key={r.code}>
+                        <td className="n">
+                          {r.name?.trim() || r.email}
+                          {r.name?.trim() ? (
+                            <span style={{ color: 'var(--muted)', display: 'block', fontSize: '.8rem' }}>
+                              {r.email}
+                            </span>
+                          ) : null}
+                        </td>
+                        <td style={{ fontFamily: 'monospace', fontSize: '.82rem' }}>{r.code}</td>
+                        <td>{r.redeemed_at ? new Date(r.redeemed_at).toLocaleDateString() : '—'}</td>
+                        <td>
+                          <span className={`lato-st ${r.completed ? 'lato-st--ok' : 'lato-st--wait'}`}>
+                            {r.completed ? 'Completed' : 'Not started'}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'right', fontWeight: 700 }}>
+                          {r.score ?? '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
             <div className="lato-card" style={{ marginTop: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ fontWeight: 700 }}>Voucher codes</h3>
@@ -264,7 +314,8 @@ export function BrandedCompany({
                 </button>
               </div>
               <p style={{ color: 'var(--muted)', fontSize: '.85rem', margin: '6px 0 12px' }}>
-                Aggregated only — individual scores stay private to each employee.
+                Share one code per employee. Each covers a full assessment and premium
+                report; their score rolls up under Individual results above.
               </p>
               <div className="lato-codes">
                 {selected.codes.map((c) => (
