@@ -3,18 +3,16 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { BookOpen, Lock, PlayCircle, Sparkles } from 'lucide-react';
+import { BookOpen, PlayCircle } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { attemptApi } from '@/services/attempt.api';
 import { clearPendingAttempt } from '@/lib/storage';
 import { ReportView } from '@/components/assessment/ReportView';
-import { PremiumReportView } from '@/components/assessment/PremiumReportView';
 import { StudyVideo } from '@/components/assessment/StudyVideo';
 import { LearningResources } from '@/components/assessment/LearningResources';
 import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import { Loading } from '@/components/common/Loading';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -30,9 +28,6 @@ function ReportContent({ attemptId }: { attemptId: string }) {
   const [report, setReport] = useState<AttemptReport | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [unlocking, setUnlocking] = useState(false);
-  const [premiumError, setPremiumError] = useState('');
-  const [unlockedJustNow, setUnlockedJustNow] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -58,22 +53,6 @@ function ReportContent({ attemptId }: { attemptId: string }) {
     };
   }, [attemptId]);
 
-  const unlock = async () => {
-    if (!report) return;
-    setUnlocking(true);
-    setPremiumError('');
-    try {
-      await attemptApi.unlockPremium(report.report_id);
-      const fresh = await attemptApi.getReport(attemptId);
-      setReport(fresh);
-      setUnlockedJustNow(true);
-    } catch (err) {
-      setPremiumError(err instanceof Error ? err.message : 'Unlock failed');
-    } finally {
-      setUnlocking(false);
-    }
-  };
-
   if (loading) return <Loading label={t('report.preparing')} />;
   if (error) {
     return (
@@ -91,81 +70,24 @@ function ReportContent({ attemptId }: { attemptId: string }) {
     <div className="space-y-6">
       <ReportView data={report} />
 
-      {/* Premium report */}
-      {report.premium.unlocked ? (
+      {/* Study video (shown when the mentor provided one) */}
+      {report.study_video_url ? (
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                {t('report.premiumReport')}
-              </CardTitle>
-              <Badge>PREMIUM</Badge>
-            </div>
-            {unlockedJustNow ? (
-              <CardDescription className="font-medium text-emerald-600">
-                {t('report.premiumUnlockedNote')}
-              </CardDescription>
-            ) : null}
+            <CardTitle className="flex items-center gap-2">
+              <PlayCircle className="h-5 w-5 text-primary" />
+              {t('report.studyVideoTitle')}
+            </CardTitle>
+            <CardDescription>{t('report.studyVideoDescription')}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <PremiumReportView content={report.premium.content ?? ''} />
-            {report.premium.study_video_url ? (
-              <div className="space-y-2 border-t pt-4">
-                <h3 className="flex items-center gap-2 font-semibold">
-                  <PlayCircle className="h-5 w-5 text-primary" />
-                  {t('report.studyVideoTitle')}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {t('report.studyVideoDescription')}
-                </p>
-                <StudyVideo url={report.premium.study_video_url} />
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
-      ) : report.premium.cost > 0 ? (
-        <Card className="border-2 border-dashed border-primary/30 bg-accent/30">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Lock className="h-5 w-5 text-primary" />
-                {t('report.premiumReport')}
-              </CardTitle>
-              <Badge variant="outline">{report.premium.cost} Tokens</Badge>
-            </div>
-            <CardDescription>{t('report.premiumDescription')}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {report.premium.description ? (
-              <p className="whitespace-pre-line text-sm text-muted-foreground">
-                {report.premium.description}
-              </p>
-            ) : null}
-            <ErrorMessage message={premiumError} />
-            <Button
-              onClick={unlock}
-              disabled={unlocking}
-              size="lg"
-              variant="bronze"
-            >
-              {unlocking ? (
-                t('report.unlocking')
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4" />
-                  {t('report.unlockCta')} ({report.premium.cost} tokens)
-                </>
-              )}
-            </Button>
+          <CardContent>
+            <StudyVideo url={report.study_video_url} />
           </CardContent>
         </Card>
       ) : null}
 
-      {/* Learning Resources — curated materials matched to the taker's result.
-          Free resources show immediately; premium ones unlock with the report. */}
-      {report.learning_resources.length > 0 ||
-      report.premium.locked_resources > 0 ? (
+      {/* Learning Resources — curated materials matched to the taker's result. */}
+      {report.learning_resources.length > 0 ? (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -183,9 +105,7 @@ function ReportContent({ attemptId }: { attemptId: string }) {
           <CardContent>
             <LearningResources
               resources={report.learning_resources}
-              lockedCount={
-                report.premium.unlocked ? 0 : report.premium.locked_resources
-              }
+              lockedCount={0}
             />
           </CardContent>
         </Card>

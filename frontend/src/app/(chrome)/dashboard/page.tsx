@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ClipboardList, Coins, FileText } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
@@ -74,15 +74,6 @@ function DashboardHome() {
   const [actionNotice, setActionNotice] = useState('');
   const [topUpOpen, setTopUpOpen] = useState(false);
   const [topUpError, setTopUpError] = useState('');
-
-  const loadWallet = useCallback(async () => {
-    const [mine, wallet] = await Promise.all([
-      attemptApi.listMine(),
-      tokenApi.getBalance(),
-    ]);
-    setAttempts(mine);
-    setBalance(wallet.balance);
-  }, []);
 
   useEffect(() => {
     let active = true;
@@ -176,21 +167,6 @@ function DashboardHome() {
     }
   };
 
-  const unlock = async (reportId: string) => {
-    setBusy(reportId);
-    setActionError('');
-    setActionNotice('');
-    try {
-      await attemptApi.unlockPremium(reportId);
-      await loadWallet();
-      setActionNotice('Premium report unlocked — open it to see your full analysis.');
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Unlock failed');
-    } finally {
-      setBusy(null);
-    }
-  };
-
   const total = attempts?.length ?? 0;
   const reportsAvailable = attempts?.filter((a) => a.report_id).length ?? 0;
 
@@ -279,7 +255,6 @@ function DashboardHome() {
                     <TableHead>{t('dashboard.colAssessment')}</TableHead>
                     <TableHead>{t('dashboard.colScore')}</TableHead>
                     <TableHead>{t('dashboard.colDate')}</TableHead>
-                    <TableHead>{t('dashboard.colPremium')}</TableHead>
                     <TableHead className="text-right">
                       {t('dashboard.colReport')}
                     </TableHead>
@@ -294,24 +269,6 @@ function DashboardHome() {
                       <TableCell>{a.score}</TableCell>
                       <TableCell>
                         {new Date(a.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        {a.premium_unlocked ? (
-                          <Badge variant="secondary">
-                            {t('dashboard.unlocked')}
-                          </Badge>
-                        ) : a.premium_token_cost > 0 && a.report_id ? (
-                          <Button
-                            size="sm"
-                            variant="bronze"
-                            onClick={() => unlock(a.report_id as string)}
-                            disabled={busy === a.report_id}
-                          >
-                            🔒 Unlock ({a.premium_token_cost})
-                          </Button>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button asChild size="sm" variant="outline">
