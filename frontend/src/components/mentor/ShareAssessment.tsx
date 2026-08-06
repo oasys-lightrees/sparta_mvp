@@ -22,9 +22,10 @@ export function ShareAssessment({
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState('');
 
-  // Build the public URL on the client (needs window.location.origin).
+  // Build the public URL on the client (needs window.location.origin). Points
+  // at the assessment's branded landing page.
   useEffect(() => {
-    setUrl(`${window.location.origin}/assessments/${assessmentId}`);
+    setUrl(`${window.location.origin}/a/${assessmentId}`);
   }, [assessmentId]);
 
   const copy = async () => {
@@ -47,8 +48,8 @@ export function ShareAssessment({
         </CardTitle>
         <CardDescription>
           {isPublished
-            ? 'Anyone with this link can take the assessment — no sign-up required.'
-            : 'Publish this assessment to make the link live for takers.'}
+            ? 'This links to your assessment’s landing page — anyone can open it and take the assessment, no sign-up required.'
+            : 'Publish this assessment to make its landing page live at this link.'}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
