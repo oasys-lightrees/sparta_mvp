@@ -62,7 +62,9 @@ export function BrandedShell({
       <header className="lato-topbar">
         <div className="lato-topbar__in">
           <span className="lato-brand">
-            <span className="lato-brand__m">
+            <span
+              className={`lato-brand__m${app.brand.logoUrl ? ' lato-brand__m--img' : ''}`}
+            >
               {app.brand.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={app.brand.logoUrl} alt={app.brand.brandName} />

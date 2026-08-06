@@ -294,17 +294,17 @@ export function BrandedReport({
           </div>
         </div>
 
-        {/* Study video (shown when the mentor provided one) */}
+        {/* Opening video (shown when the mentor provided one) */}
         {report.study_video_url ? (
           <div className="lato-card" style={{ marginTop: 20 }}>
             <span className="lato-eyebrow">
-              <LatoIcon name="play" size={14} /> Study video
+              <LatoIcon name="play" size={14} /> Opening video
             </span>
             {embed ? (
               <div className="lato-video" style={{ marginTop: 14 }}>
                 <iframe
                   src={embed}
-                  title="Study video"
+                  title="Opening video"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                 />
@@ -317,7 +317,7 @@ export function BrandedReport({
                 className="lato-btn lato-btn--ghost"
                 style={{ marginTop: 16 }}
               >
-                <LatoIcon name="play" size={15} /> Open study video
+                <LatoIcon name="play" size={15} /> Open video
               </a>
             )}
           </div>

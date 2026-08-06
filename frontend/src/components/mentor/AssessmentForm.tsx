@@ -424,7 +424,7 @@ export function AssessmentForm({
         </div>
       ) : null}
       <div className="space-y-2">
-        <Label htmlFor="study_video_url">Study video URL</Label>
+        <Label htmlFor="study_video_url">Opening video URL</Label>
         <Input
           id="study_video_url"
           type="url"
@@ -433,8 +433,8 @@ export function AssessmentForm({
           placeholder="https://youtube.com/watch?v=…"
         />
         <p className="text-xs text-muted-foreground">
-          Optional. Shown to the taker alongside their result. Supports YouTube,
-          Vimeo, or a direct video link.
+          Optional opening video for this assessment. Supports YouTube, Vimeo, or
+          a direct video link.
         </p>
       </div>
 

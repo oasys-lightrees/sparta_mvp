@@ -223,7 +223,7 @@ function DetailView({ id }: { id: string }) {
                 value={detail.free_report_text ?? '—'}
               />
               <Info
-                label="Study video"
+                label="Opening video"
                 value={
                   detail.study_video_url ? (
                     <a

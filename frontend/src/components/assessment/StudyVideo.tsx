@@ -47,7 +47,7 @@ export function StudyVideo({ url }: { url: string }) {
         <div className="relative w-full overflow-hidden rounded-md border bg-black pt-[56.25%]">
           <iframe
             src={embed}
-            title="Study video"
+            title="Opening video"
             className="absolute inset-0 h-full w-full"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
@@ -67,7 +67,7 @@ export function StudyVideo({ url }: { url: string }) {
         className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
       >
         <ExternalLink className="h-3.5 w-3.5" />
-        Open study video
+        Open video
       </a>
     </div>
   );

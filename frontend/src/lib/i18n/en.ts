@@ -82,9 +82,9 @@ export const en = {
     'Go deeper with an AI-personalized breakdown of your strengths, gaps, and a 30-day plan.',
   'report.unlocking': 'Unlocking…',
   'report.unlockCta': 'Unlock Elite Insight',
-  'report.studyVideoTitle': 'Study video',
+  'report.studyVideoTitle': 'Opening video',
   'report.studyVideoDescription':
-    'A training video from your mentor to help you act on this report.',
+    'An opening video from your mentor for this assessment.',
   'report.resourcesTitle': 'Learning Resources',
   'report.resourcesPathTitle': 'Your Personalized Learning Path',
   'report.resourcesDescription':
