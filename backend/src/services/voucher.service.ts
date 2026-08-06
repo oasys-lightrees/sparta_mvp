@@ -141,12 +141,24 @@ export const getBatch = async (buyerId: string, batchId: string) => {
   const analytics = await computeAnalytics(batch.id, batch.assessmentId, batch.credits);
   const redeemers = await computeRedeemers(batch.id, batch.assessmentId);
 
+  // Personality assessments produce a result category, not a score — the UI
+  // uses this to show the result label instead of an (always-zero) score.
+  const [assessment] = await db
+    .select({ resultCategories: assessments.resultCategories })
+    .from(assessments)
+    .where(eq(assessments.id, batch.assessmentId))
+    .limit(1);
+  const isPersonality = Boolean(
+    assessment?.resultCategories && Object.keys(assessment.resultCategories).length > 0,
+  );
+
   return {
     batch_id: batch.id,
     assessment_id: batch.assessmentId,
     company_name: batch.companyName,
     credits: batch.credits,
     created_at: batch.createdAt,
+    is_personality: isPersonality,
     analytics,
     redeemers,
     codes: codeRows.map((c) => ({
@@ -183,14 +195,19 @@ const computeRedeemers = async (batchId: string, assessmentId: string) => {
     .filter((id): id is string => Boolean(id));
 
   // Latest attempt per redeemer on this assessment (rows ordered ascending, so
-  // the last one written to the map wins).
-  const attemptByUser = new Map<string, { attemptId: string; score: number }>();
+  // the last one written to the map wins). For personality assessments the
+  // result is a category (no numeric score), so we also carry the category name.
+  const attemptByUser = new Map<
+    string,
+    { attemptId: string; score: number; resultLabel: string | null }
+  >();
   if (userIds.length) {
     const attemptRows = await db
       .select({
         userId: attempts.userId,
         attemptId: attempts.id,
         score: attempts.totalScore,
+        categoryResult: attempts.categoryResult,
       })
       .from(attempts)
       .where(
@@ -201,7 +218,13 @@ const computeRedeemers = async (batchId: string, assessmentId: string) => {
       )
       .orderBy(attempts.createdAt);
     for (const a of attemptRows) {
-      if (a.userId) attemptByUser.set(a.userId, { attemptId: a.attemptId, score: a.score });
+      if (!a.userId) continue;
+      const cr = a.categoryResult;
+      attemptByUser.set(a.userId, {
+        attemptId: a.attemptId,
+        score: a.score,
+        resultLabel: cr ? (cr.dominantName ?? cr.dominant ?? null) : null,
+      });
     }
   }
 
@@ -213,7 +236,10 @@ const computeRedeemers = async (batchId: string, assessmentId: string) => {
       code: r.code,
       redeemed_at: r.redeemedAt,
       completed: Boolean(attempt),
-      score: attempt?.score ?? null,
+      // Personality attempts have no meaningful score — `result` carries the
+      // category name instead, and `score` is null.
+      score: attempt && attempt.resultLabel === null ? attempt.score : null,
+      result: attempt?.resultLabel ?? null,
       attempt_id: attempt?.attemptId ?? null,
     };
   });

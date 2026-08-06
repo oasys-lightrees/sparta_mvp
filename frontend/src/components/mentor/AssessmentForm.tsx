@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
-import { AssessmentImage } from '@/components/assessment/AssessmentImage';
+import { ImageSourceField } from '@/components/mentor/ImageSourceField';
 import {
   LearningResourcesEditor,
   type ResourceProfile,
@@ -83,17 +83,11 @@ export function AssessmentForm({
   const [title, setTitle] = useState(str(initial?.title));
   const [description, setDescription] = useState(str(initial?.description));
   const [imageUrl, setImageUrl] = useState(str(initial?.image_url));
-  const [premiumCost, setPremiumCost] = useState(
-    numStr(initial?.premium_token_cost),
-  );
   const [low, setLow] = useState(numStr(initial?.low_score_threshold));
   const [high, setHigh] = useState(numStr(initial?.high_score_threshold));
   const [freeText, setFreeText] = useState(str(initial?.free_report_text));
   const [freeTemplate, setFreeTemplate] = useState(
     str(initial?.free_report_template),
-  );
-  const [premiumDesc, setPremiumDesc] = useState(
-    str(initial?.premium_report_description),
   );
   const [emailTemplate, setEmailTemplate] = useState(
     str(initial?.email_template),
@@ -108,9 +102,11 @@ export function AssessmentForm({
   const [resourcesDoc, setResourcesDoc] = useState<LearningResourcesDoc | null>(
     initial?.learning_resources ?? null,
   );
-  const [accessMode, setAccessMode] = useState<AccessMode>(
-    initial?.access_mode ?? 'FREEMIUM',
-  );
+  const [accessMode, setAccessMode] = useState<AccessMode>(() => {
+    // FREEMIUM is retired (premium report removed); treat legacy rows as FREE.
+    const m = initial?.access_mode ?? 'FREE';
+    return m === 'FREEMIUM' ? 'FREE' : m;
+  });
   const [accessTokenCost, setAccessTokenCost] = useState(
     numStr(initial?.access_token_cost),
   );
@@ -196,18 +192,12 @@ export function AssessmentForm({
       low_score_threshold: lowNum,
       high_score_threshold: highNum,
       free_report_text: freeText.trim() === '' ? null : freeText,
-      // Premium report cost only applies to Freemium; force 0 for other modes.
-      premium_token_cost:
-        accessMode === 'FREEMIUM'
-          ? premiumCost.trim() === ''
-            ? 0
-            : Number(premiumCost)
-          : 0,
+      // Premium report removed — never charge a premium unlock.
+      premium_token_cost: 0,
       // Score template is a skill-mode field.
       free_report_template:
         isPersonality || freeTemplate.trim() === '' ? null : freeTemplate,
-      premium_report_description:
-        premiumDesc.trim() === '' ? null : premiumDesc,
+      premium_report_description: null,
       email_template: emailTemplate.trim() === '' ? null : emailTemplate,
       base_knowledge: baseKnowledge.trim() === '' ? null : baseKnowledge,
       ai_enabled: aiEnabled,
@@ -295,36 +285,13 @@ export function AssessmentForm({
           onChange={(e) => setDescription(e.target.value)}
         />
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="image_url">Cover image URL</Label>
-        <div className="flex gap-2">
-          <Input
-            id="image_url"
-            type="url"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://example.com/image.jpg"
-          />
-          {imageUrl.trim() !== '' ? (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setImageUrl('')}
-            >
-              Remove
-            </Button>
-          ) : null}
-        </div>
-        {imageUrl.trim() !== '' ? (
-          <div className="max-w-xs overflow-hidden rounded-md border">
-            <AssessmentImage src={imageUrl.trim()} alt={title || 'Cover preview'} />
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground">
-            Optional. Paste an image URL to give your assessment a cover.
-          </p>
-        )}
-      </div>
+      <ImageSourceField
+        label="Cover photo"
+        value={imageUrl}
+        onChange={setImageUrl}
+        placeholder="https://example.com/image.jpg"
+        helpText="Optional cover shown on the assessment card. Upload a file or paste a URL. PNG, SVG, JPG, JPEG or WEBP · up to 5 MB."
+      />
       {/* Access model — how takers get to start this assessment. Any cost the
           mode needs (premium unlock for Freemium, access cost for Paid) is set
           inside the card, so mentors only see the field relevant to their mode. */}
@@ -332,17 +299,18 @@ export function AssessmentForm({
         <div className="space-y-1">
           <Label>Access model</Label>
           <p className="text-xs text-muted-foreground">
-            Controls who can start this assessment. Premium reports remain a
-            separate token unlock only in Freemium.
+            Controls who can start this assessment. Payments are token-based:
+            takers fund a token wallet, then spend tokens to start a Paid
+            assessment. A Paid assessment can also be unlocked with a voucher
+            code.
           </p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           {(
             [
-              { value: 'FREE', title: 'Free', description: 'Anyone can start immediately. No premium tier.' },
-              { value: 'FREEMIUM', title: 'Freemium', description: 'Free to take; premium report unlockable with tokens.' },
-              { value: 'PAID', title: 'Paid', description: 'Must buy access (tokens) before starting. Full result included.' },
-              { value: 'VOUCHER', title: 'Voucher', description: 'Must redeem a valid voucher before starting.' },
+              { value: 'FREE', title: 'Free', description: 'Anyone can start immediately. Full result included.' },
+              { value: 'PAID', title: 'Paid (tokens)', description: 'Spend tokens to start. Full result included. Vouchers also work.' },
+              { value: 'VOUCHER', title: 'Voucher only', description: 'Must redeem a valid voucher before starting.' },
             ] as const
           ).map((opt) => (
             <button
@@ -364,23 +332,6 @@ export function AssessmentForm({
             </button>
           ))}
         </div>
-        {accessMode === 'FREEMIUM' ? (
-          <div className="space-y-2">
-            <Label htmlFor="premium_token_cost">Premium report cost (tokens)</Label>
-            <Input
-              id="premium_token_cost"
-              type="number"
-              min={0}
-              value={premiumCost}
-              onChange={(e) => setPremiumCost(e.target.value)}
-              placeholder="e.g. 40"
-            />
-            <p className="text-xs text-muted-foreground">
-              Tokens a taker spends to unlock the premium report after taking the
-              assessment for free. 0 means no premium report is offered.
-            </p>
-          </div>
-        ) : null}
         {accessMode === 'PAID' ? (
           <div className="space-y-2">
             <Label htmlFor="access_token_cost">Access cost (tokens)</Label>
@@ -473,17 +424,6 @@ export function AssessmentForm({
         </div>
       ) : null}
       <div className="space-y-2">
-        <Label htmlFor="premium_report_description">
-          Premium report description
-        </Label>
-        <Textarea
-          id="premium_report_description"
-          value={premiumDesc}
-          onChange={(e) => setPremiumDesc(e.target.value)}
-          placeholder="What the premium report includes (shown to users)"
-        />
-      </div>
-      <div className="space-y-2">
         <Label htmlFor="study_video_url">Study video URL</Label>
         <Input
           id="study_video_url"
@@ -493,8 +433,8 @@ export function AssessmentForm({
           placeholder="https://youtube.com/watch?v=…"
         />
         <p className="text-xs text-muted-foreground">
-          Optional. Shown to the taker after they unlock the premium report.
-          Supports YouTube, Vimeo, or a direct video link.
+          Optional. Shown to the taker alongside their result. Supports YouTube,
+          Vimeo, or a direct video link.
         </p>
       </div>
 

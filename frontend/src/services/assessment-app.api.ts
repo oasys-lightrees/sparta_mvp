@@ -24,7 +24,7 @@ export type AppConfigPatch = {
       ctaPrimary?: string;
       ctaSecondary?: string;
     };
-    finalCta?: { title?: string; subtitle?: string; button?: string };
+    finalCta?: { enabled?: boolean; title?: string; subtitle?: string; button?: string };
   };
   seo?: { title?: string; description?: string };
 };

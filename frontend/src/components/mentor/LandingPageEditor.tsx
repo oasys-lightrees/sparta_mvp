@@ -36,6 +36,7 @@ type Form = {
   heroImageUrl: string;
   ctaPrimary: string;
   ctaSecondary: string;
+  finalEnabled: boolean;
   finalTitle: string;
   finalSubtitle: string;
   finalButton: string;
@@ -59,6 +60,7 @@ const fromConfig = (a: AssessmentApp): Form => ({
   heroImageUrl: a.landing.hero.heroImageUrl ?? '',
   ctaPrimary: a.landing.hero.ctaPrimary,
   ctaSecondary: a.landing.hero.ctaSecondary,
+  finalEnabled: a.landing.finalCta.enabled,
   finalTitle: a.landing.finalCta.title,
   finalSubtitle: a.landing.finalCta.subtitle,
   finalButton: a.landing.finalCta.button,
@@ -86,6 +88,7 @@ const toPatch = (f: Form): AppConfigPatch => ({
       ctaSecondary: f.ctaSecondary,
     },
     finalCta: {
+      enabled: f.finalEnabled,
       title: f.finalTitle.trim(),
       subtitle: f.finalSubtitle,
       button: f.finalButton.trim(),
@@ -382,12 +385,30 @@ export function LandingPageEditor({
 
             {/* Final CTA */}
             <div className="space-y-3">
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Closing call to action
-              </h4>
-              <TextField label="Title" value={form.finalTitle} onChange={(v) => set({ finalTitle: v })} />
-              <TextField label="Subtitle" value={form.finalSubtitle} onChange={(v) => set({ finalSubtitle: v })} textarea />
-              <TextField label="Button" value={form.finalButton} onChange={(v) => set({ finalButton: v })} />
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Closing call to action
+                </h4>
+                <label className="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={form.finalEnabled}
+                    onChange={(e) => set({ finalEnabled: e.target.checked })}
+                  />
+                  Show closing section
+                </label>
+              </div>
+              {form.finalEnabled ? (
+                <>
+                  <TextField label="Title" value={form.finalTitle} onChange={(v) => set({ finalTitle: v })} />
+                  <TextField label="Subtitle" value={form.finalSubtitle} onChange={(v) => set({ finalSubtitle: v })} textarea />
+                  <TextField label="Button" value={form.finalButton} onChange={(v) => set({ finalButton: v })} />
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  The closing call-to-action section is hidden on your landing page.
+                </p>
+              )}
             </div>
 
             {/* SEO */}

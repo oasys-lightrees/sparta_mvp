@@ -211,14 +211,6 @@ function DetailView({ id }: { id: string }) {
                 value={detail.price > 0 ? `$${detail.price}` : 'Free'}
               />
               <Info
-                label="Premium cost"
-                value={
-                  detail.premium_token_cost > 0
-                    ? `${detail.premium_token_cost} tokens`
-                    : '—'
-                }
-              />
-              <Info
                 label="Low threshold"
                 value={detail.low_score_threshold ?? '—'}
               />

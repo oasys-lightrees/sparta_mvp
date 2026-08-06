@@ -1,4 +1,4 @@
-import { Fragment, type CSSProperties } from 'react';
+import { type CSSProperties } from 'react';
 import type { AssessmentApp, Plan } from '@/types/assessment-app';
 import type { AccessMode, PricingTier, PublicProduct } from '@/types';
 import { BrandedAuthChip } from '@/components/branded/BrandedAuthChip';
@@ -67,7 +67,6 @@ export function BrandedLanding({
   startHref = '#products',
   loginHref = '/login',
   dashboardHref = '/dashboard',
-  companyHref,
   redeemHref,
   accessMode,
   accessTokenCost = 0,
@@ -102,14 +101,6 @@ export function BrandedLanding({
     (tier) => tier.enabled,
   );
   const hasProductTiers = productTiers.length > 0;
-  const flow = [
-    { t: 'Company buys', d: 'Pick a seat package', icon: 'building', alt: false },
-    { t: 'Get vouchers', d: 'Unique codes generated', icon: 'ticket', alt: true },
-    { t: 'Share codes', d: 'Send to employees', icon: 'share', alt: true },
-    { t: 'They redeem', d: 'One code, one seat', icon: 'users', alt: true },
-    { t: 'They assess', d: 'Each gets a report', icon: 'check', alt: true },
-    { t: 'Org dashboard', d: 'Aggregated analytics', icon: 'chart', alt: false },
-  ];
 
   return (
     <div
@@ -131,7 +122,7 @@ export function BrandedLanding({
           </a>
           <nav className="lato-links" aria-label="Primary">
             <a href="#products">Products</a>
-            <a href="#why">About</a>
+            <a href="#top">About</a>
           </nav>
           <div className="lato-nav__r">
             <BrandedAuthChip loginHref={loginHref} dashboardHref={dashboardHref} />
@@ -171,7 +162,7 @@ export function BrandedLanding({
                   {primaryLabel}
                 </a>
                 {landing.hero.ctaSecondary ? (
-                  <a href="#process" className="lato-btn lato-btn--ghost lato-btn--lg">
+                  <a href="#products" className="lato-btn lato-btn--ghost lato-btn--lg">
                     {landing.hero.ctaSecondary}
                   </a>
                 ) : null}
@@ -249,81 +240,6 @@ export function BrandedLanding({
           </div>
         </section>
 
-        {/* TRUST */}
-        {(landing.trust.companies.length || landing.trust.stats.length) ? (
-          <section className="lato-trust" aria-label="Trust">
-            <div className="lato-wrap">
-              {landing.trust.companies.length ? (
-                <>
-                  <p className="lato-trust__lead">{landing.trust.lead}</p>
-                  <div className="lato-trust__row">
-                    {landing.trust.companies.map((n) => (
-                      <span className="lato-logo" key={n}>
-                        <span className="lato-logo__m">{n[0]}</span>
-                        {n}
-                      </span>
-                    ))}
-                  </div>
-                </>
-              ) : null}
-              {landing.trust.stats.length ? (
-                <div className="lato-stats">
-                  {landing.trust.stats.map((s, i) => (
-                    <div className="lato-stat" key={i}>
-                      <b>{s.value}</b>
-                      <span>{s.label}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          </section>
-        ) : null}
-
-        {/* FEATURES */}
-        {landing.features.length ? (
-          <section className="lato-section" id="why">
-            <div className="lato-wrap lato-center">
-              <span className="lato-eyebrow">Why this assessment</span>
-              <h2 className="lato-h">Clarity you can act on</h2>
-            </div>
-            <div className="lato-wrap">
-              <div className="lato-cards">
-                {landing.features.map((f, i) => (
-                  <div className="lato-card" key={i}>
-                    <div className="lato-card__i">
-                      <Icon name={f.icon} />
-                    </div>
-                    <h3>{f.title}</h3>
-                    <p>{f.body}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        ) : null}
-
-        {/* PROCESS */}
-        {landing.process.length ? (
-          <section className="lato-section lato-section--tint" id="process">
-            <div className="lato-wrap lato-center">
-              <span className="lato-eyebrow">How it works</span>
-              <h2 className="lato-h">From answers to a plan</h2>
-            </div>
-            <div className="lato-wrap">
-              <div className="lato-steps">
-                {landing.process.map((s, i) => (
-                  <div className="lato-step" key={i}>
-                    <div className="lato-step__n" />
-                    <h3>{s.title}</h3>
-                    <p>{s.body}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        ) : null}
-
         {/* PRODUCTS */}
         <section className="lato-section" id="products">
           <div className="lato-wrap lato-center">
@@ -352,123 +268,23 @@ export function BrandedLanding({
           </div>
         </section>
 
-        {/* VOUCHER FLOW */}
-        <section className="lato-section lato-section--tint" id="teams">
-          <div className="lato-wrap lato-center">
-            <span className="lato-eyebrow">For companies</span>
-            <h2 className="lato-h">Buy once, deploy to your whole team</h2>
-            <p className="lato-sub">
-              Purchase a package, hand out codes, and watch aggregated insight roll into one
-              dashboard.
-            </p>
-          </div>
-          <div className="lato-wrap">
-            <div className="lato-flow">
-              {flow.map((n, i) => (
-                <Fragment key={i}>
-                  <div className={`lato-flow__n${n.alt ? ' alt' : ''}`}>
-                    <div className="lato-flow__i">
-                      <Icon name={n.icon} size={20} />
-                    </div>
-                    <div className="lato-flow__t">{n.t}</div>
-                    <div className="lato-flow__d">{n.d}</div>
-                  </div>
-                  {i < flow.length - 1 ? (
-                    <div className="lato-flow__l">
-                      <Icon name="arrow" size={20} />
-                    </div>
-                  ) : null}
-                </Fragment>
-              ))}
-            </div>
-            {companyHref || redeemHref ? (
-              <div
-                className="lato-hero__cta"
-                style={{ justifyContent: 'center', marginTop: 44 }}
-              >
-                {companyHref ? (
-                  <a href={companyHref} className="lato-btn lato-btn--grad lato-btn--lg">
-                    Buy team vouchers
-                  </a>
-                ) : null}
-                {redeemHref ? (
-                  <a href={redeemHref} className="lato-btn lato-btn--ghost lato-btn--lg">
-                    Redeem a code
-                  </a>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
-        </section>
-
-        {/* TESTIMONIALS */}
-        {landing.testimonials.length ? (
-          <section className="lato-section" id="testimonials">
-            <div className="lato-wrap lato-center">
-              <span className="lato-eyebrow">Testimonials</span>
-              <h2 className="lato-h">What people say</h2>
-            </div>
+        {/* FINAL CTA (optional) */}
+        {landing.finalCta.enabled ? (
+          <section className="lato-section" style={{ paddingBottom: 0 }}>
             <div className="lato-wrap">
-              <div className="lato-quotes">
-                {landing.testimonials.map((t, i) => (
-                  <div className="lato-quote" key={i}>
-                    <div className="lato-quote__s">★★★★★</div>
-                    <p>“{t.quote}”</p>
-                    <div className="lato-quote__w">
-                      <span className="lato-av">{t.name[0]}</span>
-                      <span>
-                        <b>{t.name}</b>
-                        <span>
-                          {t.role}
-                          {t.company ? ` · ${t.company}` : ''}
-                        </span>
-                      </span>
-                    </div>
-                  </div>
-                ))}
+              <div className="lato-final">
+                <h2>{landing.finalCta.title}</h2>
+                {landing.finalCta.subtitle ? <p>{landing.finalCta.subtitle}</p> : null}
+                <a href={primaryHref} className="lato-btn lato-btn--lg">
+                  {accessMode === 'VOUCHER' ? primaryLabel : landing.finalCta.button}
+                </a>
+                {landing.finalCta.fineprint ? (
+                  <p className="fp">{landing.finalCta.fineprint}</p>
+                ) : null}
               </div>
             </div>
           </section>
         ) : null}
-
-        {/* FAQ */}
-        {landing.faq.length ? (
-          <section className="lato-section lato-section--tint" id="faq">
-            <div className="lato-wrap lato-center">
-              <span className="lato-eyebrow">FAQ</span>
-              <h2 className="lato-h">Questions, answered</h2>
-            </div>
-            <div className="lato-wrap">
-              <div className="lato-faq">
-                {landing.faq.map((f, i) => (
-                  <details key={i} open={i === 0}>
-                    <summary>
-                      <span className="q">{f.q}</span>
-                      <span className="pm" />
-                    </summary>
-                    <div className="a">{f.a}</div>
-                  </details>
-                ))}
-              </div>
-            </div>
-          </section>
-        ) : null}
-
-        {/* FINAL CTA */}
-        <section className="lato-section" style={{ paddingBottom: 0 }}>
-          <div className="lato-wrap">
-            <div className="lato-final">
-              <h2>{landing.finalCta.title}</h2>
-              {landing.finalCta.subtitle ? <p>{landing.finalCta.subtitle}</p> : null}
-              <a href={primaryHref} className="lato-btn lato-btn--lg">
-                {accessMode === 'VOUCHER' ? primaryLabel : landing.finalCta.button}
-              </a>
-              {landing.finalCta.fineprint ? (
-                <p className="fp">{landing.finalCta.fineprint}</p>
-              ) : null}
-            </div>
-          </div>
-        </section>
       </main>
 
       {/* FOOTER */}
@@ -485,9 +301,7 @@ export function BrandedLanding({
             <div className="lato-fcol">
               <h4>Product</h4>
               <a href="#products">Pricing</a>
-              <a href="#process">How it works</a>
-              <a href="#teams">For teams</a>
-              <a href="#faq">FAQ</a>
+              <a href="#top">Overview</a>
             </div>
             <div className="lato-fcol">
               <h4>Company</h4>
@@ -541,18 +355,10 @@ function ProductTierCards({
           className={`lato-plan${tier.highlight ? ' lato-plan--hot' : ''}`}
         >
           {tier.highlight ? <span className="lato-plan__badge">Most popular</span> : null}
+          {/* Order: title, photo, description, price (token), button */}
           <div className="lato-plan__name">{tier.title || '—'}</div>
-          {tier.description ? <div className="lato-plan__tag">{tier.description}</div> : null}
-          <div className="lato-plan__price">
-            <b>{tier.priceLabel || (tier.tokenCost > 0 ? '' : 'Free')}</b>
-          </div>
-          {tier.tokenCost > 0 ? (
-            <div style={{ fontSize: '.82rem', color: 'var(--muted)', marginTop: 2 }}>
-              {tier.tokenCost} token{tier.tokenCost === 1 ? '' : 's'}
-            </div>
-          ) : null}
           {tier.imageUrl ? (
-            // Mentor-provided tier image, shown between the title and the button.
+            // Mentor-provided tier image, shown between the title and the price.
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={tier.imageUrl}
@@ -563,9 +369,23 @@ function ProductTierCards({
                 maxHeight: 140,
                 objectFit: 'contain',
                 borderRadius: 12,
-                margin: '16px 0',
+                margin: '14px 0',
               }}
             />
+          ) : null}
+          {tier.description ? <div className="lato-plan__tag">{tier.description}</div> : null}
+          {/* Token price is the focus — bold and prominent, above the description. */}
+          <div className="lato-plan__price" style={{ fontWeight: 800 }}>
+            <b>
+              {tier.tokenCost > 0
+                ? `${tier.tokenCost} token${tier.tokenCost === 1 ? '' : 's'}`
+                : tier.priceLabel || 'Free'}
+            </b>
+          </div>
+          {tier.tokenCost > 0 && tier.priceLabel ? (
+            <div style={{ fontSize: '.82rem', color: 'var(--muted)', marginTop: 2 }}>
+              {tier.priceLabel}
+            </div>
           ) : null}
           <a
             href={hrefFor(tier)}
@@ -574,6 +394,7 @@ function ProductTierCards({
                 ? 'lato-btn lato-btn--grad lato-btn--block'
                 : 'lato-btn lato-btn--ghost lato-btn--block'
             }
+            style={{ marginTop: 14 }}
           >
             {tier.ctaLabel || 'Get started'}
           </a>

@@ -68,6 +68,7 @@ function DashboardHome() {
   const [explore, setExplore] = useState<AssessmentSummary[] | null>(null);
   const [exploreError, setExploreError] = useState('');
   const [batches, setBatches] = useState<VoucherBatchSummary[]>([]);
+  const [voucherFor, setVoucherFor] = useState('');
   const [balance, setBalance] = useState<number | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [actionError, setActionError] = useState('');
@@ -286,16 +287,45 @@ function DashboardHome() {
         )}
       </section>
 
-      {/* Team vouchers (HR / company buyers) */}
-      {batches.length > 0 ? (
-        <section className="space-y-4">
-          <div className="space-y-1">
-            <h2 className="text-xl font-semibold tracking-tight">Team vouchers</h2>
-            <p className="text-sm text-muted-foreground">
-              Voucher packages you&apos;ve purchased. Open one to share codes and review
-              your team&apos;s results.
-            </p>
-          </div>
+      {/* Team vouchers (HR / company buyers) — buy packages + manage results */}
+      <section className="space-y-4">
+        <div className="space-y-1">
+          <h2 className="text-xl font-semibold tracking-tight">Team vouchers</h2>
+          <p className="text-sm text-muted-foreground">
+            Buy a package of voucher codes for your team, hand them out, and review
+            each person&apos;s result here.
+          </p>
+        </div>
+
+        {/* Buy a package: pick an assessment, go to its company portal */}
+        <Card>
+          <CardContent className="flex flex-wrap items-end gap-3 p-4">
+            <div className="flex-1 space-y-1.5" style={{ minWidth: 220 }}>
+              <span className="text-sm font-medium">Buy voucher codes for</span>
+              <select
+                className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                value={voucherFor}
+                onChange={(e) => setVoucherFor(e.target.value)}
+              >
+                <option value="">Select an assessment…</option>
+                {(explore ?? []).map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <Button asChild variant="bronze" disabled={!voucherFor}>
+              {voucherFor ? (
+                <Link href={`/a/${voucherFor}/company`}>Buy voucher codes</Link>
+              ) : (
+                <span>Buy voucher codes</span>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {batches.length > 0 ? (
           <Card>
             <CardContent className="p-0">
               <Table>
@@ -334,8 +364,8 @@ function DashboardHome() {
               </Table>
             </CardContent>
           </Card>
-        </section>
-      ) : null}
+        ) : null}
+      </section>
 
       {/* Explore Assessments */}
       <section className="space-y-4">

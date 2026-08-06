@@ -250,10 +250,13 @@ export function BrandedCompany({
                 <div className="lato-kpi__k">Completion rate</div>
                 <div className="lato-kpi__v">{a.completion_rate}%</div>
               </div>
-              <div className="lato-kpi">
-                <div className="lato-kpi__k">Average score</div>
-                <div className="lato-kpi__v">{a.average_score}</div>
-              </div>
+              {/* Average score is meaningless for personality tests. */}
+              {!selected.is_personality ? (
+                <div className="lato-kpi">
+                  <div className="lato-kpi__k">Average score</div>
+                  <div className="lato-kpi__v">{a.average_score}</div>
+                </div>
+              ) : null}
             </div>
 
             {/* Per-person results */}
@@ -275,7 +278,9 @@ export function BrandedCompany({
                       <th>Code</th>
                       <th>Redeemed</th>
                       <th>Status</th>
-                      <th style={{ textAlign: 'right' }}>Score</th>
+                      <th style={{ textAlign: 'right' }}>
+                        {selected.is_personality ? 'Result' : 'Score'}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -297,7 +302,7 @@ export function BrandedCompany({
                           </span>
                         </td>
                         <td style={{ textAlign: 'right', fontWeight: 700 }}>
-                          {r.score ?? '—'}
+                          {r.result ?? (r.score !== null ? r.score : '—')}
                         </td>
                       </tr>
                     ))}

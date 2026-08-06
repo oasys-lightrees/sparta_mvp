@@ -188,6 +188,8 @@ export type VoucherCode = {
   redeemed_at: string | null;
 };
 // One person who redeemed a code in the batch, with their result (if taken).
+// For personality assessments `result` holds the category name and `score` is
+// null; for skill assessments `score` holds the number and `result` is null.
 export type VoucherRedeemer = {
   name: string | null;
   email: string;
@@ -195,6 +197,7 @@ export type VoucherRedeemer = {
   redeemed_at: string | null;
   completed: boolean;
   score: number | null;
+  result: string | null;
   attempt_id: string | null;
 };
 export type VoucherBatchDetail = {
@@ -203,6 +206,7 @@ export type VoucherBatchDetail = {
   company_name: string;
   credits: number;
   created_at: string;
+  is_personality: boolean;
   analytics: VoucherAnalytics;
   redeemers: VoucherRedeemer[];
   codes: VoucherCode[];
