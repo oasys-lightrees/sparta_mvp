@@ -10,12 +10,14 @@ import { BrandedShell, LatoIcon } from './shell';
 export function BrandedRedeem({
   app,
   assessmentId,
+  initialCode = '',
 }: {
   app: AssessmentApp;
   assessmentId: string;
+  initialCode?: string;
 }) {
   const { user, loading: authLoading } = useAuth();
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState(initialCode.trim().toUpperCase());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<RedeemResult | null>(null);
@@ -41,7 +43,9 @@ export function BrandedRedeem({
   };
 
   if (!authLoading && !user) {
-    const next = encodeURIComponent(`/a/${assessmentId}/redeem`);
+    // Preserve the entered code so it's still there after logging in.
+    const redeemPath = `/a/${assessmentId}/redeem${code ? `?code=${encodeURIComponent(code)}` : ''}`;
+    const next = encodeURIComponent(redeemPath);
     return (
       <BrandedShell app={app} right={right}>
         <div className="lato-intro">
