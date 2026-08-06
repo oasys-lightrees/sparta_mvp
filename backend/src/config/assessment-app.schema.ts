@@ -187,12 +187,15 @@ export const LandingSchema = z.object({
   faq: z.array(FaqSchema).default([]),
   finalCta: z
     .object({
+      // Whether the closing call-to-action section renders on the landing page.
+      enabled: z.boolean().default(true),
       title: NonEmpty.default('Ready to begin?'),
       subtitle: z.string().default(''),
       button: NonEmpty.default('Get started'),
       fineprint: z.string().default('Free to start · No credit card'),
     })
     .default({
+      enabled: true,
       title: 'Ready to begin?',
       subtitle: '',
       button: 'Get started',

@@ -95,7 +95,13 @@ export interface Landing {
   process: Step[];
   testimonials: Testimonial[];
   faq: Faq[];
-  finalCta: { title: string; subtitle: string; button: string; fineprint: string };
+  finalCta: {
+    enabled: boolean;
+    title: string;
+    subtitle: string;
+    button: string;
+    fineprint: string;
+  };
 }
 
 export interface Plan {
