@@ -83,9 +83,9 @@ export const id: Record<TranslationKey, string> = {
     'Pelajari lebih dalam dengan uraian kekuatan, kekurangan, dan rencana 30 hari yang dipersonalisasi oleh AI.',
   'report.unlocking': 'Membuka…',
   'report.unlockCta': 'Buka Elite Insight',
-  'report.studyVideoTitle': 'Video pembelajaran',
+  'report.studyVideoTitle': 'Video pembuka',
   'report.studyVideoDescription':
-    'Video latihan dari mentor Anda untuk membantu menindaklanjuti laporan ini.',
+    'Video pembuka dari mentor Anda untuk asesmen ini.',
   'report.resourcesTitle': 'Sumber Belajar',
   'report.resourcesPathTitle': 'Jalur Belajar Personal Anda',
   'report.resourcesDescription':
