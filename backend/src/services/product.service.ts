@@ -18,24 +18,44 @@ export type UpsertProductInput = {
 };
 
 const defaultTiers = (): ProductTiers =>
-  ProductTiersSchema.parse({
-    individualBasic: {
+  ProductTiersSchema.parse([
+    {
+      id: 'basic',
       enabled: true,
+      title: 'Basic',
+      description: 'Take the assessment and get your instant report.',
+      kind: 'FREE',
       priceLabel: 'Free',
-      blurb: 'Take the assessment and get your instant report.',
+      tokenCost: 0,
+      ctaLabel: 'Start assessment',
+      imageUrl: null,
+      highlight: false,
     },
-    individualPremium: {
+    {
+      id: 'premium',
       enabled: true,
+      title: 'Premium',
+      description: 'Unlock the full personalized AI report.',
+      kind: 'FREEMIUM',
       priceLabel: '',
-      blurb: 'Unlock the full personalized AI report.',
+      tokenCost: 0,
+      ctaLabel: 'Get premium',
+      imageUrl: null,
+      highlight: true,
     },
-    companyPremium: {
+    {
+      id: 'voucher',
       enabled: true,
+      title: 'Team / Voucher',
+      description: 'Have a company voucher? Redeem it to unlock access.',
+      kind: 'VOUCHER',
       priceLabel: '',
-      blurb: 'Buy seats for your team and see everyone’s results in one place.',
-      seats: 10,
+      tokenCost: 0,
+      ctaLabel: 'Redeem a voucher',
+      imageUrl: null,
+      highlight: false,
     },
-  });
+  ]);
 
 const slugify = (s: string): string =>
   s

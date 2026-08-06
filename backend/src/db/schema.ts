@@ -533,23 +533,26 @@ export const vouchersRelations = relations(vouchers, ({ one }) => ({
 }));
 
 /**
- * Product tiers — the three purchasable options a mentor offers for a product.
- * Presentational + enablement only: the actual mechanics reuse the assessment's
- * existing access model (Individual Premium => the assessment's premium unlock;
- * Company Premium => a voucher batch of `seats` codes). Prices are display
- * strings (no checkout is wired to these labels).
+ * Product pricing tiers — an ordered list of marketing cards the mentor offers
+ * for a product. Presentation + routing only: `kind` mirrors the assessment
+ * access models and decides where the card's button routes on the landing page
+ * (VOUCHER => the redeem flow). Actual enforcement stays on the assessment. See
+ * config/product.schema.ts.
  */
-export type ProductTier = {
+export type ProductTierKind = 'FREE' | 'FREEMIUM' | 'PAID' | 'VOUCHER';
+export type PricingTier = {
+  id: string;
   enabled: boolean;
+  title: string;
+  description: string;
+  kind: ProductTierKind;
   priceLabel: string;
-  blurb: string;
+  tokenCost: number;
+  ctaLabel: string;
+  imageUrl: string | null;
+  highlight: boolean;
 };
-export type ProductTiers = {
-  individualBasic: ProductTier;
-  individualPremium: ProductTier;
-  // Company tier additionally carries the default number of voucher seats.
-  companyPremium: ProductTier & { seats: number };
-};
+export type ProductTiers = PricingTier[];
 
 /**
  * products

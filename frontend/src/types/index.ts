@@ -231,17 +231,22 @@ export type RedeemResult = {
 };
 
 // --- Products (sellable 1:1 wrapper around an assessment) ---
-export type ProductTier = {
+// Pricing model of a tier. Mirrors the assessment access modes; on the landing
+// page it decides where the card's button routes (VOUCHER -> redeem).
+export type ProductTierKind = 'FREE' | 'FREEMIUM' | 'PAID' | 'VOUCHER';
+export type PricingTier = {
+  id: string;
   enabled: boolean;
+  title: string;
+  description: string;
+  kind: ProductTierKind;
   priceLabel: string;
-  blurb: string;
+  tokenCost: number;
+  ctaLabel: string;
+  imageUrl: string | null;
+  highlight: boolean;
 };
-export type ProductCompanyTier = ProductTier & { seats: number };
-export type ProductTiers = {
-  individualBasic: ProductTier;
-  individualPremium: ProductTier;
-  companyPremium: ProductCompanyTier;
-};
+export type ProductTiers = PricingTier[];
 export type ProductStatus = 'DRAFT' | 'PUBLISHED';
 // Full product as seen by its owning mentor.
 export type MentorProduct = {

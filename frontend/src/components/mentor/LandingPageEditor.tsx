@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { ExternalLink, Upload, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ExternalLink } from 'lucide-react';
 import { assessmentAppApi, type AppConfigPatch } from '@/services/assessment-app.api';
-import { uploadApi } from '@/services/upload.api';
+import { ImageSourceField } from '@/components/mentor/ImageSourceField';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -152,172 +152,6 @@ function ColorField({
         />
         <Input value={value} onChange={(e) => onChange(e.target.value)} className="font-mono" />
       </div>
-    </div>
-  );
-}
-
-// Client-side upload constraints — mirror the backend (upload.service.ts) so we
-// reject bad files before hitting the network. The server re-validates.
-const ACCEPTED_IMAGE_TYPES = [
-  'image/png',
-  'image/svg+xml',
-  'image/jpeg',
-  'image/webp',
-];
-const ACCEPT_ATTR = '.png,.svg,.jpg,.jpeg,.webp';
-const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB
-
-// An uploaded (vs. externally hosted) logo is served from our own upload route.
-const isUploadedAsset = (url: string): boolean => /\/api\/uploads\//.test(url);
-
-/**
- * Landing-page logo picker. The mentor either uploads an image file (stored via
- * the platform's storage provider) OR points at an external image URL — both
- * populate the SAME `logoUrl` field, so existing URL-based logos keep working
- * and no config migration is needed.
- */
-function LogoField({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  // Default the toggle to whichever source the current value looks like.
-  const [source, setSource] = useState<'upload' | 'url'>(
-    value && !isUploadedAsset(value) ? 'url' : 'upload',
-  );
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const pickFile = async (file: File) => {
-    setUploadError('');
-    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-      setUploadError('Unsupported format. Use PNG, SVG, JPG, JPEG or WEBP.');
-      return;
-    }
-    if (file.size > MAX_UPLOAD_BYTES) {
-      setUploadError('Image is too large. The maximum size is 5 MB.');
-      return;
-    }
-    setUploading(true);
-    try {
-      const { url } = await uploadApi.uploadImage(file);
-      onChange(url);
-    } catch (e) {
-      setUploadError(e instanceof Error ? e.message : 'Upload failed');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    // Reset so selecting the same file again still fires onChange.
-    e.target.value = '';
-    if (file) void pickFile(file);
-  };
-
-  return (
-    <div className="space-y-2">
-      <Label>Landing page logo</Label>
-
-      {/* Source toggle */}
-      <div className="flex gap-4 text-sm">
-        {(['upload', 'url'] as const).map((opt) => (
-          <label key={opt} className="flex cursor-pointer items-center gap-1.5">
-            <input
-              type="radio"
-              name="logo-source"
-              checked={source === opt}
-              onChange={() => {
-                setSource(opt);
-                setUploadError('');
-              }}
-            />
-            {opt === 'upload' ? 'Upload file' : 'External URL'}
-          </label>
-        ))}
-      </div>
-
-      {source === 'upload' ? (
-        <div className="space-y-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept={ACCEPT_ATTR}
-            onChange={onFileChange}
-            className="hidden"
-          />
-          {value ? (
-            <div className="flex items-center gap-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={value}
-                alt="Logo preview"
-                className="h-12 w-12 rounded border bg-accent/20 object-contain p-1"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-              >
-                {uploading ? 'Uploading…' : 'Replace'}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  onChange('');
-                  setUploadError('');
-                }}
-                disabled={uploading}
-              >
-                <X className="h-3.5 w-3.5" />
-                Remove
-              </Button>
-            </div>
-          ) : (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-            >
-              <Upload className="h-3.5 w-3.5" />
-              {uploading ? 'Uploading…' : 'Choose file'}
-            </Button>
-          )}
-          <p className="text-xs text-muted-foreground">
-            PNG, SVG, JPG, JPEG or WEBP · up to 5 MB.
-          </p>
-          <ErrorMessage message={uploadError} />
-        </div>
-      ) : (
-        <div className="space-y-2">
-          <Input
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder="https://example.com/logo.svg"
-          />
-          {value ? (
-            <div className="flex items-center gap-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={value}
-                alt="Logo preview"
-                className="h-12 w-12 rounded border bg-accent/20 object-contain p-1"
-              />
-              <span className="text-xs text-muted-foreground">Live preview</span>
-            </div>
-          ) : null}
-        </div>
-      )}
     </div>
   );
 }
@@ -480,7 +314,12 @@ export function LandingPageEditor({
                   onChange={(v) => set({ monogram: v.slice(0, 2) })}
                 />
               </div>
-              <LogoField value={form.logoUrl} onChange={(v) => set({ logoUrl: v })} />
+              <ImageSourceField
+                label="Landing page logo"
+                value={form.logoUrl}
+                onChange={(v) => set({ logoUrl: v })}
+                placeholder="https://example.com/logo.svg"
+              />
               <div className="grid gap-3 sm:grid-cols-3">
                 <ColorField label="Primary" value={form.primary} onChange={(v) => set({ primary: v })} />
                 <ColorField label="Secondary" value={form.secondary} onChange={(v) => set({ secondary: v })} />
@@ -528,11 +367,12 @@ export function LandingPageEditor({
                 onChange={(v) => set({ heroDescription: v })}
                 textarea
               />
-              <TextField
-                label="Landing page photo (URL, optional)"
+              <ImageSourceField
+                label="Landing page / hero photo (optional)"
                 value={form.heroImageUrl}
                 onChange={(v) => set({ heroImageUrl: v })}
                 placeholder="https://example.com/hero.jpg — replaces the default preview"
+                helpText="Shown as the hero image, replacing the default preview. PNG, SVG, JPG, JPEG or WEBP · up to 5 MB."
               />
               <div className="grid gap-3 sm:grid-cols-2">
                 <TextField label="Primary button" value={form.ctaPrimary} onChange={(v) => set({ ctaPrimary: v })} />
