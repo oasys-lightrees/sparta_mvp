@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { attemptApi } from '@/services/attempt.api';
 import { assessmentApi } from '@/services/assessment.api';
 import { tokenApi } from '@/services/token.api';
+import { voucherApi } from '@/services/voucher.api';
 import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import { AssessmentCard } from '@/components/assessment/AssessmentCard';
 import { TopUpDialog } from '@/components/wallet/TopUpDialog';
@@ -31,7 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { AssessmentSummary, MyAttempt } from '@/types';
+import type { AssessmentSummary, MyAttempt, VoucherBatchSummary } from '@/types';
 
 function StatCard({
   label,
@@ -66,6 +67,7 @@ function DashboardHome() {
   const [attemptsError, setAttemptsError] = useState('');
   const [explore, setExplore] = useState<AssessmentSummary[] | null>(null);
   const [exploreError, setExploreError] = useState('');
+  const [batches, setBatches] = useState<VoucherBatchSummary[]>([]);
   const [balance, setBalance] = useState<number | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [actionError, setActionError] = useState('');
@@ -107,6 +109,13 @@ function DashboardHome() {
           setExploreError(
             err instanceof Error ? err.message : 'Failed to load assessments',
           );
+      }
+      // Team voucher packages (best-effort — HR users who've bought seats).
+      try {
+        const mineBatches = await voucherApi.listBatches();
+        if (active) setBatches(mineBatches);
+      } catch {
+        /* ignore — the section simply stays hidden */
       }
     })();
     return () => {
@@ -319,6 +328,57 @@ function DashboardHome() {
           </Card>
         )}
       </section>
+
+      {/* Team vouchers (HR / company buyers) */}
+      {batches.length > 0 ? (
+        <section className="space-y-4">
+          <div className="space-y-1">
+            <h2 className="text-xl font-semibold tracking-tight">Team vouchers</h2>
+            <p className="text-sm text-muted-foreground">
+              Voucher packages you&apos;ve purchased. Open one to share codes and review
+              your team&apos;s results.
+            </p>
+          </div>
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Company</TableHead>
+                    <TableHead>Assessment</TableHead>
+                    <TableHead>Redeemed</TableHead>
+                    <TableHead>Purchased</TableHead>
+                    <TableHead className="text-right">Manage</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {batches.map((b) => (
+                    <TableRow key={b.batch_id}>
+                      <TableCell className="font-medium">{b.company_name}</TableCell>
+                      <TableCell>{b.assessment_title}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">
+                          {b.redeemed}/{b.credits}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(b.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button asChild size="sm" variant="outline">
+                          <Link href={`/a/${b.assessment_id}/company`}>
+                            View results
+                          </Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </section>
+      ) : null}
 
       {/* Explore Assessments */}
       <section className="space-y-4">
