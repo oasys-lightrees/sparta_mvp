@@ -244,6 +244,10 @@ Recommended Cloudflare settings:
 
 ## 6. Payments (Midtrans)
 
+> **Step-by-step operator guide:** [`docs/MIDTRANS.md`](docs/MIDTRANS.md) —
+> sandbox setup, webhook, test cards, going live, and troubleshooting. The
+> section below is the quick reference.
+
 Token purchases run through **Midtrans Snap**. The backend creates a `PENDING`
 order, hands the browser to Midtrans' hosted checkout, and credits the wallet
 from a **signed server-to-server notification (webhook)** — exactly once, on the
