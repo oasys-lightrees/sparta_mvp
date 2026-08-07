@@ -71,6 +71,8 @@ export function BrandedLanding({
   loginHref = '/login',
   dashboardHref = '/dashboard',
   redeemHref,
+  homeHref = '#top',
+  latoHref = '/',
   accessMode,
   accessTokenCost = 0,
 }: {
@@ -81,6 +83,10 @@ export function BrandedLanding({
   dashboardHref?: string;
   companyHref?: string;
   redeemHref?: string;
+  // The assessment's own landing page (the brand logo links here).
+  homeHref?: string;
+  // The main LATO platform home (the "Back to LATO" button links here).
+  latoHref?: string;
   accessMode?: AccessMode | null;
   accessTokenCost?: number;
 }) {
@@ -116,7 +122,7 @@ export function BrandedLanding({
       {/* NAV */}
       <header className="lato-nav">
         <div className="lato-wrap lato-nav__in">
-          <a className="lato-brand" href="#top" aria-label={brand.brandName}>
+          <a className="lato-brand" href={homeHref} aria-label={brand.brandName}>
             <BrandMark app={app} />
             <span className="lato-brand__n">
               {brand.brandName}
@@ -125,9 +131,12 @@ export function BrandedLanding({
           </a>
           <nav className="lato-links" aria-label="Primary">
             <a href="#products">Products</a>
-            <a href="#top">About</a>
+            <a href={homeHref}>About</a>
           </nav>
           <div className="lato-nav__r">
+            <a href={latoHref} className="lato-btn lato-btn--ghost">
+              ← LATO
+            </a>
             <BrandedAuthChip loginHref={loginHref} dashboardHref={dashboardHref} />
             <details className="lato-mnav">
               <summary aria-label="Menu">
@@ -135,7 +144,8 @@ export function BrandedLanding({
               </summary>
               <div className="lato-mnav__panel">
                 <a href="#products">Products</a>
-                <a href="#why">About</a>
+                <a href={homeHref}>About</a>
+                <a href={latoHref}>← Back to LATO</a>
                 <BrandedAuthChip loginHref={loginHref} dashboardHref={dashboardHref} />
               </div>
             </details>

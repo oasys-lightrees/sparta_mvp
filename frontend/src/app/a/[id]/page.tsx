@@ -97,6 +97,8 @@ export default async function BrandedAssessmentPage({
       dashboardHref={`/a/${id}/dashboard`}
       companyHref={`/a/${id}/company`}
       redeemHref={`/a/${id}/redeem`}
+      homeHref={`/a/${id}`}
+      latoHref="/"
       accessMode={access?.mode ?? null}
       accessTokenCost={access?.access_token_cost ?? 0}
     />
