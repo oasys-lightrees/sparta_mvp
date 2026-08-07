@@ -185,6 +185,11 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Demo assessments — surfaced right below the hero for easy access */}
+      <div id="assessments" className="scroll-mt-20 border-b">
+        <PublishedAssessments />
+      </div>
+
       {/* Problem → Solution */}
       <section className="border-b">
         <div className="container grid gap-8 py-16 md:grid-cols-2 md:py-20">
@@ -361,11 +366,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Demo assessments + blog (live content) */}
-      <div id="assessments" className="scroll-mt-20 border-b">
-        <PublishedAssessments />
-      </div>
 
       {/* AI Growth Report highlight */}
       <section className="border-b bg-primary text-primary-foreground">
