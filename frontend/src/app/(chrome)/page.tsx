@@ -131,7 +131,7 @@ export default function HomePage() {
             </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
               <Button asChild variant="bronze" size="lg">
-                <Link href="/register">
+                <Link href="#assessments">
                   {t('landing.ctaCreate')}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
@@ -412,7 +412,7 @@ export default function HomePage() {
             {t('landing.finalCtaSubtitle')}
           </p>
           <Button asChild size="lg" variant="crimson">
-            <Link href="/register">
+            <Link href="#assessments">
               {t('landing.getStarted')}
               <ArrowRight className="h-4 w-4" />
             </Link>
