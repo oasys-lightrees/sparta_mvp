@@ -290,7 +290,7 @@ export function AssessmentForm({
         value={imageUrl}
         onChange={setImageUrl}
         placeholder="https://example.com/image.jpg"
-        helpText="Optional cover shown on the assessment card. Upload a file or paste a URL. PNG, SVG, JPG, JPEG or WEBP · up to 5 MB."
+        helpText="Optional cover shown on the assessment card. Use a 16:9 (widescreen) image — recommended 1280×720 (min 640×360). It's cropped to fill, so keep the subject centered. PNG, JPG, JPEG or WEBP · up to 5 MB."
       />
       {/* Access model — how takers get to start this assessment. Any cost the
           mode needs (premium unlock for Freemium, access cost for Paid) is set
