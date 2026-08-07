@@ -72,7 +72,6 @@ export function BrandedDashboard({
     );
   }
 
-  const unlocked = attempts?.filter((a) => a.premium_unlocked).length ?? 0;
   const latest = attempts?.[0]?.score;
 
   return (
@@ -99,10 +98,6 @@ export function BrandedDashboard({
           <div className="lato-kpi">
             <div className="lato-kpi__k">Assessments taken</div>
             <div className="lato-kpi__v">{attempts === null ? '—' : attempts.length}</div>
-          </div>
-          <div className="lato-kpi">
-            <div className="lato-kpi__k">Premium reports</div>
-            <div className="lato-kpi__v">{attempts === null ? '—' : unlocked}</div>
           </div>
           <div className="lato-kpi">
             <div className="lato-kpi__k">Token balance</div>
@@ -160,29 +155,23 @@ export function BrandedDashboard({
           </div>
         )}
 
-        {/* Recommendations */}
-        <div className="lato-recs">
-          <div className="lato-card">
-            <div className="lato-card__i">
-              <LatoIcon name="spark" />
-            </div>
-            <h3 style={{ fontWeight: 700 }}>Recommended next</h3>
-            <p style={{ color: 'var(--muted)', fontSize: '.92rem', marginTop: 6 }}>
-              {app.assessment.meta.benefits[0] ??
-                `Keep building on your ${app.brand.brandName} results with the premium blueprint.`}
-            </p>
+        {/* Team vouchers */}
+        <div className="lato-card" style={{ marginTop: 16 }}>
+          <div className="lato-card__i">
+            <LatoIcon name="check" />
           </div>
-          <div className="lato-card">
-            <div className="lato-card__i">
-              <LatoIcon name="download" />
-            </div>
-            <h3 style={{ fontWeight: 700 }}>Your reports</h3>
-            <p style={{ color: 'var(--muted)', fontSize: '.92rem', marginTop: 6 }}>
-              {unlocked > 0
-                ? `You have ${unlocked} premium report${unlocked > 1 ? 's' : ''}. Open one to export a branded PDF.`
-                : 'Unlock a premium report to get your personalized AI blueprint and study resources.'}
-            </p>
-          </div>
+          <h3 style={{ fontWeight: 700 }}>Team vouchers</h3>
+          <p style={{ color: 'var(--muted)', fontSize: '.92rem', marginTop: 6 }}>
+            Buy voucher codes in bulk for your team, share them out, and track
+            everyone&apos;s results in one place.
+          </p>
+          <a
+            href={`/a/${assessmentId}/company`}
+            className="lato-btn lato-btn--grad"
+            style={{ marginTop: 14 }}
+          >
+            Buy &amp; manage team vouchers
+          </a>
         </div>
       </div>
     </BrandedShell>
