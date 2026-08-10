@@ -183,7 +183,7 @@ function DashboardHome() {
         </div>
         <h1 className="text-3xl font-bold tracking-tight">
           {t('dashboard.welcome')}
-          {user?.email ? `, ${user.email.split('@')[0]}` : ''}
+          {user ? `, ${user.name?.trim() || user.email.split('@')[0]}` : ''}
         </h1>
         <p className="text-muted-foreground">{t('dashboard.overview')}</p>
       </div>

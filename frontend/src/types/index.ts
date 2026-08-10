@@ -7,6 +7,7 @@ export type ReportType = 'FREE' | 'PREMIUM';
 
 export type User = {
   id: string;
+  name: string | null;
   email: string;
   role: Role;
 };

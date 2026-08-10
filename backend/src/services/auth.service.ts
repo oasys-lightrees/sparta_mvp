@@ -3,13 +3,13 @@ import { eq } from 'drizzle-orm';
 import { sign } from 'hono/jwt';
 import { db } from '../db/client';
 import { users } from '../db/schema';
-import type { AuthUser, Role } from '../middleware/auth.middleware';
+import type { Role } from '../middleware/auth.middleware';
 import { HttpError } from '../utils/http-error';
 
 const SALT_ROUNDS = 10;
 const TOKEN_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
-type SafeUser = { id: string; email: string; role: Role };
+type SafeUser = { id: string; name: string | null; email: string; role: Role };
 
 export type RegisterInput = {
   name: string;
@@ -24,10 +24,12 @@ export type LoginInput = {
 
 const toSafeUser = (row: {
   id: string;
+  name: string | null;
   email: string;
   role: Role;
 }): SafeUser => ({
   id: row.id,
+  name: row.name,
   email: row.email,
   role: row.role,
 });
@@ -79,6 +81,7 @@ export const register = async (input: RegisterInput): Promise<SafeUser> => {
     })
     .returning({
       id: users.id,
+      name: users.name,
       email: users.email,
       role: users.role,
     });
@@ -98,6 +101,7 @@ export const login = async (
   const [row] = await db
     .select({
       id: users.id,
+      name: users.name,
       email: users.email,
       role: users.role,
       passwordHash: users.passwordHash,
@@ -124,10 +128,11 @@ export const login = async (
 /**
  * Fetch a user by id (used by /me to return a fresh role, not a stale token).
  */
-export const getUserById = async (id: string): Promise<AuthUser> => {
+export const getUserById = async (id: string): Promise<SafeUser> => {
   const [row] = await db
     .select({
       id: users.id,
+      name: users.name,
       email: users.email,
       role: users.role,
     })
