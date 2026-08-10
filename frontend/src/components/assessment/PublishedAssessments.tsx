@@ -42,7 +42,7 @@ export function PublishedAssessments() {
             {t('assessment.availableTitle')}
           </h2>
           <p className="text-muted-foreground">
-            Accept a challenge and start right away — no sign-up needed to take
+            Accept a challenge and start right away. No sign-up needed to take
             it.
           </p>
         </div>
@@ -54,7 +54,7 @@ export function PublishedAssessments() {
       ) : items.length === 0 ? (
         <EmptyState
           title="No assessments available yet"
-          description="Check back soon — new assessments are added regularly."
+          description="Check back soon. New assessments are added regularly."
         />
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

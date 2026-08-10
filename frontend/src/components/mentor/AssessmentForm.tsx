@@ -282,7 +282,7 @@ export function AssessmentForm({
         value={imageUrl}
         onChange={setImageUrl}
         placeholder="https://example.com/image.jpg"
-        helpText="Optional cover shown on the assessment card. Use a 16:9 (widescreen) image — recommended 1280×720 (min 640×360). It's cropped to fill, so keep the subject centered. PNG, JPG, JPEG or WEBP · up to 5 MB."
+        helpText="Optional cover shown on the assessment card. Use a 16:9 (widescreen) image, recommended 1280×720 (min 640×360). It's cropped to fill, so keep the subject centered. PNG, JPG, JPEG or WEBP · up to 5 MB."
       />
       {/* Access model — how takers get to start this assessment. Any cost the
           mode needs (access cost for Paid) is set inside the card, so experts
@@ -354,7 +354,7 @@ export function AssessmentForm({
               (<code>/a/&lt;id&gt;/company</code>), which generates unique voucher
               codes. A taker enters a code on the Redeem page
               (<code>/a/&lt;id&gt;/redeem</code>); redeeming grants them access to
-              start — one code = one seat. Publish the assessment first so those
+              start, one code = one seat. Publish the assessment first so those
               pages are live.
             </p>
           </div>
@@ -470,7 +470,7 @@ export function AssessmentForm({
             <Textarea
               value={c.knowledge}
               onChange={(e) => setCategory(i, { knowledge: e.target.value })}
-              placeholder="Knowledge — what people with this result are like"
+              placeholder="Knowledge: what people with this result are like"
             />
           </div>
         ))}

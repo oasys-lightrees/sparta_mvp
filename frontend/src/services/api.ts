@@ -51,7 +51,7 @@ async function request<T>(
       throw new Error('The request timed out. Please try again.');
     }
     throw new Error(
-      'Network error — please check your connection and try again.',
+      'Network error. Please check your connection and try again.',
     );
   } finally {
     clearTimeout(timer);

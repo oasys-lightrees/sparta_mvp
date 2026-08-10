@@ -31,13 +31,13 @@ const FEATURES = [
     icon: FileText,
     title: 'Branded Landing Pages',
     description:
-      'Every assessment gets its own branded landing page — your logo, colors, copy, cover photo, and products.',
+      'Every assessment gets its own branded landing page with your logo, colors, copy, cover photo, and products.',
   },
   {
     icon: Wallet,
     title: 'Balance Payments',
     description:
-      'Learners top up a wallet balance and spend it to unlock your paid assessments — powered by a real payment gateway.',
+      'Learners top up a wallet balance and spend it to unlock your paid assessments, powered by a real payment gateway.',
   },
   {
     icon: Wand2,
@@ -49,7 +49,7 @@ const FEATURES = [
     icon: TrendingUp,
     title: 'Expert Revenue Tracking',
     description:
-      'See every paid unlock and your total revenue in one clean dashboard — no spreadsheets required.',
+      'See every paid unlock and your total revenue in one clean dashboard. No spreadsheets required.',
   },
   {
     icon: BarChart3,
@@ -61,7 +61,7 @@ const FEATURES = [
     icon: Mail,
     title: 'Email Report Delivery',
     description:
-      'Results are delivered straight to inboxes with your own templated message — automatically after each submission.',
+      'Results are delivered straight to inboxes with your own templated message, automatically after each submission.',
   },
 ];
 
@@ -69,7 +69,7 @@ const MENTOR_STEPS = [
   {
     title: 'Create an assessment',
     description:
-      'Set up your test, thresholds, questions, and pricing — exactly how you want it.',
+      'Set up your test, thresholds, questions, and pricing, exactly how you want it.',
   },
   {
     title: 'Publish & share',
@@ -87,7 +87,7 @@ const USER_STEPS = [
   {
     title: 'Take a challenge',
     description:
-      'Pick an assessment and answer at your own pace — get an instant free result.',
+      'Pick an assessment and answer at your own pace, then get an instant free result.',
   },
   {
     title: 'Get your report',

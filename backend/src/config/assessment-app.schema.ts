@@ -463,7 +463,7 @@ export const defaultAssessmentApp = (
         title: `Know where you stand with ${title}.`,
         subtitle: `${title} measures what matters and turns your result into a personalized AI plan.`,
         description:
-          'Take the assessment for free and get an instant report — with an optional AI deep-dive.',
+          'Take the assessment for free and get an instant report.',
         heroImageUrl: null,
         ctaPrimary: 'Start free assessment',
         ctaSecondary: 'See how it works',
@@ -479,7 +479,7 @@ export const defaultAssessmentApp = (
       },
       features: [
         { icon: 'target', title: 'Discover strengths', body: 'See where you already outperform, backed by your own answers.' },
-        { icon: 'gauge', title: 'Identify gaps', body: 'Pinpoint the specific areas holding you back — no vague feedback.' },
+        { icon: 'gauge', title: 'Identify gaps', body: 'Pinpoint the specific areas holding you back, with no vague feedback.' },
         { icon: 'spark', title: 'Personalized AI insight', body: 'A tailored report written from your responses, not a template.' },
         { icon: 'map', title: 'A clear next step', body: 'Concrete recommendations and a roadmap matched to your level.' },
       ],
@@ -505,7 +505,7 @@ export const defaultAssessmentApp = (
     assessment: {
       intro: {
         title: `Welcome to ${title}`,
-        body: 'Answer honestly — there are no trick questions. Your progress saves automatically.',
+        body: 'Answer honestly; there are no trick questions. Your progress saves automatically.',
       },
       meta: {
         estimatedMinutes: input.estimatedMinutes ?? 12,
@@ -557,7 +557,7 @@ export const defaultAssessmentApp = (
       reportReady: { subject: `Your ${name} result`, heading: 'Your report is ready', body: 'View your score, level, and personalized summary.' },
     },
     seo: {
-      title: `${name} — ${title}`,
+      title: `${name} - ${title}`,
       description: input.description?.trim() || `Take ${title}: an AI-powered assessment with an instant free report and a personalized premium blueprint.`,
       keywords: [name.toLowerCase(), 'assessment', 'ai report'],
       ogImageUrl: null,

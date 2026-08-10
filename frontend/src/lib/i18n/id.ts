@@ -17,7 +17,7 @@ export const id: Record<TranslationKey, string> = {
   'landing.heroTitlePrefix': 'Kenali diri. Latih potensi Anda.',
   'landing.heroTitleHighlight': 'Jadi lebih kuat.',
   'landing.heroSubtitle':
-    'Setiap pelajar butuh umpan balik; setiap transformasi dimulai dari pengukuran. LATO mengubah asesmen yang jujur menjadi Cetak Biru Pertumbuhan — dan rencana untuk menjalankannya.',
+    'Setiap pelajar butuh umpan balik; setiap transformasi dimulai dari pengukuran. LATO mengubah asesmen yang jujur menjadi Cetak Biru Pertumbuhan, dan rencana untuk menjalankannya.',
   'landing.ctaCreate': 'Mulai latihan Anda',
   'landing.ctaDemo': 'Lihat cara kerjanya',
   // Hero blueprint preview
@@ -27,8 +27,8 @@ export const id: Record<TranslationKey, string> = {
   'landing.metricPotential': 'Potensi',
   'landing.problemTitle': 'Banyak orang hanya menebak posisi mereka.',
   'landing.problemBody':
-    'Tanpa umpan balik yang jujur dan rencana yang jelas, pertumbuhan terhenti. Kursus umum tidak pernah menunjukkan kekuatan asli Anda — atau celah yang menghambat.',
-  'landing.solutionTitle': 'LATO mengukurnya — lalu memberi Anda rencana.',
+    'Tanpa umpan balik yang jujur dan rencana yang jelas, pertumbuhan terhenti. Kursus umum tidak pernah menunjukkan kekuatan asli Anda, atau celah yang menghambat.',
+  'landing.solutionTitle': 'LATO mengukurnya, lalu memberi Anda rencana.',
   'landing.solutionBody':
     'Terima tantangan latihan, dapatkan gambaran objektif tentang posisi Anda, dan terima Cetak Biru Pertumbuhan yang mengubah hasil menjadi langkah nyata.',
   'landing.featuresTitle': 'Semua yang Anda butuhkan untuk berlatih dan berkembang',
@@ -49,7 +49,7 @@ export const id: Record<TranslationKey, string> = {
   'dashboard.commandCenter': 'Pusat Komando',
   'dashboard.welcome': 'Selamat datang kembali',
   'dashboard.overview':
-    'Perjalanan pertumbuhan Anda berlanjut — pilih tantangan berikutnya.',
+    'Perjalanan pertumbuhan Anda berlanjut. Pilih tantangan berikutnya.',
   'dashboard.balance': 'Saldo Dompet',
   'dashboard.topUp': 'Isi Saldo',
   'dashboard.toppingUp': 'Mengisi…',

@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'LATO — LighTech Assessment Tool',
+    name: 'LATO - LighTech Assessment Tool',
     short_name: 'LATO',
     description:
       'Create assessments, deliver clear reports, and monetize your expertise.',

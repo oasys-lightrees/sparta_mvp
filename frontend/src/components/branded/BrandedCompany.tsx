@@ -162,7 +162,7 @@ export function BrandedCompany({
           </div>
           <p style={{ color: 'var(--muted)', fontSize: '.92rem', marginTop: 4 }}>
             Buy a seat package from your balance. We generate one unique code per
-            seat — share them with employees; each code unlocks one assessment and
+            seat to share with employees; each code unlocks one assessment and
             results roll up here.
           </p>
 

@@ -233,7 +233,7 @@ export function ProductEditor({
       setEditing(false);
       setNotice(
         saved.status === 'PUBLISHED'
-          ? 'Product saved and published — its tiers are live on the landing page.'
+          ? 'Product saved and published. Its tiers are live on the landing page.'
           : 'Product saved as a draft.',
       );
     } catch (e) {
@@ -271,7 +271,7 @@ export function ProductEditor({
         <div className="space-y-1">
           <CardTitle>Product &amp; pricing</CardTitle>
           <CardDescription>
-            Package this assessment into pricing tiers — each a card with its own
+            Package this assessment into pricing tiers, each a card with its own
             title, price (in Rupiah), button and image, and a pricing type (free,
             paid, or voucher).
           </CardDescription>
@@ -523,7 +523,7 @@ export function ProductEditor({
               </div>
               <p className="rounded-md border border-dashed bg-accent/20 px-3 py-2 text-xs text-muted-foreground">
                 Batch/seat packages a company buys from their balance to get voucher
-                codes. Price each package in Rupiah — set it cheaper per seat than the
+                codes. Price each package in Rupiah, set it cheaper per seat than the
                 individual cost. Buyers purchase these from their dashboard&apos;s
                 Team-vouchers section.
               </p>

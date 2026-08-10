@@ -35,7 +35,7 @@ export function ShareAssessment({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setError('Could not copy automatically — select and copy the link above.');
+      setError('Could not copy automatically. Select and copy the link above.');
     }
   };
 
@@ -48,7 +48,7 @@ export function ShareAssessment({
         </CardTitle>
         <CardDescription>
           {isPublished
-            ? 'This links to your assessment’s landing page — anyone can open it and take the assessment, no sign-up required.'
+            ? 'This links to your assessment’s landing page. Anyone can open it and take the assessment, no sign-up required.'
             : 'Publish this assessment to make its landing page live at this link.'}
         </CardDescription>
       </CardHeader>

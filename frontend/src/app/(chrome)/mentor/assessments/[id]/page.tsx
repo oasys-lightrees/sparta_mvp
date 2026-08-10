@@ -101,7 +101,7 @@ function DetailView({ id }: { id: string }) {
       await loadDetail();
       setNotice(
         next === 'PUBLISHED'
-          ? 'Assessment published — your share link is now live.'
+          ? 'Assessment published. Your share link is now live.'
           : 'Assessment unpublished.',
       );
     } catch (err) {

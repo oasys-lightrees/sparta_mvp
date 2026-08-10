@@ -66,7 +66,7 @@ const CATEGORY: Record<Band, string> = {
   HIGH: 'Advanced',
 };
 const SUMMARY: Record<Band, string> = {
-  LOW: 'You are getting started — focus on building the fundamentals.',
+  LOW: 'You are getting started, so focus on building the fundamentals.',
   MEDIUM: 'You have a solid foundation with clear room to grow.',
   HIGH: 'You show strong proficiency in this area.',
 };
@@ -84,7 +84,7 @@ const renderFree = (title: string, score: number): string => {
 // The demo mentor persona — owns all three assessments so logging in as the
 // mentor immediately shows a full dashboard (assessments, revenue, analytics).
 const MENTOR = {
-  name: 'Sarah Chen — AI Career Coach',
+  name: 'Sarah Chen, AI Career Coach',
   email: 'mentor@lato.demo',
 };
 
@@ -152,7 +152,7 @@ const SHOWCASE: Record<string, Showcase> = {
     testimonials: [
       { quote: 'Meridian named a blind spot I’d been dancing around for years. The coaching moves were spot on.', name: 'Elena Ruiz', role: 'VP Engineering', company: 'Everline' },
       { quote: 'We mapped our whole leadership team in a week. The shared vocabulary changed how we run meetings.', name: 'Tom Bradley', role: 'COO', company: 'Harborlight' },
-      { quote: 'No right answers, no judgment — just an honest mirror. Rare in this category.', name: 'Aisha Khan', role: 'Director of Ops', company: 'Terra' },
+      { quote: 'No right answers, no judgment, just an honest mirror. Rare in this category.', name: 'Aisha Khan', role: 'Director of Ops', company: 'Terra' },
     ],
   },
   'Sales Skill Assessment': {
@@ -330,7 +330,7 @@ const ASSESSMENTS: AssessmentSeed[] = [
   {
     title: 'Sales Skill Assessment',
     description:
-      'Understand your natural sales strengths — from rapport and discovery to resilience and closing.',
+      'Understand your natural sales strengths, from rapport and discovery to resilience and closing.',
     imageUrl:
       'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&q=80',
     price: 29,
@@ -378,9 +378,9 @@ const BLOGS = [
     title: 'Are You Ready for Your First AI Engineering Role?',
     slug: 'ready-for-first-ai-engineering-role',
     excerpt:
-      'The skills that actually get you hired as an AI engineer — and a simple way to find your gaps before the interview.',
+      'The skills that actually get you hired as an AI engineer, and a simple way to find your gaps before the interview.',
     content:
-      'Breaking into AI engineering is less about knowing every paper and more about a handful of durable skills.\n\nYou need solid Python, a real grasp of how models train and fail, and the ability to ship and monitor a service in production. Add clear thinking about data quality and evaluation, and you are most of the way there.\n\nThe fastest way forward is to find your specific gaps — then close them one at a time.',
+      'Breaking into AI engineering is less about knowing every paper and more about a handful of durable skills.\n\nYou need solid Python, a real grasp of how models train and fail, and the ability to ship and monitor a service in production. Add clear thinking about data quality and evaluation, and you are most of the way there.\n\nThe fastest way forward is to find your specific gaps, then close them one at a time.',
     cover_image_url:
       'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800',
   },
@@ -388,9 +388,9 @@ const BLOGS = [
     title: 'What Great Leaders Actually Do Differently',
     slug: 'great-leaders-do-differently',
     excerpt:
-      'Leadership is not a title — it is a set of everyday behaviours. We break down the habits that set the best leaders apart.',
+      'Leadership is not a title; it is a set of everyday behaviours. We break down the habits that set the best leaders apart.',
     content:
-      'The best leaders we have worked with share a few unglamorous habits.\n\nThey communicate context, not just instructions. They make decisions and explain the why. They give credit generously and absorb blame willingly. And they create room for others to lead.\n\nNone of this requires a corner office — it starts wherever you are today.',
+      'The best leaders we have worked with share a few unglamorous habits.\n\nThey communicate context, not just instructions. They make decisions and explain the why. They give credit generously and absorb blame willingly. And they create room for others to lead.\n\nNone of this requires a corner office; it starts wherever you are today.',
     cover_image_url:
       'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800',
   },
@@ -640,22 +640,22 @@ async function seed() {
         D: {
           name: 'Dominant',
           knowledge:
-            'Direct, results-driven and decisive. You take charge, move fast, and thrive on challenge — growth comes from patience and listening.',
+            'Direct, results-driven and decisive. You take charge, move fast, and thrive on challenge; growth comes from patience and listening.',
         },
         I: {
           name: 'Influencer',
           knowledge:
-            'Outgoing, persuasive and optimistic. You energize people and build relationships — growth comes from follow-through and detail.',
+            'Outgoing, persuasive and optimistic. You energize people and build relationships; growth comes from follow-through and detail.',
         },
         S: {
           name: 'Steady',
           knowledge:
-            'Patient, dependable and supportive. You bring calm and consistency to teams — growth comes from embracing change and speaking up.',
+            'Patient, dependable and supportive. You bring calm and consistency to teams; growth comes from embracing change and speaking up.',
         },
         C: {
           name: 'Conscientious',
           knowledge:
-            'Analytical, precise and quality-focused. You value accuracy and structure — growth comes from decisiveness and flexibility.',
+            'Analytical, precise and quality-focused. You value accuracy and structure; growth comes from decisiveness and flexibility.',
         },
       };
 
@@ -710,7 +710,7 @@ async function seed() {
           I: [
             vid('i-1', 'Communication Mastery', 'Turn your energy into influence.', 'https://www.youtube.com/watch?v=aircAruvnKk', 'youtube', '11 min', 'free'),
             vid('i-2', 'Public Speaking', 'Command a room with confidence.', 'https://vimeo.com/76979871', 'vimeo', '18 min', 'premium'),
-            doc('article', 'i-3', 'Sales Psychology', 'Why people say yes — and how to help them.', 'https://example.com/disc/i-sales', 'free'),
+            doc('article', 'i-3', 'Sales Psychology', 'Why people say yes, and how to help them.', 'https://example.com/disc/i-sales', 'free'),
             doc('course', 'i-4', 'Networking that Sticks', 'Build a network that compounds.', 'https://example.com/disc/i-course', 'premium'),
           ],
           S: [
@@ -783,7 +783,7 @@ async function seed() {
           mentorId,
           title: 'DISC Personality Profile',
           description:
-            'Discover your dominant working style — Dominant, Influencer, Steady or Conscientious — and get a learning path tailored to your result.',
+            'Discover your dominant working style (Dominant, Influencer, Steady or Conscientious) and get a learning path tailored to your result.',
           imageUrl:
             'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80',
           status: 'PUBLISHED',
@@ -886,7 +886,7 @@ async function seed() {
         email: GUESTS[0],
         phone: '+1 555 0142',
         message:
-          'Loved the AI Engineer Readiness assessment — do you offer team packages for our bootcamp?',
+          'Loved the AI Engineer Readiness assessment. Do you offer team packages for our bootcamp?',
         status: 'NEW',
       },
       {
@@ -909,7 +909,7 @@ async function seed() {
   console.log('✅ Demo seed complete.');
   console.log('   Password for all accounts: %s', DEMO_PASSWORD);
   console.log('   ADMIN  -> admin@lato.demo');
-  console.log('   MENTOR -> mentor@lato.demo (Sarah Chen — AI Career Coach)');
+  console.log('   MENTOR -> mentor@lato.demo (Sarah Chen, AI Career Coach)');
   console.log('   USER   -> user@lato.demo (+ 5 named users)');
   console.log('   3 published assessments (10 questions each, AI enabled)');
   console.log('   Historical attempts across beginner/intermediate/advanced');

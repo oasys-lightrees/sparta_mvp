@@ -13,7 +13,7 @@ const sora = Sora({
 });
 
 const APP_NAME = 'LATO';
-const APP_TITLE = 'LATO — LighTech Assessment Tool';
+const APP_TITLE = 'LATO - LighTech Assessment Tool';
 const APP_DESCRIPTION =
   'Create assessments, deliver clear reports, and monetize your expertise.';
 

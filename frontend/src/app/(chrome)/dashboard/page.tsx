@@ -130,7 +130,7 @@ function DashboardHome() {
         setBalance(order.balance);
         if (order.status === 'PAID') {
           setActionNotice(
-            `Payment received — ${formatIdr(order.amount)} added. Balance: ${formatIdr(order.balance)}.`,
+            `Payment received. ${formatIdr(order.amount)} added. Balance: ${formatIdr(order.balance)}.`,
           );
         } else if (order.status === 'PENDING') {
           setActionNotice(
@@ -161,7 +161,7 @@ function DashboardHome() {
       // Demo fallback (gateway not configured): credited immediately.
       setBalance(result.balance);
       setTopUpOpen(false);
-      setActionNotice(`Added ${formatIdr(amount)} — your balance is now ${formatIdr(result.balance)}.`);
+      setActionNotice(`Added ${formatIdr(amount)}. Your balance is now ${formatIdr(result.balance)}.`);
     } catch (err) {
       setTopUpError(err instanceof Error ? err.message : 'Top-up failed');
     } finally {

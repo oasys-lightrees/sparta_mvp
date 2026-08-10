@@ -16,7 +16,7 @@ export const en = {
   'landing.heroTitlePrefix': 'Know yourself. Train your potential.',
   'landing.heroTitleHighlight': 'Become stronger.',
   'landing.heroSubtitle':
-    'Every learner needs feedback; every transformation starts with measurement. LATO turns an honest assessment into a Growth Blueprint — and a plan to act on it.',
+    'Every learner needs feedback; every transformation starts with measurement. LATO turns an honest assessment into a Growth Blueprint, and a plan to act on it.',
   'landing.ctaCreate': 'Begin your training',
   'landing.ctaDemo': 'See how it works',
   // Hero blueprint preview
@@ -26,8 +26,8 @@ export const en = {
   'landing.metricPotential': 'Potential',
   'landing.problemTitle': 'Most people guess at where they stand.',
   'landing.problemBody':
-    'Without honest feedback and a clear plan, growth stalls. Generic courses never tell you your real strengths — or the gaps holding you back.',
-  'landing.solutionTitle': 'LATO measures it — then gives you a plan.',
+    'Without honest feedback and a clear plan, growth stalls. Generic courses never tell you your real strengths, or the gaps holding you back.',
+  'landing.solutionTitle': 'LATO measures it, then gives you a plan.',
   'landing.solutionBody':
     'Accept a training challenge, get an objective read on where you stand, and receive a Growth Blueprint that turns your results into concrete next steps.',
   'landing.featuresTitle': 'Everything you need to train and grow',
@@ -48,7 +48,7 @@ export const en = {
   'dashboard.commandCenter': 'Command Center',
   'dashboard.welcome': 'Welcome back',
   'dashboard.overview':
-    'Your growth journey continues — pick your next challenge.',
+    'Your growth journey continues. Pick your next challenge.',
   'dashboard.balance': 'Wallet Balance',
   'dashboard.topUp': 'Top Up Balance',
   'dashboard.toppingUp': 'Topping up…',
