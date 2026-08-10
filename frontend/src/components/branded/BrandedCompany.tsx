@@ -95,16 +95,13 @@ export function BrandedCompany({
       .catch(() => {});
   };
 
-  const right = (
-    <a href={`/a/${assessmentId}`} style={{ color: 'inherit' }}>
-      {app.brand.brandName}
-    </a>
-  );
+  const home = `/a/${assessmentId}`;
+  const dashboardBack = { href: `${home}/dashboard`, label: 'Dashboard' };
 
   if (!authLoading && !user) {
     const next = encodeURIComponent(`/a/${assessmentId}/company`);
     return (
-      <BrandedShell app={app} right={right}>
+      <BrandedShell app={app} homeHref={home}>
         <div className="lato-intro">
           <div className="lato-card__i" style={{ margin: '0 auto 16px' }}>
             <LatoIcon name="lock" />
@@ -129,7 +126,7 @@ export function BrandedCompany({
   const a = selected?.analytics;
 
   return (
-    <BrandedShell app={app} right={right}>
+    <BrandedShell app={app} homeHref={home} back={dashboardBack}>
       <div className="lato-dash">
         <div className="lato-dash__head">
           <div>

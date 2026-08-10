@@ -42,16 +42,12 @@ export function BrandedDashboard({
     };
   }, [user, authLoading, assessmentId]);
 
-  const right = (
-    <a href={`/a/${assessmentId}`} style={{ color: 'inherit' }}>
-      {app.brand.brandName}
-    </a>
-  );
+  const home = `/a/${assessmentId}`;
 
   if (!authLoading && !user) {
     const next = encodeURIComponent(`/a/${assessmentId}/dashboard`);
     return (
-      <BrandedShell app={app} right={right}>
+      <BrandedShell app={app} homeHref={home}>
         <div className="lato-intro">
           <div className="lato-card__i" style={{ margin: '0 auto 16px' }}>
             <LatoIcon name="lock" />
@@ -76,7 +72,7 @@ export function BrandedDashboard({
   const latest = attempts?.[0]?.score;
 
   return (
-    <BrandedShell app={app} right={right}>
+    <BrandedShell app={app} homeHref={home}>
       <div className="lato-dash">
         <div className="lato-dash__head">
           <div>

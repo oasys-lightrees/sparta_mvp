@@ -203,18 +203,13 @@ export function BrandedTake({
     }
   };
 
-  const backToStart = (
-    <a href={`/a/${assessmentId}`} className="lato-topbar__r" style={{ color: 'inherit' }}>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-        <LatoIcon name="arrowLeft" size={15} /> Exit
-      </span>
-    </a>
-  );
+  const home = `/a/${assessmentId}`;
+  const exitBack = { href: home, label: 'Exit' };
 
   // loading / error
   if (error && !detail) {
     return (
-      <BrandedShell app={app}>
+      <BrandedShell app={app} homeHref={home}>
         <div className="lato-note" style={{ maxWidth: 520, margin: '40px auto' }}>
           {error}
         </div>
@@ -223,7 +218,7 @@ export function BrandedTake({
   }
   if (!detail) {
     return (
-      <BrandedShell app={app}>
+      <BrandedShell app={app} homeHref={home}>
         <div className="lato-loading">
           <div className="lato-spinner" />
         </div>
@@ -234,7 +229,7 @@ export function BrandedTake({
   // submitting / completion
   if (phase === 'submitting') {
     return (
-      <BrandedShell app={app} right={backToStart}>
+      <BrandedShell app={app} homeHref={home}>
         <div className="lato-loading">
           <div className="lato-spinner" />
           <h3 style={{ fontSize: '1.3rem' }}>{app.assessment.completion.title}</h3>
@@ -251,7 +246,7 @@ export function BrandedTake({
   // intro
   if (phase === 'intro') {
     return (
-      <BrandedShell app={app} right={backToStart}>
+      <BrandedShell app={app} homeHref={home} back={exitBack}>
         <div className="lato-intro">
           <span className="lato-eyebrow" style={{ justifyContent: 'center' }}>
             {app.brand.brandName}
@@ -309,7 +304,7 @@ export function BrandedTake({
 
   // taking
   return (
-    <BrandedShell app={app} right={backToStart}>
+    <BrandedShell app={app} homeHref={home} back={exitBack}>
       <div className="lato-take">
         <div className="lato-take__bar">
           <div className="lato-prog">

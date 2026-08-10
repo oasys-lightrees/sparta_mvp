@@ -243,6 +243,12 @@
 .lato-topbar{position:sticky;top:0;z-index:40;backdrop-filter:saturate(180%) blur(14px);background:color-mix(in srgb,var(--ground) 82%,transparent);border-bottom:1px solid var(--line)}
 .lato-topbar__in{max-width:1000px;margin:0 auto;height:60px;display:flex;align-items:center;gap:14px;padding:0 24px}
 .lato-topbar__r{margin-left:auto;display:flex;align-items:center;gap:12px;color:var(--muted);font-size:.85rem}
+/* Clickable brand mark (links home). Keep the default cursor/spacing, just add affordance. */
+.lato-brand--link{text-decoration:none;color:inherit;border-radius:10px;transition:opacity .15s ease}
+.lato-brand--link:hover{opacity:.82}
+/* One consistent back/exit control for every branded sub-page. */
+.lato-back{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:.9rem;color:var(--ink-2);padding:.45em .7em;border-radius:9px;border:1px solid transparent;transition:background .15s ease,color .15s ease,border-color .15s ease;text-decoration:none;white-space:nowrap}
+.lato-back:hover{color:var(--b1);background:color-mix(in srgb,var(--b1) 8%,transparent);border-color:color-mix(in srgb,var(--b1) 22%,transparent)}
 .lato-stage{max-width:1000px;margin:0 auto;padding:34px 24px 100px}
 
 /* ---- take flow ---- */

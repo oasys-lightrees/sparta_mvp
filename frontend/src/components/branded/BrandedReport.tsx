@@ -206,17 +206,14 @@ export function BrandedReport({
     };
   }, [attemptId, user, authLoading]);
 
-  const dashRight = (
-    <a href={`/a/${assessmentId}`} style={{ color: 'inherit' }}>
-      {app.brand.brandName}
-    </a>
-  );
+  const home = `/a/${assessmentId}`;
+  const dashboardBack = { href: `${home}/dashboard`, label: 'Dashboard' };
 
   // auth gate (report is tied to an account)
   if (!authLoading && !user) {
     const next = encodeURIComponent(`/a/${assessmentId}/report/${attemptId}`);
     return (
-      <BrandedShell app={app} right={dashRight}>
+      <BrandedShell app={app} homeHref={home}>
         <div className="lato-intro">
           <div className="lato-card__i" style={{ margin: '0 auto 16px' }}>
             <LatoIcon name="lock" />
@@ -240,7 +237,7 @@ export function BrandedReport({
 
   if (loading) {
     return (
-      <BrandedShell app={app} right={dashRight}>
+      <BrandedShell app={app} homeHref={home} back={dashboardBack}>
         <div className="lato-loading">
           <div className="lato-spinner" />
         </div>
@@ -249,7 +246,7 @@ export function BrandedReport({
   }
   if (error || !report) {
     return (
-      <BrandedShell app={app} right={dashRight}>
+      <BrandedShell app={app} homeHref={home} back={dashboardBack}>
         <div className="lato-note" style={{ maxWidth: 520, margin: '40px auto' }}>
           {error || 'Report not found.'}
         </div>
@@ -264,7 +261,7 @@ export function BrandedReport({
   const embed = report.study_video_url ? embedUrl(report.study_video_url) : null;
 
   return (
-    <BrandedShell app={app} right={dashRight}>
+    <BrandedShell app={app} homeHref={home} back={dashboardBack}>
       <div className="lato-report">
         <span className="lato-eyebrow">{app.reports.free.title}</span>
         <h2 className="lato-h" style={{ marginBottom: 20 }}>
@@ -328,12 +325,6 @@ export function BrandedReport({
           lockedCount={0}
           profileName={report.result_profile?.name ?? null}
         />
-
-        <div style={{ marginTop: 26 }}>
-          <a href={`/a/${assessmentId}/dashboard`} className="lato-btn lato-btn--ghost">
-            Go to my dashboard
-          </a>
-        </div>
       </div>
     </BrandedShell>
   );

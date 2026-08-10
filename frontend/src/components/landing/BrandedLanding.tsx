@@ -73,7 +73,6 @@ export function BrandedLanding({
   dashboardHref = '/dashboard',
   redeemHref,
   homeHref = '#top',
-  latoHref = '/',
   accessMode,
   accessCost = 0,
 }: {
@@ -86,8 +85,6 @@ export function BrandedLanding({
   redeemHref?: string;
   // The assessment's own landing page (the brand logo links here).
   homeHref?: string;
-  // The main LATO platform home (the "Back to LATO" button links here).
-  latoHref?: string;
   accessMode?: AccessMode | null;
   accessCost?: number;
 }) {
@@ -135,9 +132,6 @@ export function BrandedLanding({
             <a href={homeHref}>About</a>
           </nav>
           <div className="lato-nav__r">
-            <a href={latoHref} className="lato-btn lato-btn--ghost">
-              ← LATO
-            </a>
             <BrandedAuthChip loginHref={loginHref} dashboardHref={dashboardHref} />
             <details className="lato-mnav">
               <summary aria-label="Menu">
@@ -146,7 +140,6 @@ export function BrandedLanding({
               <div className="lato-mnav__panel">
                 <a href="#products">Products</a>
                 <a href={homeHref}>About</a>
-                <a href={latoHref}>← Back to LATO</a>
                 <BrandedAuthChip loginHref={loginHref} dashboardHref={dashboardHref} />
               </div>
             </details>
