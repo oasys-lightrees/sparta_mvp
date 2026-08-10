@@ -63,11 +63,11 @@ const DEFAULT_TIERS = (): PricingTier[] => [
     ctaLabel: 'Start assessment',
   }),
   makeTier({
-    id: 'premium',
-    title: 'Premium',
-    description: 'Unlock the full personalized AI report.',
-    kind: 'FREEMIUM',
-    ctaLabel: 'Get premium',
+    id: 'paid',
+    title: 'Full access',
+    description: 'Unlock full access to this assessment.',
+    kind: 'PAID',
+    ctaLabel: 'Get access',
     highlight: true,
   }),
   makeTier({
@@ -382,10 +382,10 @@ export function ProductEditor({
               </div>
               <p className="rounded-md border border-dashed bg-accent/20 px-3 py-2 text-xs text-muted-foreground">
                 Token prices are charged for real. Saving sets this assessment&apos;s
-                access from the tiers: a <strong>Freemium</strong> tier&apos;s tokens
-                become the premium-report cost, a <strong>Paid</strong> tier&apos;s
-                tokens the start-access cost, and a <strong>Voucher</strong> tier makes
-                the assessment voucher-gated.
+                access from the tiers: a <strong>Paid</strong> tier&apos;s tokens
+                become the start-access cost, a <strong>Voucher</strong> tier makes
+                the assessment redeemable with a code, and a <strong>Free</strong> tier
+                keeps it open to everyone.
               </p>
 
               {form.tiers.map((tier, i) => (
@@ -426,7 +426,7 @@ export function ProductEditor({
                       <Input
                         value={tier.title}
                         onChange={(e) => setTier(i, { title: e.target.value })}
-                        placeholder="e.g. Premium"
+                        placeholder="e.g. Full access"
                       />
                     </div>
                     <div className="space-y-1.5">

@@ -30,9 +30,7 @@ export function ReportView({ data }: { data: AttemptReport }) {
         <div className="flex items-center gap-2 text-bronze">
           <LatoMark className="h-5 w-5" withGlyph={false} />
           <span className="font-display text-xs font-semibold uppercase tracking-[0.22em]">
-            {data.report.type === 'PREMIUM'
-              ? t('report.premiumReport')
-              : t('report.blueprintEyebrow')}
+            {t('report.blueprintEyebrow')}
           </span>
         </div>
         <p className="mt-3 text-sm text-primary-foreground/70">

@@ -215,7 +215,7 @@ export function BrandedLanding({
                   <span className="lato-preview__dot" />
                   <span className="lato-preview__dot" />
                   <span className="lato-preview__dot" />
-                  <span className="lato-preview__tag">AI Report</span>
+                  <span className="lato-preview__tag">Report</span>
                 </div>
                 <div className="lato-prow">
                   <div className="lato-ring">

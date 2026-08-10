@@ -17,11 +17,11 @@ export const id: Record<TranslationKey, string> = {
   'landing.heroTitlePrefix': 'Kenali diri. Latih potensi Anda.',
   'landing.heroTitleHighlight': 'Jadi lebih kuat.',
   'landing.heroSubtitle':
-    'Setiap pelajar butuh umpan balik; setiap transformasi dimulai dari pengukuran. LATO mengubah asesmen yang jujur menjadi Cetak Biru Pertumbuhan AI — dan rencana untuk menjalankannya.',
+    'Setiap pelajar butuh umpan balik; setiap transformasi dimulai dari pengukuran. LATO mengubah asesmen yang jujur menjadi Cetak Biru Pertumbuhan — dan rencana untuk menjalankannya.',
   'landing.ctaCreate': 'Mulai latihan Anda',
   'landing.ctaDemo': 'Lihat cara kerjanya',
   // Hero blueprint preview
-  'landing.blueprintTitle': 'Cetak Biru Pertumbuhan AI',
+  'landing.blueprintTitle': 'Cetak Biru Pertumbuhan',
   'landing.metricStrength': 'Kekuatan',
   'landing.metricDiscipline': 'Disiplin',
   'landing.metricPotential': 'Potensi',
@@ -30,16 +30,13 @@ export const id: Record<TranslationKey, string> = {
     'Tanpa umpan balik yang jujur dan rencana yang jelas, pertumbuhan terhenti. Kursus umum tidak pernah menunjukkan kekuatan asli Anda — atau celah yang menghambat.',
   'landing.solutionTitle': 'LATO mengukurnya — lalu memberi Anda rencana.',
   'landing.solutionBody':
-    'Terima tantangan latihan, dapatkan gambaran objektif tentang posisi Anda, dan terima Cetak Biru Pertumbuhan AI yang mengubah hasil menjadi langkah nyata.',
+    'Terima tantangan latihan, dapatkan gambaran objektif tentang posisi Anda, dan terima Cetak Biru Pertumbuhan yang mengubah hasil menjadi langkah nyata.',
   'landing.featuresTitle': 'Semua yang Anda butuhkan untuk berlatih dan berkembang',
   'landing.howTitle': 'Latih. Ukur. Tingkatkan.',
-  'landing.aiReportTitle': 'Cetak Biru Pertumbuhan AI Anda',
-  'landing.aiReportBody':
-    'Lebih dari sekadar skor — cetak biru pribadi: kekuatan, celah, rekomendasi yang jelas, dan peta jalan 30 hari untuk menjadi lebih kuat.',
-  'landing.pricingTitle': 'Gratis untuk memulai, Elite Insight saat dibutuhkan',
+  'landing.pricingTitle': 'Gratis untuk memulai, token untuk tantangan berbayar',
   'landing.finalCtaTitle': 'Cari tahu seberapa kuat Anda hari ini',
   'landing.finalCtaSubtitle':
-    'Terima tantangan pertama Anda, klaim Cetak Biru Pertumbuhan AI, dan mulailah berlatih dengan tujuan.',
+    'Terima tantangan pertama Anda, klaim Cetak Biru Pertumbuhan, dan mulailah berlatih dengan tujuan.',
   'landing.getStarted': 'Mulai latihan Anda',
 
   // Assessment cards (tantangan yang Anda terima)
@@ -57,13 +54,12 @@ export const id: Record<TranslationKey, string> = {
   'dashboard.topUp': 'Isi Token',
   'dashboard.toppingUp': 'Mengisi…',
   'dashboard.assessmentsTaken': 'Tantangan Selesai',
-  'dashboard.reportsAvailable': 'Wawasan Terbuka',
+  'dashboard.reportsAvailable': 'Laporan',
   'dashboard.myAssessments': 'Perjalanan Pertumbuhan Anda',
   'dashboard.exploreAssessments': 'Tantangan Latihan',
   'dashboard.colAssessment': 'Tantangan',
   'dashboard.colScore': 'Indeks Kekuatan',
   'dashboard.colDate': 'Tanggal',
-  'dashboard.colPremium': 'Elite Insight',
   'dashboard.colReport': 'Cetak Biru',
   'dashboard.viewReport': 'Lihat Cetak Biru',
   'dashboard.unlocked': '✓ Terbuka',
@@ -76,16 +72,9 @@ export const id: Record<TranslationKey, string> = {
   'report.totalScore': 'Indeks Kekuatan',
   'report.yourResult': 'Hasil Anda',
   'report.reportType': 'CETAK BIRU',
-  'report.premiumReport': 'Elite Insight',
-  'report.premiumUnlockedNote':
-    '✓ Terbuka — berikut analisis personal Anda.',
-  'report.premiumDescription':
-    'Pelajari lebih dalam dengan uraian kekuatan, kekurangan, dan rencana 30 hari yang dipersonalisasi oleh AI.',
-  'report.unlocking': 'Membuka…',
-  'report.unlockCta': 'Buka Elite Insight',
   'report.studyVideoTitle': 'Video pembuka',
   'report.studyVideoDescription':
-    'Video pembuka dari mentor Anda untuk asesmen ini.',
+    'Video pembuka dari ahli Anda untuk asesmen ini.',
   'report.resourcesTitle': 'Sumber Belajar',
   'report.resourcesPathTitle': 'Jalur Belajar Personal Anda',
   'report.resourcesDescription':
@@ -103,7 +92,7 @@ export const id: Record<TranslationKey, string> = {
   'take.submit': 'Kirim',
   'take.submitting': 'Mengirim…',
 
-  // Mentor / admin headings
-  'mentor.dashboard': 'Dasbor Mentor',
+  // Expert / admin headings
+  'mentor.dashboard': 'Dasbor Ahli',
   'admin.dashboard': 'Dasbor Admin',
 };

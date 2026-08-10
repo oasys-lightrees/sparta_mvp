@@ -125,7 +125,7 @@ export function TopUpDialog({
         </div>
 
         <p className="mb-3 text-sm text-muted-foreground">
-          Tokens unlock premium reports and paid assessments. Choose an amount:
+          Tokens unlock paid assessments and voucher packages. Choose an amount:
         </p>
 
         <div className="grid grid-cols-4 gap-2">

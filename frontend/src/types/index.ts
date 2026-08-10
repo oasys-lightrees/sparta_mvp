@@ -306,14 +306,6 @@ export type MentorQuestion = {
   choices: MentorChoice[];
 };
 
-// AI question import preview (not yet saved).
-export type AIChoice = { text: string; score: number; categories?: string[] };
-export type AIQuestionPreview = {
-  question: string;
-  choices: AIChoice[];
-  correct_answer: string;
-  explanation: string;
-};
 export type ResultCategory = { name: string; knowledge: string };
 export type ResultCategories = Record<string, ResultCategory>;
 

@@ -86,10 +86,7 @@ export function BrandedRedeem({
               <LatoIcon name="check" size={26} />
             </div>
             <p className="lato-sub" style={{ marginInline: 'auto' }}>
-              Success! You&apos;ve unlocked <b>{result.assessment_title}</b>
-              {result.granted_tokens > 0
-                ? ` and received ${result.granted_tokens} tokens for your premium report.`
-                : '.'}
+              Success! You&apos;ve unlocked <b>{result.assessment_title}</b>.
             </p>
             <div style={{ marginTop: 24 }}>
               <a
@@ -103,8 +100,8 @@ export function BrandedRedeem({
         ) : (
           <>
             <p className="lato-sub" style={{ marginInline: 'auto', marginTop: 12 }}>
-              Enter the code your company shared with you. It covers your full
-              assessment and premium report.
+              Enter the code your company shared with you. It unlocks full access
+              to this assessment.
             </p>
             <form onSubmit={submit} style={{ maxWidth: 360, margin: '22px auto 0' }}>
               <label className="lato-field">

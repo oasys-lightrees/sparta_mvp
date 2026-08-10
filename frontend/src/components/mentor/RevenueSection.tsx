@@ -84,15 +84,15 @@ export function RevenueSection() {
               icon={Coins}
             />
             <StatCard
-              label="Premium Reports Sold"
+              label="Paid Unlocks"
               value={data.premiumUnlocks}
               icon={Lock}
             />
           </div>
           {data.transactions.length === 0 ? (
             <EmptyState
-              title="Premium unlocks will appear here"
-              description="When a user unlocks a premium report, the token revenue shows up in this list."
+              title="Paid unlocks will appear here"
+              description="When a user unlocks paid access to your assessment, the token revenue shows up in this list."
             />
           ) : (
             <Card>

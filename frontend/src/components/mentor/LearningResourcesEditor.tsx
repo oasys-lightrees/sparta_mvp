@@ -149,7 +149,7 @@ function ResourceCard({
           aria-label="Access level"
         >
           <option value="free">Free (shown on result)</option>
-          <option value="premium">Premium (after unlock)</option>
+          <option value="premium">Locked (unlocks with access)</option>
         </select>
         <Button
           type="button"

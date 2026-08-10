@@ -161,8 +161,8 @@ function BrandedResources({
       </div>
       {lockedCount > 0 ? (
         <p style={{ color: 'var(--muted)', fontSize: '.85rem', marginTop: 12 }}>
-          Unlock the premium report to access {lockedCount} more resource
-          {lockedCount === 1 ? '' : 's'}.
+          {lockedCount} more resource{lockedCount === 1 ? '' : 's'} will unlock
+          with access.
         </p>
       ) : null}
     </div>

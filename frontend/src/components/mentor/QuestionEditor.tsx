@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { assessmentApi } from '@/services/assessment.api';
-import { aiApi } from '@/services/ai.api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,11 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
-import type {
-  AIQuestionPreview,
-  MentorQuestion,
-  ResultCategories,
-} from '@/types';
+import type { MentorQuestion, ResultCategories } from '@/types';
 
 type ChoiceDraft = {
   choice_text: string;
@@ -212,13 +207,6 @@ export function QuestionEditor({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  // AI import state
-  const [importing, setImporting] = useState(false);
-  const [rawText, setRawText] = useState('');
-  const [preview, setPreview] = useState<AIQuestionPreview[] | null>(null);
-  const [aiBusy, setAiBusy] = useState(false);
-  const [aiError, setAiError] = useState('');
-
   const run = async (fn: () => Promise<unknown>) => {
     setBusy(true);
     setError('');
@@ -234,61 +222,11 @@ export function QuestionEditor({
     }
   };
 
-  const generatePreview = async () => {
-    setAiBusy(true);
-    setAiError('');
-    setPreview(null);
-    try {
-      setPreview(await aiApi.previewQuestions(assessmentId, rawText));
-    } catch (err) {
-      setAiError(err instanceof Error ? err.message : 'AI generation failed');
-    } finally {
-      setAiBusy(false);
-    }
-  };
-
-  const savePreview = async () => {
-    if (!preview) return;
-    setAiBusy(true);
-    setAiError('');
-    try {
-      for (const q of preview) {
-        await assessmentApi.addQuestion(assessmentId, {
-          question_text: q.question,
-          choices: q.choices.map((c) => ({
-            choice_text: c.text,
-            score: c.score,
-            categories: c.categories ?? [],
-          })),
-          correct_answer: q.correct_answer || null,
-          explanation: q.explanation || null,
-        });
-      }
-      await onChanged();
-      setImporting(false);
-      setPreview(null);
-      setRawText('');
-    } catch (err) {
-      setAiError(err instanceof Error ? err.message : 'Failed to save questions');
-    } finally {
-      setAiBusy(false);
-    }
-  };
-
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <CardTitle>Questions ({questions.length})</CardTitle>
         <div className="flex gap-2">
-          {!importing ? (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setImporting(true)}
-            >
-              AI Import
-            </Button>
-          ) : null}
           {!adding ? (
             <Button size="sm" onClick={() => setAdding(true)}>
               Add question
@@ -298,82 +236,6 @@ export function QuestionEditor({
       </CardHeader>
       <CardContent className="space-y-4">
         <ErrorMessage message={error} />
-
-        {/* AI import panel */}
-        {importing ? (
-          <div className="space-y-3 rounded-md border p-4">
-            <Label>Paste raw questions</Label>
-            <Textarea
-              value={rawText}
-              onChange={(e) => setRawText(e.target.value)}
-              className="min-h-[120px]"
-              placeholder={
-                '1. I enjoy solving technical problems\nA Strongly agree\nB Agree\nC Disagree'
-              }
-            />
-            <ErrorMessage message={aiError} />
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="bronze"
-                onClick={generatePreview}
-                disabled={aiBusy || rawText.trim() === ''}
-              >
-                {aiBusy && !preview ? 'Generating…' : 'Generate'}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setImporting(false);
-                  setPreview(null);
-                  setRawText('');
-                  setAiError('');
-                }}
-                disabled={aiBusy}
-              >
-                Cancel
-              </Button>
-            </div>
-
-            {preview ? (
-              <div className="space-y-3">
-                <p className="text-sm font-medium">
-                  Preview ({preview.length}) — review before saving
-                </p>
-                {preview.map((q, i) => (
-                  <div key={i} className="rounded-md border p-3">
-                    <p className="font-medium">{q.question}</p>
-                    <ul className="mt-2 space-y-1">
-                      {q.choices.map((c, j) => (
-                        <li
-                          key={j}
-                          className="flex items-center justify-between gap-2 text-sm"
-                        >
-                          <span>{c.text}</span>
-                          <span className="flex shrink-0 items-center gap-1">
-                            {c.categories?.map((code) => (
-                              <Badge key={code}>{code}</Badge>
-                            ))}
-                            <Badge variant="secondary">score {c.score}</Badge>
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                    {q.explanation ? (
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        {q.explanation}
-                      </p>
-                    ) : null}
-                  </div>
-                ))}
-                <Button size="sm" onClick={savePreview} disabled={aiBusy}>
-                  {aiBusy ? 'Saving…' : `Save ${preview.length} question(s)`}
-                </Button>
-              </div>
-            ) : null}
-          </div>
-        ) : null}
 
         {adding ? (
           <QuestionForm

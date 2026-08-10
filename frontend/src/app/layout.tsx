@@ -15,7 +15,7 @@ const sora = Sora({
 const APP_NAME = 'LATO';
 const APP_TITLE = 'LATO — LighTech Assessment Tool';
 const APP_DESCRIPTION =
-  'Create tests, generate questions with AI, deliver personalized reports, and monetize your expertise.';
+  'Create assessments, deliver clear reports, and monetize your expertise.';
 
 export const metadata: Metadata = {
   title: APP_TITLE,

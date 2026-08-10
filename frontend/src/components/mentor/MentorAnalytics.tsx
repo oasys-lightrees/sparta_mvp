@@ -49,7 +49,7 @@ export function MentorAnalytics() {
           xKey="date"
           yKey="tokens"
           error={error}
-          emptyLabel="No premium revenue yet"
+          emptyLabel="No paid revenue yet"
         />
         <PieChartCard
           title="Score distribution"
@@ -60,7 +60,7 @@ export function MentorAnalytics() {
         />
         <BarChartCard
           title="Conversion funnel"
-          description="Submissions to premium unlocks"
+          description="Submissions to paid unlocks"
           data={data ? data.conversionFunnel : null}
           xKey="stage"
           yKey="value"

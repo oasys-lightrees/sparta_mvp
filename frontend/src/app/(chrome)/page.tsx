@@ -28,28 +28,28 @@ import { StrengthBar } from '@/components/brand/StrengthBar';
 
 const FEATURES = [
   {
-    icon: Wand2,
-    title: 'AI Question Generator',
+    icon: FileText,
+    title: 'Branded Landing Pages',
     description:
-      'Paste your knowledge or notes and let AI draft scored questions, answers, and explanations — ready to review and publish.',
-  },
-  {
-    icon: Sparkles,
-    title: 'AI Personalized Reports',
-    description:
-      'Each respondent receives a tailored premium report generated from their answers and your subject expertise.',
+      'Every assessment gets its own branded landing page — your logo, colors, copy, cover photo, and products.',
   },
   {
     icon: Coins,
-    title: 'Token-based Premium Reports',
+    title: 'Token Payments',
     description:
-      'Gate your in-depth reports behind tokens. Users unlock the full analysis whenever they are ready for more.',
+      'Learners top up a token wallet and spend it to unlock your paid assessments — powered by a real payment gateway.',
+  },
+  {
+    icon: Wand2,
+    title: 'Team Vouchers',
+    description:
+      'Sell voucher packages so a company can assess a whole team, hand out codes, and track everyone’s results.',
   },
   {
     icon: TrendingUp,
-    title: 'Mentor Revenue Tracking',
+    title: 'Expert Revenue Tracking',
     description:
-      'See every premium unlock and your total token revenue in one clean dashboard — no spreadsheets required.',
+      'See every paid unlock and your total token revenue in one clean dashboard — no spreadsheets required.',
   },
   {
     icon: BarChart3,
@@ -69,7 +69,7 @@ const MENTOR_STEPS = [
   {
     title: 'Create an assessment',
     description:
-      'Set up your test, thresholds, and pricing — or generate questions instantly with AI.',
+      'Set up your test, thresholds, questions, and pricing — exactly how you want it.',
   },
   {
     title: 'Publish & share',
@@ -77,27 +77,27 @@ const MENTOR_STEPS = [
       'Publish your assessment and share the link. Anyone can take it, no sign-up required.',
   },
   {
-    title: 'Earn from premium reports',
+    title: 'Earn from paid access',
     description:
-      'Respondents unlock AI-generated premium reports with tokens, and you track the revenue.',
+      'Charge tokens for access or sell team voucher packages, and track the revenue.',
   },
 ];
 
 const USER_STEPS = [
   {
-    title: 'Take a test',
+    title: 'Take a challenge',
     description:
       'Pick an assessment and answer at your own pace — get an instant free result.',
   },
   {
     title: 'Get your report',
     description:
-      'Create a free account to claim your personalized report and keep your history.',
+      'Create a free account to claim your report and keep your history.',
   },
   {
-    title: 'Unlock deeper insight',
+    title: 'Go further',
     description:
-      'Use tokens to unlock the full AI-personalized premium report when you want more.',
+      'Use tokens to unlock paid assessments, or redeem a company voucher to get access.',
   },
 ];
 
@@ -142,7 +142,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* AI Growth Blueprint preview — "this platform builds my profile" */}
+          {/* Growth Blueprint preview — "this platform builds my profile" */}
           <div className="relative mx-auto w-full max-w-md">
             <div className="absolute -inset-3 -z-10 rounded-3xl bg-primary/5 blur-xl" />
             <div className="overflow-hidden rounded-2xl border bg-card shadow-lg shadow-primary/10">
@@ -219,7 +219,7 @@ export default function HomePage() {
               {t('landing.featuresTitle')}
             </h2>
             <p className="text-muted-foreground">
-              From AI-assisted authoring to revenue tracking, LATO handles the
+              From branded landing pages to revenue tracking, LATO handles the
               full lifecycle of your assessments.
             </p>
           </div>
@@ -248,14 +248,14 @@ export default function HomePage() {
               {t('landing.howTitle')}
             </h2>
             <p className="text-muted-foreground">
-              Mentors create and earn. Users learn and grow. Everyone gets a
+              Experts create and earn. Users learn and grow. Everyone gets a
               smooth, modern experience.
             </p>
           </div>
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader>
-                <Badge className="mb-1 w-fit">For mentors</Badge>
+                <Badge className="mb-1 w-fit">For experts</Badge>
                 <CardTitle>Create &amp; monetize</CardTitle>
               </CardHeader>
               <CardContent>
@@ -314,8 +314,8 @@ export default function HomePage() {
               {t('landing.pricingTitle')}
             </h2>
             <p className="text-muted-foreground">
-              Taking assessments is always free. Deeper, AI-personalized reports
-              are unlocked with tokens.
+              Free assessments are always free. Paid assessments unlock with
+              tokens, or with a company voucher code.
             </p>
           </div>
           <div className="mx-auto grid max-w-4xl gap-6 sm:grid-cols-2">
@@ -323,7 +323,7 @@ export default function HomePage() {
               <CardHeader className="space-y-2">
                 <div className="flex items-center gap-2">
                   <FileText className="h-5 w-5 text-muted-foreground" />
-                  <CardTitle className="text-xl">Free Report</CardTitle>
+                  <CardTitle className="text-xl">Free assessments</CardTitle>
                 </div>
                 <CardDescription>
                   Instant results for every respondent.
@@ -331,70 +331,32 @@ export default function HomePage() {
               </CardHeader>
               <CardContent className="flex-1">
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• Take any published assessment</li>
-                  <li>• Immediate score and free report</li>
+                  <li>• Take any free published assessment</li>
+                  <li>• Immediate score and report</li>
                   <li>• Create an account to save your history</li>
                   <li>• No payment required</li>
                 </ul>
               </CardContent>
             </Card>
             <Card className="relative flex flex-col border-primary/40 shadow-sm">
-              <span className="absolute right-4 top-4">
-                <Badge className="gap-1">
-                  <Sparkles className="h-3 w-3" />
-                  Premium
-                </Badge>
-              </span>
               <CardHeader className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Coins className="h-5 w-5 text-primary" />
-                  <CardTitle className="text-xl">Premium Report</CardTitle>
+                  <CardTitle className="text-xl">Paid assessments</CardTitle>
                 </div>
                 <CardDescription>
-                  AI-personalized deep-dive, unlocked with tokens.
+                  Unlocked with tokens or a company voucher.
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex-1">
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• AI-generated, tailored to your answers</li>
-                  <li>• Unlock with a simple token balance</li>
-                  <li>• Delivered to your inbox</li>
-                  <li>• Mentors earn revenue on every unlock</li>
+                  <li>• Top up a token wallet, then unlock access</li>
+                  <li>• Or redeem a company voucher code</li>
+                  <li>• Results delivered to your inbox</li>
+                  <li>• Experts earn revenue on every unlock</li>
                 </ul>
               </CardContent>
             </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* AI Growth Report highlight */}
-      <section className="border-b bg-primary text-primary-foreground">
-        <div className="container grid items-center gap-8 py-20 md:grid-cols-2">
-          <div className="space-y-4">
-            <Badge variant="bronze" className="gap-1.5">
-              <Sparkles className="h-3.5 w-3.5" />
-              {t('landing.aiReportTitle')}
-            </Badge>
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              {t('landing.aiReportTitle')}
-            </h2>
-            <p className="max-w-md text-primary-foreground/80">
-              {t('landing.aiReportBody')}
-            </p>
-          </div>
-          <div className="rounded-xl border border-white/15 bg-white/5 p-6">
-            <div className="space-y-4">
-              {['Overview', 'Strengths', 'Recommendations', '30-Day Roadmap'].map(
-                (s, i) => (
-                  <div key={s} className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-bronze text-sm font-semibold text-bronze-foreground">
-                      {i + 1}
-                    </span>
-                    <span className="font-medium">{s}</span>
-                  </div>
-                ),
-              )}
-            </div>
           </div>
         </div>
       </section>

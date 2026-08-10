@@ -38,7 +38,7 @@ export type AssessmentPayload = {
 };
 
 // Result-category editor rows (diagnostic/personality assessments). Codes are
-// mentor-defined (e.g. PB, PO, GR) — not limited to A/B/C/D.
+// expert-defined (e.g. PB, PO, GR) — not limited to A/B/C/D.
 type CategoryRow = { code: string; name: string; knowledge: string };
 
 type Props = {
@@ -92,10 +92,6 @@ export function AssessmentForm({
   const [emailTemplate, setEmailTemplate] = useState(
     str(initial?.email_template),
   );
-  const [baseKnowledge, setBaseKnowledge] = useState(
-    str(initial?.base_knowledge),
-  );
-  const [aiEnabled, setAiEnabled] = useState(Boolean(initial?.ai_enabled));
   const [studyVideoUrl, setStudyVideoUrl] = useState(
     str(initial?.study_video_url),
   );
@@ -199,8 +195,8 @@ export function AssessmentForm({
         isPersonality || freeTemplate.trim() === '' ? null : freeTemplate,
       premium_report_description: null,
       email_template: emailTemplate.trim() === '' ? null : emailTemplate,
-      base_knowledge: baseKnowledge.trim() === '' ? null : baseKnowledge,
-      ai_enabled: aiEnabled,
+      base_knowledge: null,
+      ai_enabled: false,
       // Categories only apply to personality mode.
       result_categories: isPersonality ? buildResultCategories() : null,
       study_video_url:
@@ -293,8 +289,8 @@ export function AssessmentForm({
         helpText="Optional cover shown on the assessment card. Use a 16:9 (widescreen) image — recommended 1280×720 (min 640×360). It's cropped to fill, so keep the subject centered. PNG, JPG, JPEG or WEBP · up to 5 MB."
       />
       {/* Access model — how takers get to start this assessment. Any cost the
-          mode needs (premium unlock for Freemium, access cost for Paid) is set
-          inside the card, so mentors only see the field relevant to their mode. */}
+          mode needs (access cost for Paid) is set inside the card, so experts
+          only see the field relevant to their mode. */}
       <div className="space-y-3 rounded-md border p-4">
         <div className="space-y-1">
           <Label>Access model</Label>
@@ -346,7 +342,7 @@ export function AssessmentForm({
             <p className="text-xs text-muted-foreground">
               Tokens a taker spends to unlock access before starting. They fund
               their wallet via payment (Midtrans) or the demo top-up, then spend
-              it here. The full result is included — no separate premium unlock.
+              it here. The full result is included.
             </p>
           </div>
         ) : null}
@@ -503,37 +499,6 @@ export function AssessmentForm({
           placeholder={
             'Optional. Variables: {{assessment_title}}, {{score}}, {{category}}, {{summary}}, {{free_report}}'
           }
-        />
-      </div>
-
-      <div className="space-y-2 rounded-md border p-4">
-        <div className="flex items-center justify-between">
-          <Label>AI assistant</Label>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant={aiEnabled ? 'default' : 'outline'}
-              onClick={() => setAiEnabled(true)}
-            >
-              On
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant={!aiEnabled ? 'default' : 'outline'}
-              onClick={() => setAiEnabled(false)}
-            >
-              Off
-            </Button>
-          </div>
-        </div>
-        <Label htmlFor="base_knowledge">Assessment Knowledge</Label>
-        <Textarea
-          id="base_knowledge"
-          value={baseKnowledge}
-          onChange={(e) => setBaseKnowledge(e.target.value)}
-          placeholder="Explain your framework, scoring logic, and how AI should interpret results."
         />
       </div>
 

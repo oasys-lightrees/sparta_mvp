@@ -170,7 +170,7 @@ export function BrandedCompany({
               className="lato-note"
               style={{ marginTop: 16 }}
             >
-              No voucher packages are offered for this assessment yet. The mentor
+              No voucher packages are offered for this assessment yet. The expert
               sets these up in the product editor.
             </p>
           ) : (
@@ -350,8 +350,8 @@ export function BrandedCompany({
                 </button>
               </div>
               <p style={{ color: 'var(--muted)', fontSize: '.85rem', margin: '6px 0 12px' }}>
-                Share one code per employee. Each covers a full assessment and premium
-                report; their score rolls up under Individual results above.
+                Share one code per employee. Each covers a full assessment;
+                their score rolls up under Individual results above.
               </p>
               <div className="lato-codes">
                 {selected.codes.map((c) => (
