@@ -188,7 +188,6 @@ function DetailView({ id }: { id: string }) {
                 low_score_threshold: detail.low_score_threshold,
                 high_score_threshold: detail.high_score_threshold,
                 free_report_text: detail.free_report_text,
-                premium_token_cost: detail.premium_token_cost,
                 free_report_template: detail.free_report_template,
                 premium_report_description: detail.premium_report_description,
                 email_template: detail.email_template,
@@ -198,7 +197,7 @@ function DetailView({ id }: { id: string }) {
                 study_video_url: detail.study_video_url,
                 learning_resources: detail.learning_resources,
                 access_mode: detail.access_mode,
-                access_token_cost: detail.access_token_cost,
+                access_cost: detail.access_cost,
               }}
               onSubmit={handleSave}
               onCancel={() => setEditing(false)}

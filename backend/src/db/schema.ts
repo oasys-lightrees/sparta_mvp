@@ -31,14 +31,15 @@ export const contactStatus = pgEnum('contact_status', [
   'CLOSED',
 ]);
 export const transactionType = pgEnum('transaction_type', [
-  'TOKEN_TOPUP',
+  // Balance added to a wallet (a real Midtrans payment or the demo top-up).
+  'TOPUP',
   'PREMIUM_UNLOCK',
   'ADMIN_GRANT',
-  // Tokens granted to a user when they redeem a company voucher code.
+  // Balance granted to a user when they redeem a company voucher code.
   'VOUCHER_REDEEM',
-  // Tokens spent to purchase start access to a PAID assessment.
+  // Balance spent to purchase start access to a PAID assessment.
   'ACCESS_PURCHASE',
-  // Tokens spent by a company/buyer to purchase a voucher batch (seat package).
+  // Balance spent by a company/buyer to purchase a voucher batch (seat package).
   'VOUCHER_PURCHASE',
 ]);
 // How a taker obtained access to start a gated (PAID/VOUCHER) assessment.
@@ -83,8 +84,9 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 255 }).notNull().unique(),
   passwordHash: text('password_hash').notNull(),
   role: userRole('role').notNull().default('USER'),
-  // Token wallet for unlocking premium reports (no real payment).
-  tokenBalance: integer('token_balance').notNull().default(0),
+  // Wallet balance in IDR (whole rupiah). Funded by a real payment or the demo
+  // top-up, and spent to start paid assessments / buy voucher packages.
+  balance: integer('balance').notNull().default(0),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
@@ -134,14 +136,13 @@ export const assessments = pgTable('assessments', {
   resultCategories: jsonb('result_categories').$type<ResultCategories>(),
   // Listed price for analytics only (no payment/checkout in MVP).
   price: integer('price').notNull().default(0),
-  // Token cost to unlock this assessment's premium report (0 = no premium).
-  premiumTokenCost: integer('premium_token_cost').notNull().default(0),
   // Access model (v6): how the assessment gates *starting*. Null -> FREEMIUM
   // (the platform's original behavior), so existing rows are unaffected. See
   // config/access.ts.
   accessMode: accessMode('access_mode'),
-  // Token cost to purchase start access when accessMode is PAID (0 otherwise).
-  accessTokenCost: integer('access_token_cost').notNull().default(0),
+  // Access cost in IDR (whole rupiah) to purchase start access when accessMode
+  // is PAID (0 otherwise).
+  accessCost: integer('access_cost').notNull().default(0),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')
     .notNull()
@@ -273,7 +274,7 @@ export const reports = pgTable(
   (t) => [
     // At most ONE premium report per attempt — the DB guard that makes premium
     // unlock idempotent under concurrency (a losing racer's insert is rejected,
-    // rolling back its token debit).
+    // rolling back its balance debit).
     uniqueIndex('reports_one_premium_per_attempt')
       .on(t.attemptId)
       .where(sql`${t.reportType} = 'PREMIUM'`),
@@ -412,8 +413,9 @@ export const blogsRelations = relations(blogs, ({ one }) => ({
 
 /**
  * transactions
- * Token ledger: top-ups, admin grants and premium unlocks. mentor_id /
- * assessment_id / report_id are only set for PREMIUM_UNLOCK rows.
+ * Balance ledger (amounts in IDR): top-ups, admin grants, access purchases and
+ * voucher spends. mentor_id / assessment_id are set for the assessment-scoped
+ * spend rows (ACCESS_PURCHASE / VOUCHER_PURCHASE).
  */
 export const transactions = pgTable('transactions', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -435,24 +437,24 @@ export const transactions = pgTable('transactions', {
 });
 
 /**
- * token_orders
- * A real token purchase processed through the Midtrans payment gateway. One row
+ * orders
+ * A real balance top-up processed through the Midtrans payment gateway. One row
  * is created (PENDING) when the user starts checkout; the gateway's asynchronous
  * notification flips it to PAID/FAILED/EXPIRED. On the first PAID transition the
- * wallet is credited and a TOKEN_TOPUP transaction is recorded — the PAID state
- * makes crediting idempotent against duplicate notifications.
+ * wallet is credited and a TOPUP transaction is recorded — the PAID state makes
+ * crediting idempotent against duplicate notifications. Because the wallet holds
+ * IDR directly, `amount` is both the balance credited and the Midtrans
+ * gross_amount (1:1, whole rupiah).
  */
-export const tokenOrders = pgTable('token_orders', {
+export const orders = pgTable('orders', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
   // Midtrans order_id (also our idempotency key). Unique across all orders.
   orderId: varchar('order_id', { length: 255 }).notNull().unique(),
-  // Tokens to credit on success.
-  tokenAmount: integer('token_amount').notNull(),
-  // Charged amount in IDR (Midtrans gross_amount, whole rupiah).
-  grossAmount: integer('gross_amount').notNull(),
+  // Amount in IDR (whole rupiah): credited to the wallet and charged by Midtrans.
+  amount: integer('amount').notNull(),
   status: paymentStatus('status').notNull().default('PENDING'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')
@@ -461,9 +463,9 @@ export const tokenOrders = pgTable('token_orders', {
     .$onUpdate(() => new Date()),
 });
 
-export const tokenOrdersRelations = relations(tokenOrders, ({ one }) => ({
+export const ordersRelations = relations(orders, ({ one }) => ({
   user: one(users, {
-    fields: [tokenOrders.userId],
+    fields: [orders.userId],
     references: [users.id],
   }),
 }));
@@ -490,9 +492,8 @@ export const voucherBatches = pgTable('voucher_batches', {
 
 /**
  * vouchers
- * A single redeemable code belonging to a batch. Redeeming grants the taker the
- * tokens needed to unlock this assessment's premium report (a VOUCHER_REDEEM
- * transaction), so a code == one funded premium assessment.
+ * A single redeemable code belonging to a batch. Redeeming grants the taker
+ * start-access to the batch's assessment, so a code == one funded seat.
  */
 export const vouchers = pgTable('vouchers', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -549,7 +550,9 @@ export type PricingTier = {
   description: string;
   kind: ProductTierKind;
   priceLabel: string;
-  tokenCost: number;
+  // Price in IDR (whole rupiah) shown on the card and, for a PAID tier, charged
+  // as the assessment's start-access cost.
+  amount: number;
   ctaLabel: string;
   imageUrl: string | null;
   highlight: boolean;
@@ -557,15 +560,15 @@ export type PricingTier = {
 export type ProductTiers = PricingTier[];
 
 /**
- * A company/batch voucher package: buying it charges `tokenCost` tokens and
- * issues `seats` unique voucher codes. Priced per-package (typically cheaper
- * per seat than the individual token cost) — see config/product.schema.ts.
+ * A company/batch voucher package: buying it charges `amount` (IDR, whole
+ * rupiah) and issues `seats` unique voucher codes. Priced per-package (typically
+ * cheaper per seat than the individual cost) — see config/product.schema.ts.
  */
 export type VoucherPackage = {
   id: string;
   label: string;
   seats: number;
-  tokenCost: number;
+  amount: number;
 };
 export type VoucherPackages = VoucherPackage[];
 
@@ -592,8 +595,8 @@ export const products = pgTable('products', {
   slug: varchar('slug', { length: 255 }).notNull().unique(),
   description: text('description'),
   tiers: jsonb('tiers').$type<ProductTiers>(),
-  // Company/batch seat packages a buyer can purchase with tokens (each yields
-  // that many voucher codes). Null/empty -> batch buying is not offered.
+  // Company/batch seat packages a buyer can purchase from their balance (each
+  // yields that many voucher codes). Null/empty -> batch buying is not offered.
   voucherPackages: jsonb('voucher_packages').$type<VoucherPackages>(),
   status: productStatus('status').notNull().default('DRAFT'),
   createdAt: timestamp('created_at').notNull().defaultNow(),

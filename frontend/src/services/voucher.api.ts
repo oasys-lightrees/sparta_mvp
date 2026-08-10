@@ -7,7 +7,7 @@ import type {
 } from '@/types';
 
 export const voucherApi = {
-  // Company: buy a seat package for an assessment (charges tokens, issues codes).
+  // Company: buy a seat package for an assessment (charges balance, issues codes).
   createBatch: (input: {
     assessment_id: string;
     company_name: string;
@@ -21,7 +21,7 @@ export const voucherApi = {
   getBatch: (batchId: string) =>
     apiClient.get<VoucherBatchDetail>(`/api/vouchers/batches/${batchId}`),
 
-  // Employee: redeem a code (grants tokens to unlock premium).
+  // Employee: redeem a code (grants start-access to the assessment).
   redeem: (code: string) =>
     apiClient.post<RedeemResult>('/api/vouchers/redeem', { code }),
 };

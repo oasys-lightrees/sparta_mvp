@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { formatIdr } from '@/lib/currency';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import {
   Card,
@@ -65,28 +66,28 @@ export function AccessGate({
       );
     }
 
-    // PAID — buy access with tokens.
-    const cost = access.access_token_cost;
-    const balance = access.token_balance ?? 0;
+    // PAID — buy access from wallet balance.
+    const cost = access.access_cost;
+    const balance = access.balance ?? 0;
     const affordable = balance >= cost;
     return (
       <>
         <p className="text-sm text-muted-foreground">
-          Get access for <strong>{cost} tokens</strong>. Your balance: {balance}{' '}
-          token{balance === 1 ? '' : 's'}.
+          Get access for <strong>{formatIdr(cost)}</strong>. Your balance:{' '}
+          {formatIdr(balance)}.
         </p>
         <ErrorMessage message={error} />
         {affordable ? (
           <Button onClick={onPurchase} disabled={purchasing} variant="bronze">
-            {purchasing ? 'Processing…' : `Pay ${cost} tokens to start`}
+            {purchasing ? 'Processing…' : `Pay ${formatIdr(cost)} to start`}
           </Button>
         ) : (
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">
-              You need {cost - balance} more token{cost - balance === 1 ? '' : 's'}.
+              You need {formatIdr(cost - balance)} more in your balance.
             </p>
             <Button asChild variant="bronze">
-              <Link href="/dashboard">Get tokens</Link>
+              <Link href="/dashboard">Top up balance</Link>
             </Button>
           </div>
         )}

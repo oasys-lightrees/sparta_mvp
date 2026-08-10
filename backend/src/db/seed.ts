@@ -81,24 +81,6 @@ const renderFree = (title: string, score: number): string => {
     .replaceAll('{{summary}}', SUMMARY[band]);
 };
 
-// Sectioned premium report (matches the AI output format: ## Overview, etc.).
-const renderPremium = (title: string, score: number): string => {
-  const band = bandFor(score);
-  const level = CATEGORY[band];
-  return [
-    '## Overview',
-    `Based on your score of ${score} on the ${title}, you are performing at the ${level} level. This report breaks down what is working, where you can improve, and a concrete plan for the next 30 days.`,
-    '## Strengths',
-    '- You show consistent effort and a genuine willingness to grow.\n- Your strongest responses point to reliable fundamentals you can build on.\n- You bring self-awareness about where you stand today.',
-    '## Weaknesses',
-    '- A few areas show hesitation under pressure or ambiguity.\n- Consistency dips when situations fall outside your comfort zone.\n- Some advanced competencies are still developing.',
-    '## Recommendations',
-    '1. Double down on your two strongest areas to create momentum.\n2. Pick one weakness and practice it deliberately each week.\n3. Seek feedback from someone a level ahead of you.\n4. Review your results again in 30 days to measure progress.',
-    '## 30-Day Improvement Roadmap',
-    'Week 1: Audit your current habits and set one measurable goal.\nWeek 2: Apply a new technique in a real situation and reflect.\nWeek 3: Get feedback and adjust your approach.\nWeek 4: Consolidate the habit and retake the assessment to see your growth.',
-  ].join('\n\n');
-};
-
 // The demo mentor persona — owns all three assessments so logging in as the
 // mentor immediately shows a full dashboard (assessments, revenue, analytics).
 const MENTOR = {
@@ -111,14 +93,14 @@ type AssessmentSeed = {
   description: string;
   imageUrl: string;
   price: number;
-  premiumTokenCost: number;
   premiumReportDescription: string;
   baseKnowledge: string;
   studyVideoUrl?: string;
   learningResources?: LearningResources;
   // Access model for the demo. Omit -> FREEMIUM (platform default).
   accessMode?: AccessMode;
-  accessTokenCost?: number;
+  // Access cost in IDR (whole rupiah) when accessMode is PAID.
+  accessCost?: number;
   questions: string[];
 };
 
@@ -207,7 +189,6 @@ const buildAppConfig = (a: AssessmentSeed): AssessmentApp | null => {
     assessmentTitle: a.title,
     monogram: s.monogram,
     colors: s.colors,
-    premiumTokenCost: a.premiumTokenCost,
     questionCount: a.questions.length,
     estimatedMinutes: 10,
     description: a.description,
@@ -230,7 +211,6 @@ const ASSESSMENTS: AssessmentSeed[] = [
     imageUrl:
       'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&q=80',
     price: 49,
-    premiumTokenCost: 50,
     premiumReportDescription:
       'A personalized deep-dive into your AI engineering readiness: your strongest competencies, the specific gaps holding you back, recommended resources, and a 30-day roadmap to become production-ready.',
     baseKnowledge:
@@ -327,14 +307,13 @@ const ASSESSMENTS: AssessmentSeed[] = [
     imageUrl:
       'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80',
     price: 39,
-    premiumTokenCost: 40,
     premiumReportDescription:
       'An in-depth look at your leadership style: where you naturally lead, the blind spots that hold teams back, and a focused 30-day plan to grow your influence.',
     baseKnowledge:
       'This assessment measures leadership potential across initiative, composure, communication, accountability, decisiveness and people development. Higher scores indicate stronger leadership instincts. Beginners should focus on self-management and communication; intermediates on coaching and conflict; advanced leaders on vision and organizational influence.',
-    // PAID access: buyers unlock the whole assessment up front with tokens.
+    // PAID access: buyers unlock the whole assessment up front from balance.
     accessMode: 'PAID',
-    accessTokenCost: 30,
+    accessCost: 30_000,
     questions: [
       'I naturally take initiative when no one else steps up.',
       'I stay calm and focused when the pressure is high.',
@@ -355,7 +334,6 @@ const ASSESSMENTS: AssessmentSeed[] = [
     imageUrl:
       'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&q=80',
     price: 29,
-    premiumTokenCost: 30,
     premiumReportDescription:
       'A tailored breakdown of your sales skills: the instincts that win deals, the habits that cost you, and a 30-day plan to sharpen your pipeline and close rate.',
     baseKnowledge:
@@ -377,15 +355,15 @@ const ASSESSMENTS: AssessmentSeed[] = [
   },
 ];
 
-// Realistic registered users (besides admin + mentors). Token balances vary so
-// the user dashboards and admin token column look populated.
+// Realistic registered users (besides admin + mentors). Wallet balances (IDR)
+// vary so the user dashboards and admin balance column look populated.
 const USERS = [
-  { name: 'Demo User', email: 'user@lato.demo', tokens: 120 },
-  { name: 'Olivia Bennett', email: 'olivia.bennett@lato.demo', tokens: 70 },
-  { name: 'Liam Carter', email: 'liam.carter@lato.demo', tokens: 35 },
-  { name: 'Sophia Nguyen', email: 'sophia.nguyen@lato.demo', tokens: 0 },
-  { name: 'Noah Patel', email: 'noah.patel@lato.demo', tokens: 60 },
-  { name: 'Emma Rossi', email: 'emma.rossi@lato.demo', tokens: 15 },
+  { name: 'Demo User', email: 'user@lato.demo', balance: 120_000 },
+  { name: 'Olivia Bennett', email: 'olivia.bennett@lato.demo', balance: 70_000 },
+  { name: 'Liam Carter', email: 'liam.carter@lato.demo', balance: 35_000 },
+  { name: 'Sophia Nguyen', email: 'sophia.nguyen@lato.demo', balance: 0 },
+  { name: 'Noah Patel', email: 'noah.patel@lato.demo', balance: 60_000 },
+  { name: 'Emma Rossi', email: 'emma.rossi@lato.demo', balance: 15_000 },
 ];
 
 // Guest (not-registered) takers, used for some attempts + the contact inbox.
@@ -533,29 +511,28 @@ async function seed() {
           email: u.email,
           passwordHash,
           role: 'USER' as const,
-          tokenBalance: u.tokens,
+          balance: u.balance,
         })),
       )
       .returning({ id: users.id });
     const userIds = userRows.map((u) => u.id);
 
-    // Token top-up ledger so the admin transaction count looks real.
+    // Balance top-up ledger so the admin transaction count looks real.
     const topups = USERS.map((u, i) => ({ u, id: userIds[i] })).filter(
-      (x) => x.u.tokens > 0,
+      (x) => x.u.balance > 0,
     );
     if (topups.length) {
       await tx.insert(transactions).values(
         topups.map((x, i) => ({
           userId: x.id,
-          amount: x.u.tokens + 50, // topped up more than the current balance
-          type: 'TOKEN_TOPUP' as const,
+          amount: x.u.balance + 50_000, // topped up more than the current balance
+          type: 'TOPUP' as const,
           createdAt: daysAgo(60 - i * 3),
         })),
       );
     }
 
-    // --- Assessments + questions + choices + attempts + premium unlocks ---
-    let premiumUnlocks = 0;
+    // --- Assessments + questions + choices + attempts ---
     let totalAttempts = 0;
 
     for (let ai = 0; ai < ASSESSMENTS.length; ai++) {
@@ -577,11 +554,10 @@ async function seed() {
           studyVideoUrl: a.studyVideoUrl ?? null,
           learningResources: a.learningResources ?? null,
           accessMode: a.accessMode ?? null,
-          accessTokenCost: a.accessTokenCost ?? 0,
+          accessCost: a.accessCost ?? 0,
           lowScoreThreshold: LOW,
           highScoreThreshold: HIGH,
           price: a.price,
-          premiumTokenCost: a.premiumTokenCost,
           // Polished branded landing/app config for the demo (distinct per
           // assessment). Null falls back to a generated default.
           appConfig: buildAppConfig(a),
@@ -634,46 +610,23 @@ async function seed() {
         });
 
         // Gated modes (PAID/VOUCHER): the registered taker holds an access
-        // grant. For PAID, also record the token purchase as mentor revenue.
+        // grant. For PAID, also record the access purchase as mentor revenue.
         if (policy.startRequiresGrant && userId) {
           const source = policy.grantVia === 'voucher' ? 'VOUCHER' : 'PAYMENT';
           await tx
             .insert(assessmentAccess)
             .values({ userId, assessmentId: assessment.id, source })
             .onConflictDoNothing();
-          if (policy.grantVia === 'payment' && (a.accessTokenCost ?? 0) > 0) {
+          if (policy.grantVia === 'payment' && (a.accessCost ?? 0) > 0) {
             await tx.insert(transactions).values({
               userId,
               mentorId,
               assessmentId: assessment.id,
-              amount: a.accessTokenCost ?? 0,
+              amount: a.accessCost ?? 0,
               type: 'ACCESS_PURCHASE',
               createdAt,
             });
           }
-        }
-
-        // Premium unlocks only exist in premium-unlockable (FREEMIUM) modes.
-        if (spec.premium && userId && policy.premiumUnlockable) {
-          const [premium] = await tx
-            .insert(reports)
-            .values({
-              attemptId: attempt.id,
-              reportType: 'PREMIUM',
-              content: renderPremium(a.title, spec.score),
-            })
-            .returning({ id: reports.id });
-
-          await tx.insert(transactions).values({
-            userId,
-            mentorId,
-            assessmentId: assessment.id,
-            reportId: premium.id,
-            amount: a.premiumTokenCost,
-            type: 'PREMIUM_UNLOCK',
-            createdAt: new Date(createdAt.getTime() + 60 * 60 * 1000),
-          });
-          premiumUnlocks++;
         }
       }
     }
@@ -842,8 +795,7 @@ async function seed() {
           aiEnabled: true,
           resultCategories: DISC_CATEGORIES,
           learningResources: discResources,
-          accessMode: 'FREEMIUM',
-          premiumTokenCost: 25,
+          accessMode: 'FREE',
           price: 0,
         })
         .returning({ id: assessments.id });
@@ -884,10 +836,10 @@ async function seed() {
       };
 
       // A spread of results so the demo shows different learning paths.
-      const discAttempts: { who: number; dominant: keyof typeof DISC_CATEGORIES; daysAgo: number; premium?: boolean }[] = [
-        { who: 0, dominant: 'D', daysAgo: 2, premium: true },
+      const discAttempts: { who: number; dominant: keyof typeof DISC_CATEGORIES; daysAgo: number }[] = [
+        { who: 0, dominant: 'D', daysAgo: 2 },
         { who: 1, dominant: 'I', daysAgo: 5 },
-        { who: 2, dominant: 'S', daysAgo: 9, premium: true },
+        { who: 2, dominant: 'S', daysAgo: 9 },
         { who: 3, dominant: 'C', daysAgo: 14 },
         { who: 4, dominant: 'D', daysAgo: 20 },
         { who: 5, dominant: 'I', daysAgo: 27 },
@@ -910,26 +862,6 @@ async function seed() {
           reportType: 'FREE',
           content: discFree(spec.dominant),
         });
-        if (spec.premium) {
-          const [premium] = await tx
-            .insert(reports)
-            .values({
-              attemptId: attempt.id,
-              reportType: 'PREMIUM',
-              content: renderPremium('DISC Personality Profile', 20),
-            })
-            .returning({ id: reports.id });
-          await tx.insert(transactions).values({
-            userId: userIds[spec.who],
-            mentorId,
-            assessmentId: discAssessment.id,
-            reportId: premium.id,
-            amount: 25,
-            type: 'PREMIUM_UNLOCK',
-            createdAt: new Date(createdAt.getTime() + 60 * 60 * 1000),
-          });
-          premiumUnlocks++;
-        }
       }
     }
 
@@ -971,7 +903,7 @@ async function seed() {
       },
     ]);
 
-    return { totalAttempts, premiumUnlocks };
+    return { totalAttempts };
   });
 
   console.log('✅ Demo seed complete.');
@@ -981,7 +913,7 @@ async function seed() {
   console.log('   USER   -> user@lato.demo (+ 5 named users)');
   console.log('   3 published assessments (10 questions each, AI enabled)');
   console.log('   Historical attempts across beginner/intermediate/advanced');
-  console.log('   Premium unlocks + token transactions + mentor revenue');
+  console.log('   Balance transactions + expert revenue');
 }
 
 seed()

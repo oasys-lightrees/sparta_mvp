@@ -20,7 +20,6 @@ export type CreateInput = {
   low_score_threshold?: number | null;
   high_score_threshold?: number | null;
   price?: number;
-  premium_token_cost?: number;
   free_report_template?: string | null;
   premium_report_description?: string | null;
   email_template?: string | null;
@@ -30,7 +29,7 @@ export type CreateInput = {
   study_video_url?: string | null;
   learning_resources?: LearningResources | null;
   access_mode?: AccessMode | null;
-  access_token_cost?: number;
+  access_cost?: number;
 };
 
 export type UpdateInput = {
@@ -41,7 +40,6 @@ export type UpdateInput = {
   low_score_threshold?: number | null;
   high_score_threshold?: number | null;
   price?: number;
-  premium_token_cost?: number;
   free_report_template?: string | null;
   premium_report_description?: string | null;
   email_template?: string | null;
@@ -51,7 +49,7 @@ export type UpdateInput = {
   study_video_url?: string | null;
   learning_resources?: LearningResources | null;
   access_mode?: AccessMode | null;
-  access_token_cost?: number;
+  access_cost?: number;
 };
 
 const publicColumns = {
@@ -62,7 +60,7 @@ const publicColumns = {
   price: assessments.price,
   // Access model is public (drives the take-flow CTA); it never leaks scores.
   accessMode: assessments.accessMode,
-  accessTokenCost: assessments.accessTokenCost,
+  accessCost: assessments.accessCost,
 };
 
 /**
@@ -163,7 +161,6 @@ export const create = async (mentorId: string, input: CreateInput) => {
       lowScoreThreshold: input.low_score_threshold ?? null,
       highScoreThreshold: input.high_score_threshold ?? null,
       price: input.price ?? 0,
-      premiumTokenCost: input.premium_token_cost ?? 0,
       freeReportTemplate: input.free_report_template ?? null,
       premiumReportDescription: input.premium_report_description ?? null,
       emailTemplate: input.email_template ?? null,
@@ -173,7 +170,7 @@ export const create = async (mentorId: string, input: CreateInput) => {
       studyVideoUrl: input.study_video_url ?? null,
       learningResources: input.learning_resources ?? null,
       accessMode: input.access_mode ?? null,
-      accessTokenCost: input.access_token_cost ?? 0,
+      accessCost: input.access_cost ?? 0,
     })
     .returning({ id: assessments.id, status: assessments.status });
 
@@ -198,7 +195,6 @@ export const update = async (
     lowScoreThreshold: number | null;
     highScoreThreshold: number | null;
     price: number;
-    premiumTokenCost: number;
     freeReportTemplate: string | null;
     premiumReportDescription: string | null;
     emailTemplate: string | null;
@@ -208,7 +204,7 @@ export const update = async (
     studyVideoUrl: string | null;
     learningResources: LearningResources | null;
     accessMode: AccessMode | null;
-    accessTokenCost: number;
+    accessCost: number;
   }> = {};
   if (input.title !== undefined) values.title = input.title.trim();
   if (input.description !== undefined) values.description = input.description;
@@ -220,8 +216,6 @@ export const update = async (
   if (input.high_score_threshold !== undefined)
     values.highScoreThreshold = input.high_score_threshold;
   if (input.price !== undefined) values.price = input.price;
-  if (input.premium_token_cost !== undefined)
-    values.premiumTokenCost = input.premium_token_cost;
   if (input.free_report_template !== undefined)
     values.freeReportTemplate = input.free_report_template;
   if (input.premium_report_description !== undefined)
@@ -238,8 +232,8 @@ export const update = async (
   if (input.learning_resources !== undefined)
     values.learningResources = input.learning_resources;
   if (input.access_mode !== undefined) values.accessMode = input.access_mode;
-  if (input.access_token_cost !== undefined)
-    values.accessTokenCost = input.access_token_cost;
+  if (input.access_cost !== undefined)
+    values.accessCost = input.access_cost;
 
   const [updated] = await db
     .update(assessments)
@@ -255,7 +249,6 @@ export const update = async (
       low_score_threshold: assessments.lowScoreThreshold,
       high_score_threshold: assessments.highScoreThreshold,
       price: assessments.price,
-      premium_token_cost: assessments.premiumTokenCost,
       free_report_template: assessments.freeReportTemplate,
       premium_report_description: assessments.premiumReportDescription,
       email_template: assessments.emailTemplate,
@@ -265,7 +258,7 @@ export const update = async (
       study_video_url: assessments.studyVideoUrl,
       learning_resources: assessments.learningResources,
       access_mode: assessments.accessMode,
-      access_token_cost: assessments.accessTokenCost,
+      access_cost: assessments.accessCost,
     });
 
   return updated;

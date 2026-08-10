@@ -33,7 +33,7 @@ export const id: Record<TranslationKey, string> = {
     'Terima tantangan latihan, dapatkan gambaran objektif tentang posisi Anda, dan terima Cetak Biru Pertumbuhan yang mengubah hasil menjadi langkah nyata.',
   'landing.featuresTitle': 'Semua yang Anda butuhkan untuk berlatih dan berkembang',
   'landing.howTitle': 'Latih. Ukur. Tingkatkan.',
-  'landing.pricingTitle': 'Gratis untuk memulai, token untuk tantangan berbayar',
+  'landing.pricingTitle': 'Gratis untuk memulai, isi saldo untuk tantangan berbayar',
   'landing.finalCtaTitle': 'Cari tahu seberapa kuat Anda hari ini',
   'landing.finalCtaSubtitle':
     'Terima tantangan pertama Anda, klaim Cetak Biru Pertumbuhan, dan mulailah berlatih dengan tujuan.',
@@ -50,8 +50,8 @@ export const id: Record<TranslationKey, string> = {
   'dashboard.welcome': 'Selamat datang kembali',
   'dashboard.overview':
     'Perjalanan pertumbuhan Anda berlanjut — pilih tantangan berikutnya.',
-  'dashboard.tokenBalance': 'Token Latihan',
-  'dashboard.topUp': 'Isi Token',
+  'dashboard.balance': 'Saldo Dompet',
+  'dashboard.topUp': 'Isi Saldo',
   'dashboard.toppingUp': 'Mengisi…',
   'dashboard.assessmentsTaken': 'Tantangan Selesai',
   'dashboard.reportsAvailable': 'Laporan',

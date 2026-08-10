@@ -414,7 +414,6 @@ export type DefaultConfigInput = {
   monogram?: string;
   colors?: { primary?: string; secondary?: string; accent?: string };
   premiumPrice?: string; // display string, e.g. "$29"
-  premiumTokenCost?: number;
   questionCount?: number;
   estimatedMinutes?: number;
   description?: string | null;

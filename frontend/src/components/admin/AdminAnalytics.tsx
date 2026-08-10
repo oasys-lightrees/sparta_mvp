@@ -43,7 +43,7 @@ export function AdminAnalytics() {
         />
         <BarChartCard
           title="Revenue overview"
-          description="Token transactions and paid unlocks"
+          description="Transactions and paid unlocks"
           data={data ? data.revenueOverview : null}
           xKey="name"
           yKey="value"

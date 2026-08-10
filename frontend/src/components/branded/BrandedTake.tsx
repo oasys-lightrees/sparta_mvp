@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { assessmentApi } from '@/services/assessment.api';
+import { formatIdr } from '@/lib/currency';
 import { useAuth } from '@/hooks/useAuth';
 import type { AssessmentApp } from '@/types/assessment-app';
 import type { AccessState, AssessmentDetail } from '@/types';
@@ -68,9 +69,9 @@ function AccessGate({
     );
   }
 
-  // PAID: purchase access with tokens.
-  const cost = access.access_token_cost;
-  const balance = access.token_balance ?? 0;
+  // PAID: purchase access from wallet balance.
+  const cost = access.access_cost;
+  const balance = access.balance ?? 0;
   const affordable = balance >= cost;
   return (
     <div className="lato-card" style={{ marginTop: 24, textAlign: 'center' }}>
@@ -78,10 +79,10 @@ function AccessGate({
         <LatoIcon name="lock" size={13} /> Paid assessment
       </span>
       <h3 style={{ margin: '12px 0 6px', fontWeight: 750 }}>
-        Get access for {cost} tokens
+        Get access for {formatIdr(cost)}
       </h3>
       <p style={{ color: 'var(--muted)', fontSize: '.9rem' }}>
-        Your balance: {balance} token{balance === 1 ? '' : 's'}
+        Your balance: {formatIdr(balance)}
       </p>
       {error ? (
         <div className="lato-note" style={{ marginTop: 12 }}>
@@ -95,15 +96,15 @@ function AccessGate({
             onClick={onPurchase}
             disabled={purchasing}
           >
-            {purchasing ? 'Processing…' : `Pay ${cost} tokens to start`}
+            {purchasing ? 'Processing…' : `Pay ${formatIdr(cost)} to start`}
           </button>
         ) : (
           <>
             <p style={{ color: 'var(--muted)', fontSize: '.9rem', marginBottom: 12 }}>
-              You need {cost - balance} more token{cost - balance === 1 ? '' : 's'}.
+              You need {formatIdr(cost - balance)} more in your balance.
             </p>
             <a href="/dashboard" className="lato-btn lato-btn--grad lato-btn--lg">
-              Get tokens
+              Top up balance
             </a>
           </>
         )}

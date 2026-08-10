@@ -32,7 +32,7 @@ export const en = {
     'Accept a training challenge, get an objective read on where you stand, and receive a Growth Blueprint that turns your results into concrete next steps.',
   'landing.featuresTitle': 'Everything you need to train and grow',
   'landing.howTitle': 'Train. Measure. Improve.',
-  'landing.pricingTitle': 'Free to take, tokens for paid challenges',
+  'landing.pricingTitle': 'Free to take, top up for paid challenges',
   'landing.finalCtaTitle': 'Find out how strong you are today',
   'landing.finalCtaSubtitle':
     'Accept your first challenge, claim your Growth Blueprint, and start training with purpose.',
@@ -49,8 +49,8 @@ export const en = {
   'dashboard.welcome': 'Welcome back',
   'dashboard.overview':
     'Your growth journey continues — pick your next challenge.',
-  'dashboard.tokenBalance': 'Training Tokens',
-  'dashboard.topUp': 'Top Up Tokens',
+  'dashboard.balance': 'Wallet Balance',
+  'dashboard.topUp': 'Top Up Balance',
   'dashboard.toppingUp': 'Topping up…',
   'dashboard.assessmentsTaken': 'Completed Challenges',
   'dashboard.reportsAvailable': 'Reports',

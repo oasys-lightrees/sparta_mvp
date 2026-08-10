@@ -28,11 +28,10 @@ export type AccessState = {
   requires_auth_to_start: boolean;
   grant_via: 'payment' | 'voucher' | null;
   premium_unlockable: boolean;
-  access_token_cost: number;
-  premium_token_cost: number;
+  access_cost: number;
   price: number;
   has_access: boolean;
-  token_balance: number | null;
+  balance: number | null;
 };
 export type PurchaseAccessResult = AccessState & {
   charged: number;
@@ -47,7 +46,7 @@ export type AssessmentSummary = {
   imageUrl?: string | null;
   price: number;
   accessMode?: AccessMode | null;
-  accessTokenCost?: number;
+  accessCost?: number;
 };
 
 // --- Learning resources ---
@@ -119,7 +118,6 @@ export type MyAttempt = {
   attempt_id: string;
   assessment_id: string;
   assessment_title: string;
-  premium_token_cost: number;
   score: number;
   created_at: string;
   report_id: string | null;
@@ -129,17 +127,17 @@ export type MyAttempt = {
   premium_content: string | null;
 };
 
-// --- Tokens ---
-export type TokenBalance = { balance: number };
-export type TokenPricing = {
-  token_price_idr: number;
+// --- Wallet balance (IDR) ---
+export type BalanceInfo = { balance: number };
+export type BalancePricing = {
   currency: string;
-  // When false the gateway isn't configured — purchases credit instantly (demo).
+  // When false the gateway isn't configured — top-ups credit instantly (demo).
   payment_configured: boolean;
 };
 export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'EXPIRED';
-// Result of starting a token purchase. When the payment gateway is not
+// Result of starting a balance top-up. When the payment gateway is not
 // configured the backend credits immediately and returns the 'demo' variant.
+// `amount` is IDR (whole rupiah).
 export type PurchaseResult =
   | { mode: 'demo'; balance: number }
   | {
@@ -148,12 +146,12 @@ export type PurchaseResult =
       token: string;
       redirect_url: string;
       client_key: string;
-      gross_amount: number;
+      amount: number;
     };
-export type TokenOrderStatus = {
+export type OrderStatus = {
   order_id: string;
   status: PaymentStatus;
-  token_amount: number;
+  amount: number;
   balance: number;
 };
 export type UnlockResult = {
@@ -224,7 +222,6 @@ export type CreateBatchResult = {
 export type RedeemResult = {
   assessment_id: string;
   assessment_title: string;
-  granted_tokens: number;
 };
 
 // --- Products (sellable 1:1 wrapper around an assessment) ---
@@ -238,20 +235,21 @@ export type PricingTier = {
   description: string;
   kind: ProductTierKind;
   priceLabel: string;
-  tokenCost: number;
+  // Price in IDR (whole rupiah); 0 -> hidden.
+  amount: number;
   ctaLabel: string;
   imageUrl: string | null;
   highlight: boolean;
 };
 export type ProductTiers = PricingTier[];
 export type ProductStatus = 'DRAFT' | 'PUBLISHED';
-// A company/batch seat package: buying it charges `tokenCost` tokens and issues
+// A company/batch seat package: buying it charges `amount` (IDR) and issues
 // `seats` voucher codes.
 export type VoucherPackage = {
   id: string;
   label: string;
   seats: number;
-  tokenCost: number;
+  amount: number;
 };
 // Full product as seen by its owning mentor.
 export type MentorProduct = {
@@ -320,7 +318,6 @@ export type MentorAssessmentDetail = {
   low_score_threshold: number | null;
   high_score_threshold: number | null;
   price: number;
-  premium_token_cost: number;
   free_report_template: string | null;
   premium_report_description: string | null;
   email_template: string | null;
@@ -329,7 +326,7 @@ export type MentorAssessmentDetail = {
   study_video_url: string | null;
   learning_resources: LearningResourcesDoc | null;
   access_mode: AccessMode | null;
-  access_token_cost: number;
+  access_cost: number;
   created_at: string;
   updated_at: string;
   questions: MentorQuestion[];
@@ -348,7 +345,7 @@ export type MentorRevenueTxn = {
 };
 export type MentorRevenue = {
   totalRevenue: number;
-  premiumUnlocks: number;
+  paidUnlocks: number;
   transactions: MentorRevenueTxn[];
 };
 
@@ -357,7 +354,7 @@ export type ChartPoint = { name: string; value: number };
 
 export type MentorAnalytics = {
   assessmentPerformance: { name: string; attempts: number }[];
-  revenueByDate: { date: string; tokens: number }[];
+  revenueByDate: { date: string; amount: number }[];
   scoreDistribution: ChartPoint[];
   conversionFunnel: { stage: string; value: number }[];
 };
@@ -374,7 +371,7 @@ export type AdminUser = {
   name: string | null;
   email: string;
   role: Role;
-  token_balance: number;
+  balance: number;
   created_at: string;
 };
 

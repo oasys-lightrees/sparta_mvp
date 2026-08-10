@@ -128,7 +128,6 @@ export const listMine = async (userId: string) => {
       attempt_id: attempts.id,
       assessment_id: assessments.id,
       assessment_title: assessments.title,
-      premium_token_cost: assessments.premiumTokenCost,
       score: attempts.totalScore,
       created_at: attempts.createdAt,
       report_id: reports.id,

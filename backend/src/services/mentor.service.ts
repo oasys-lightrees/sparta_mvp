@@ -1,4 +1,4 @@
-import { and, avg, count, desc, eq, sql } from 'drizzle-orm';
+import { and, avg, count, desc, eq, inArray, sql } from 'drizzle-orm';
 import { db } from '../db/client';
 import { assessments, attempts, transactions, users } from '../db/schema';
 import { HttpError } from '../utils/http-error';
@@ -67,13 +67,14 @@ export const getStats = async (mentorId: string) => {
 };
 
 /**
- * Token revenue for the mentor: sum + count of PREMIUM_UNLOCK transactions
- * crediting this mentor, plus the recent unlock list.
+ * Balance revenue for the mentor (IDR): sum + count of paid transactions
+ * crediting this mentor — start-access purchases and voucher-batch buys — plus
+ * the recent list.
  */
 export const getRevenue = async (mentorId: string) => {
-  const premiumFilter = and(
+  const paidFilter = and(
     eq(transactions.mentorId, mentorId),
-    eq(transactions.type, 'PREMIUM_UNLOCK'),
+    inArray(transactions.type, ['ACCESS_PURCHASE', 'VOUCHER_PURCHASE']),
   );
 
   const [agg] = await db
@@ -82,7 +83,7 @@ export const getRevenue = async (mentorId: string) => {
       unlocks: count(transactions.id),
     })
     .from(transactions)
-    .where(premiumFilter);
+    .where(paidFilter);
 
   const rows = await db
     .select({
@@ -92,12 +93,12 @@ export const getRevenue = async (mentorId: string) => {
     })
     .from(transactions)
     .leftJoin(assessments, eq(transactions.assessmentId, assessments.id))
-    .where(premiumFilter)
+    .where(paidFilter)
     .orderBy(desc(transactions.createdAt));
 
   return {
     totalRevenue: Number(agg?.total ?? 0),
-    premiumUnlocks: Number(agg?.unlocks ?? 0),
+    paidUnlocks: Number(agg?.unlocks ?? 0),
     transactions: rows,
   };
 };
@@ -106,9 +107,9 @@ export const getRevenue = async (mentorId: string) => {
  * Visual analytics for the mentor dashboard charts.
  *
  *  - assessmentPerformance: attempts per assessment (bar)
- *  - revenueByDate:         tokens earned per day from premium unlocks (line)
+ *  - revenueByDate:         balance (IDR) earned per day from paid unlocks (line)
  *  - scoreDistribution:     attempts bucketed Beginner/Intermediate/Advanced (pie)
- *  - conversionFunnel:      submissions -> premium unlocks (bar)
+ *  - conversionFunnel:      submissions -> paid unlocks (bar)
  *
  * Page views are not tracked, so the funnel starts at submissions.
  */
@@ -130,18 +131,18 @@ export const getAnalytics = async (mentorId: string) => {
     attempts: Number(r.attempts),
   }));
 
-  // 2. Token revenue per day (premium unlocks crediting this mentor).
+  // 2. Balance revenue per day (paid unlocks crediting this mentor).
   const dateExpr = sql<string>`to_char(${transactions.createdAt}, 'YYYY-MM-DD')`;
   const revRows = await db
     .select({
       date: dateExpr,
-      tokens: sql<string>`coalesce(sum(${transactions.amount}), 0)`,
+      amount: sql<string>`coalesce(sum(${transactions.amount}), 0)`,
     })
     .from(transactions)
     .where(
       and(
         eq(transactions.mentorId, mentorId),
-        eq(transactions.type, 'PREMIUM_UNLOCK'),
+        inArray(transactions.type, ['ACCESS_PURCHASE', 'VOUCHER_PURCHASE']),
       ),
     )
     .groupBy(dateExpr)
@@ -149,7 +150,7 @@ export const getAnalytics = async (mentorId: string) => {
 
   const revenueByDate = revRows.map((r) => ({
     date: r.date,
-    tokens: Number(r.tokens),
+    amount: Number(r.amount),
   }));
 
   // 3. Score distribution by each assessment's own thresholds.
@@ -170,7 +171,7 @@ export const getAnalytics = async (mentorId: string) => {
     (name) => ({ name, value: bandCounts[name] ?? 0 }),
   );
 
-  // 4. Conversion funnel: submissions -> premium unlocks.
+  // 4. Conversion funnel: submissions -> paid unlocks.
   const submissions = assessmentPerformance.reduce(
     (sum, a) => sum + a.attempts,
     0,
@@ -181,12 +182,12 @@ export const getAnalytics = async (mentorId: string) => {
     .where(
       and(
         eq(transactions.mentorId, mentorId),
-        eq(transactions.type, 'PREMIUM_UNLOCK'),
+        inArray(transactions.type, ['ACCESS_PURCHASE', 'VOUCHER_PURCHASE']),
       ),
     );
   const conversionFunnel = [
     { stage: 'Submissions', value: submissions },
-    { stage: 'Premium Unlocks', value: Number(unlockAgg?.value ?? 0) },
+    { stage: 'Paid Unlocks', value: Number(unlockAgg?.value ?? 0) },
   ];
 
   return {

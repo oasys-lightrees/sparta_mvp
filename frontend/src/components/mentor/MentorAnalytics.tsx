@@ -44,10 +44,10 @@ export function MentorAnalytics() {
         />
         <LineChartCard
           title="Revenue over time"
-          description="Tokens earned per day"
+          description="Balance (Rp) earned per day"
           data={data ? data.revenueByDate : null}
           xKey="date"
-          yKey="tokens"
+          yKey="amount"
           error={error}
           emptyLabel="No paid revenue yet"
         />

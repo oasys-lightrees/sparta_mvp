@@ -59,8 +59,7 @@ type AssessmentAccessRow = {
   status: string;
   mentorId: string;
   accessMode: AccessMode | null;
-  accessTokenCost: number;
-  premiumTokenCost: number;
+  accessCost: number;
   price: number;
 };
 
@@ -73,8 +72,7 @@ const loadAssessment = async (
       status: assessments.status,
       mentorId: assessments.mentorId,
       accessMode: assessments.accessMode,
-      accessTokenCost: assessments.accessTokenCost,
-      premiumTokenCost: assessments.premiumTokenCost,
+      accessCost: assessments.accessCost,
       price: assessments.price,
     })
     .from(assessments)
@@ -89,7 +87,7 @@ const loadAssessment = async (
 /**
  * Resolve the access state of an assessment for a given user (or anonymous when
  * userId is null). Everything the client needs to render the right CTA — the
- * mode, whether a grant/auth is required, the token cost, and whether THIS user
+ * mode, whether a grant/auth is required, the access cost, and whether THIS user
  * already has access — comes from here so no gating rule is duplicated on the
  * frontend.
  */
@@ -102,15 +100,15 @@ export const getAccessState = async (
   const policy = policyFor(mode);
 
   let hasAccess = !policy.startRequiresGrant;
-  let tokenBalance: number | null = null;
+  let balance: number | null = null;
   if (userId) {
     if (policy.startRequiresGrant) hasAccess = await hasGrant(userId, assessmentId);
     const [wallet] = await db
-      .select({ balance: users.tokenBalance })
+      .select({ balance: users.balance })
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
-    tokenBalance = wallet?.balance ?? null;
+    balance = wallet?.balance ?? null;
   }
 
   return {
@@ -120,11 +118,10 @@ export const getAccessState = async (
     requires_auth_to_start: policy.requiresAuthToStart,
     grant_via: policy.grantVia,
     premium_unlockable: policy.premiumUnlockable,
-    access_token_cost: a.accessTokenCost,
-    premium_token_cost: a.premiumTokenCost,
+    access_cost: a.accessCost,
     price: a.price,
     has_access: hasAccess,
-    token_balance: tokenBalance,
+    balance,
   };
 };
 
@@ -158,11 +155,11 @@ export const assertCanStart = async (
 };
 
 /**
- * Purchase start-access to a PAID assessment using the token wallet (the same
+ * Purchase start-access to a PAID assessment using the wallet balance (the same
  * wallet funded by Midtrans / the demo top-up). Idempotent: if the user already
- * has access, no charge is made. Debits access_token_cost tokens, records an
- * ACCESS_PURCHASE transaction crediting the mentor, and grants access — all in
- * one transaction.
+ * has access, no charge is made. Debits access_cost (IDR) from the balance,
+ * records an ACCESS_PURCHASE transaction crediting the mentor, and grants access
+ * — all in one transaction.
  */
 export const purchaseAccess = async (userId: string, assessmentId: string) => {
   const a = await loadAssessment(assessmentId);
@@ -178,7 +175,7 @@ export const purchaseAccess = async (userId: string, assessmentId: string) => {
     return { charged: 0, already_purchased: true };
   }
 
-  const cost = a.accessTokenCost;
+  const cost = a.accessCost;
 
   return db.transaction(async (tx) => {
     // Claim the grant atomically. The unique (user, assessment) constraint means
@@ -201,11 +198,11 @@ export const purchaseAccess = async (userId: string, assessmentId: string) => {
       // rolls back, so access is never granted without a successful charge.
       const debited = await tx
         .update(users)
-        .set({ tokenBalance: sql`${users.tokenBalance} - ${cost}` })
-        .where(and(eq(users.id, userId), gte(users.tokenBalance, cost)))
-        .returning({ balance: users.tokenBalance });
+        .set({ balance: sql`${users.balance} - ${cost}` })
+        .where(and(eq(users.id, userId), gte(users.balance, cost)))
+        .returning({ balance: users.balance });
       if (debited.length === 0) {
-        throw new HttpError(400, 'Not enough tokens');
+        throw new HttpError(400, 'Not enough balance');
       }
       await tx.insert(transactions).values({
         userId,

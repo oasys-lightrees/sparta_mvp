@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { tokenApi } from '@/services/token.api';
+import { balanceApi } from '@/services/balance.api';
 
 /**
- * The current user's token balance, or null when logged out / still loading.
- * Refetches whenever the authenticated user changes.
+ * The current user's wallet balance (IDR), or null when logged out / still
+ * loading. Refetches whenever the authenticated user changes.
  */
-export function useTokenBalance(): number | null {
+export function useBalance(): number | null {
   const { user } = useAuth();
   const [balance, setBalance] = useState<number | null>(null);
 
@@ -18,7 +18,7 @@ export function useTokenBalance(): number | null {
       return;
     }
     let active = true;
-    tokenApi
+    balanceApi
       .getBalance()
       .then((r) => {
         if (active) setBalance(r.balance);

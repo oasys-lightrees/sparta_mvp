@@ -24,7 +24,7 @@ const handleError = (c: Context<AppEnv>, err: unknown) => {
   throw err;
 };
 
-// Buy a voucher batch (purchase a seat package with tokens).
+// Buy a voucher batch (purchase a seat package from the wallet balance).
 voucher.post('/batches', authMiddleware, async (c) => {
   const body = await c.req.json().catch(() => null);
   if (!body || typeof body.assessment_id !== 'string' || !UUID_REGEX.test(body.assessment_id)) {

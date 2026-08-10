@@ -1,24 +1,25 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Coins, X } from 'lucide-react';
-import { tokenApi } from '@/services/token.api';
+import { Wallet, X } from 'lucide-react';
+import { balanceApi } from '@/services/balance.api';
+import { formatIdr } from '@/lib/currency';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { cn } from '@/lib/utils';
-import type { TokenPricing } from '@/types';
+import type { BalancePricing } from '@/types';
 
-const PACKAGES = [10, 25, 50, 100];
-const MAX_TOKENS = 10000;
-
-const formatIdr = (n: number) => `Rp ${n.toLocaleString('id-ID')}`;
+// Preset top-up amounts in IDR (whole rupiah).
+const PRESETS = [25_000, 50_000, 100_000, 250_000];
+const MIN_AMOUNT = 1_000;
+const MAX_AMOUNT = 10_000_000;
 
 /**
- * Wallet top-up dialog: pick a token amount (presets or custom), see the price,
- * and start the purchase. Replaces the old window.prompt(). The parent owns the
- * actual purchase (Midtrans redirect / demo credit) via onConfirm.
+ * Wallet top-up dialog: pick a rupiah amount (presets or custom) and start the
+ * top-up. The amount entered is exactly what's charged and credited (1:1). The
+ * parent owns the actual top-up (Midtrans redirect / demo credit) via onConfirm.
  */
 export function TopUpDialog({
   open,
@@ -33,19 +34,19 @@ export function TopUpDialog({
   submitting: boolean;
   error?: string;
 }) {
-  const [amount, setAmount] = useState<number>(10);
+  const [amount, setAmount] = useState<number>(PRESETS[0]);
   const [custom, setCustom] = useState('');
-  const [pricing, setPricing] = useState<TokenPricing | null>(null);
+  const [pricing, setPricing] = useState<BalancePricing | null>(null);
   const [localError, setLocalError] = useState('');
 
   // Load pricing whenever the dialog opens; reset selection.
   useEffect(() => {
     if (!open) return;
-    setAmount(10);
+    setAmount(PRESETS[0]);
     setCustom('');
     setLocalError('');
     let active = true;
-    tokenApi
+    balanceApi
       .getPricing()
       .then((p) => active && setPricing(p))
       .catch(() => {
@@ -56,7 +57,7 @@ export function TopUpDialog({
     };
   }, [open]);
 
-  // Close on Escape (unless a purchase is in flight).
+  // Close on Escape (unless a top-up is in flight).
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -81,13 +82,13 @@ export function TopUpDialog({
     if (raw.trim() !== '' && Number.isInteger(n) && n > 0) setAmount(n);
   };
 
-  const valid = Number.isInteger(amount) && amount > 0 && amount <= MAX_TOKENS;
-  const total = pricing ? amount * pricing.token_price_idr : null;
+  const valid =
+    Number.isInteger(amount) && amount >= MIN_AMOUNT && amount <= MAX_AMOUNT;
 
   const confirm = () => {
     if (!valid) {
       setLocalError(
-        `Enter a whole number of tokens between 1 and ${MAX_TOKENS}.`,
+        `Enter an amount between ${formatIdr(MIN_AMOUNT)} and ${formatIdr(MAX_AMOUNT)}.`,
       );
       return;
     }
@@ -108,9 +109,9 @@ export function TopUpDialog({
       >
         <div className="mb-4 flex items-start justify-between">
           <div className="flex items-center gap-2">
-            <Coins className="h-5 w-5 text-bronze" />
+            <Wallet className="h-5 w-5 text-bronze" />
             <h2 id="topup-title" className="text-lg font-semibold">
-              Buy tokens
+              Top up balance
             </h2>
           </div>
           <button
@@ -125,11 +126,12 @@ export function TopUpDialog({
         </div>
 
         <p className="mb-3 text-sm text-muted-foreground">
-          Tokens unlock paid assessments and voucher packages. Choose an amount:
+          Your balance unlocks paid assessments and voucher packages. Choose an
+          amount:
         </p>
 
-        <div className="grid grid-cols-4 gap-2">
-          {PACKAGES.map((n) => (
+        <div className="grid grid-cols-2 gap-2">
+          {PRESETS.map((n) => (
             <button
               key={n}
               type="button"
@@ -142,41 +144,40 @@ export function TopUpDialog({
                   : 'hover:bg-accent/30',
               )}
             >
-              {n}
+              {formatIdr(n)}
             </button>
           ))}
         </div>
 
         <div className="mt-3 space-y-1.5">
-          <Label htmlFor="topup-custom">Or a custom amount</Label>
+          <Label htmlFor="topup-custom">Or a custom amount (Rp)</Label>
           <Input
             id="topup-custom"
             type="number"
-            min={1}
-            max={MAX_TOKENS}
+            min={MIN_AMOUNT}
+            max={MAX_AMOUNT}
+            step={1000}
             value={custom}
             onChange={(e) => onCustom(e.target.value)}
-            placeholder="e.g. 30"
+            placeholder="e.g. 75000"
           />
         </div>
 
-        {/* Price summary */}
+        {/* Charge summary */}
         <div className="mt-4 flex items-center justify-between rounded-md border bg-accent/20 px-3 py-2.5 text-sm">
-          <span className="text-muted-foreground">
-            {amount} token{amount === 1 ? '' : 's'}
-          </span>
+          <span className="text-muted-foreground">You&apos;ll add</span>
           <span className="font-semibold">
             {pricing === null
               ? '…'
-              : pricing.payment_configured && total !== null
-                ? formatIdr(total)
-                : 'Instant demo credit'}
+              : pricing.payment_configured
+                ? formatIdr(amount)
+                : `${formatIdr(amount)} · Instant demo credit`}
           </span>
         </div>
         {pricing && !pricing.payment_configured ? (
           <p className="mt-1.5 text-xs text-muted-foreground">
-            Demo mode: no payment gateway is configured, so tokens are credited
-            instantly at no charge.
+            Demo mode: no payment gateway is configured, so your balance is
+            credited instantly at no charge.
           </p>
         ) : null}
 
@@ -191,9 +192,9 @@ export function TopUpDialog({
           >
             {submitting
               ? 'Processing…'
-              : pricing?.payment_configured && total !== null
-                ? `Pay ${formatIdr(total)}`
-                : `Add ${amount} tokens`}
+              : pricing?.payment_configured
+                ? `Pay ${formatIdr(amount)}`
+                : `Add ${formatIdr(amount)}`}
           </Button>
           <Button variant="outline" onClick={onClose} disabled={submitting}>
             Cancel

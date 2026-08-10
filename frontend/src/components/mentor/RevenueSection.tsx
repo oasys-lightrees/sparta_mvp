@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Coins, Lock } from 'lucide-react';
+import { Wallet, Lock } from 'lucide-react';
 import { mentorApi } from '@/services/mentor.api';
+import { formatIdr } from '@/lib/currency';
 import {
   Card,
   CardContent,
@@ -28,8 +29,8 @@ function StatCard({
   icon: Icon,
 }: {
   label: string;
-  value: number;
-  icon: typeof Coins;
+  value: string | number;
+  icon: typeof Wallet;
 }) {
   return (
     <Card>
@@ -79,20 +80,20 @@ export function RevenueSection() {
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:max-w-xl">
             <StatCard
-              label="Total Token Revenue"
-              value={data.totalRevenue}
-              icon={Coins}
+              label="Total Revenue"
+              value={formatIdr(data.totalRevenue)}
+              icon={Wallet}
             />
             <StatCard
               label="Paid Unlocks"
-              value={data.premiumUnlocks}
+              value={data.paidUnlocks}
               icon={Lock}
             />
           </div>
           {data.transactions.length === 0 ? (
             <EmptyState
               title="Paid unlocks will appear here"
-              description="When a user unlocks paid access to your assessment, the token revenue shows up in this list."
+              description="When a user unlocks paid access to your assessment, the revenue shows up in this list."
             />
           ) : (
             <Card>
@@ -101,7 +102,7 @@ export function RevenueSection() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Assessment</TableHead>
-                      <TableHead>Tokens</TableHead>
+                      <TableHead>Amount</TableHead>
                       <TableHead>Date</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -111,7 +112,7 @@ export function RevenueSection() {
                         <TableCell className="font-medium">
                           {t.assessmentTitle ?? '—'}
                         </TableCell>
-                        <TableCell>{t.amount}</TableCell>
+                        <TableCell>{formatIdr(t.amount)}</TableCell>
                         <TableCell>
                           {new Date(t.date).toLocaleString()}
                         </TableCell>

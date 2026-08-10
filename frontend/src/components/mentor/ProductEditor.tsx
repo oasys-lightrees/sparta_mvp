@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { productApi } from '@/services/product.api';
+import { formatIdr } from '@/lib/currency';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,7 +28,7 @@ import type {
 
 const KIND_OPTIONS: { value: ProductTierKind; label: string }[] = [
   { value: 'FREE', label: 'Free' },
-  { value: 'PAID', label: 'Paid (tokens)' },
+  { value: 'PAID', label: 'Paid' },
   { value: 'VOUCHER', label: 'Voucher (redeem a code)' },
 ];
 
@@ -46,7 +47,7 @@ const makeTier = (over: Partial<PricingTier> = {}): PricingTier => ({
   description: '',
   kind: 'FREE',
   priceLabel: '',
-  tokenCost: 0,
+  amount: 0,
   ctaLabel: 'Get started',
   imageUrl: null,
   highlight: false,
@@ -87,7 +88,7 @@ const makePackage = (over: Partial<VoucherPackage> = {}): VoucherPackage => ({
   id: newId(),
   label: '',
   seats: 10,
-  tokenCost: 0,
+  amount: 0,
   ...over,
 });
 
@@ -111,8 +112,8 @@ const fromProduct = (p: MentorProduct): Form => ({
 });
 
 /**
- * Mentor editor for an assessment's product — a list of pricing tiers, each a
- * marketing card (title, description, price, token cost, button, image) with a
+ * Expert editor for an assessment's product — a list of pricing tiers, each a
+ * marketing card (title, description, price in Rupiah, button, image) with a
  * pricing kind (free / freemium / paid / voucher) that decides where its button
  * routes on the landing page. Purchase mechanics still reuse the assessment's
  * access model and voucher flow; this configures the presentation.
@@ -271,8 +272,8 @@ export function ProductEditor({
           <CardTitle>Product &amp; pricing</CardTitle>
           <CardDescription>
             Package this assessment into pricing tiers — each a card with its own
-            title, price, token cost, button and image, and a pricing type (free,
-            freemium, paid, or voucher).
+            title, price (in Rupiah), button and image, and a pricing type (free,
+            paid, or voucher).
           </CardDescription>
         </div>
         <div className="flex shrink-0 gap-2">
@@ -381,11 +382,11 @@ export function ProductEditor({
                 </Button>
               </div>
               <p className="rounded-md border border-dashed bg-accent/20 px-3 py-2 text-xs text-muted-foreground">
-                Token prices are charged for real. Saving sets this assessment&apos;s
-                access from the tiers: a <strong>Paid</strong> tier&apos;s tokens
-                become the start-access cost, a <strong>Voucher</strong> tier makes
-                the assessment redeemable with a code, and a <strong>Free</strong> tier
-                keeps it open to everyone.
+                Prices are in Rupiah and charged for real. Saving sets this
+                assessment&apos;s access from the tiers: a <strong>Paid</strong>{' '}
+                tier&apos;s price becomes the start-access cost, a{' '}
+                <strong>Voucher</strong> tier makes the assessment redeemable with a
+                code, and a <strong>Free</strong> tier keeps it open to everyone.
               </p>
 
               {form.tiers.map((tier, i) => (
@@ -451,17 +452,18 @@ export function ProductEditor({
                       <Input
                         value={tier.priceLabel}
                         onChange={(e) => setTier(i, { priceLabel: e.target.value })}
-                        placeholder="e.g. $29 or Free"
+                        placeholder="e.g. Rp 29.000 or Free"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label>Token price (0 = hide)</Label>
+                      <Label>Price in Rp (0 = hide)</Label>
                       <Input
                         type="number"
                         min={0}
-                        value={tier.tokenCost}
+                        step={1000}
+                        value={tier.amount}
                         onChange={(e) =>
-                          setTier(i, { tokenCost: Math.max(0, Number(e.target.value) || 0) })
+                          setTier(i, { amount: Math.max(0, Number(e.target.value) || 0) })
                         }
                       />
                     </div>
@@ -520,8 +522,8 @@ export function ProductEditor({
                 </Button>
               </div>
               <p className="rounded-md border border-dashed bg-accent/20 px-3 py-2 text-xs text-muted-foreground">
-                Batch/seat packages a company buys with tokens to get voucher codes.
-                Price each package in tokens — set it cheaper per seat than the
+                Batch/seat packages a company buys from their balance to get voucher
+                codes. Price each package in Rupiah — set it cheaper per seat than the
                 individual cost. Buyers purchase these from their dashboard&apos;s
                 Team-vouchers section.
               </p>
@@ -550,14 +552,15 @@ export function ProductEditor({
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Price (tokens)</Label>
+                    <Label>Price (Rp)</Label>
                     <Input
                       type="number"
                       min={0}
-                      className="w-28"
-                      value={pkg.tokenCost}
+                      step={1000}
+                      className="w-32"
+                      value={pkg.amount}
                       onChange={(e) =>
-                        setPackage(i, { tokenCost: Math.max(0, Number(e.target.value) || 0) })
+                        setPackage(i, { amount: Math.max(0, Number(e.target.value) || 0) })
                       }
                     />
                   </div>
@@ -572,9 +575,9 @@ export function ProductEditor({
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
-                  {pkg.seats > 0 && pkg.tokenCost > 0 ? (
+                  {pkg.seats > 0 && pkg.amount > 0 ? (
                     <p className="text-xs text-muted-foreground sm:col-span-4">
-                      {(pkg.tokenCost / pkg.seats).toFixed(1)} tokens per seat
+                      {formatIdr(Math.round(pkg.amount / pkg.seats))} per seat
                     </p>
                   ) : null}
                 </div>

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { attemptApi } from '@/services/attempt.api';
-import { tokenApi } from '@/services/token.api';
+import { balanceApi } from '@/services/balance.api';
+import { formatIdr } from '@/lib/currency';
 import { useAuth } from '@/hooks/useAuth';
 import type { AssessmentApp } from '@/types/assessment-app';
 import type { MyAttempt } from '@/types';
@@ -27,7 +28,7 @@ export function BrandedDashboard({
       try {
         const [mine, wallet] = await Promise.all([
           attemptApi.listMine(),
-          tokenApi.getBalance(),
+          balanceApi.getBalance(),
         ]);
         if (!active) return;
         setAttempts(mine.filter((a) => a.assessment_id === assessmentId));
@@ -100,8 +101,8 @@ export function BrandedDashboard({
             <div className="lato-kpi__v">{attempts === null ? '—' : attempts.length}</div>
           </div>
           <div className="lato-kpi">
-            <div className="lato-kpi__k">Token balance</div>
-            <div className="lato-kpi__v">{balance === null ? '—' : balance}</div>
+            <div className="lato-kpi__k">Wallet balance</div>
+            <div className="lato-kpi__v">{balance === null ? '—' : formatIdr(balance)}</div>
           </div>
           <div className="lato-kpi">
             <div className="lato-kpi__k">Latest score</div>

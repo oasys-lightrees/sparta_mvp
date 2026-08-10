@@ -4,7 +4,7 @@ import Link from 'next/link';
 import {
   ArrowRight,
   BarChart3,
-  Coins,
+  Wallet,
   FileText,
   Mail,
   Sparkles,
@@ -34,10 +34,10 @@ const FEATURES = [
       'Every assessment gets its own branded landing page — your logo, colors, copy, cover photo, and products.',
   },
   {
-    icon: Coins,
-    title: 'Token Payments',
+    icon: Wallet,
+    title: 'Balance Payments',
     description:
-      'Learners top up a token wallet and spend it to unlock your paid assessments — powered by a real payment gateway.',
+      'Learners top up a wallet balance and spend it to unlock your paid assessments — powered by a real payment gateway.',
   },
   {
     icon: Wand2,
@@ -49,7 +49,7 @@ const FEATURES = [
     icon: TrendingUp,
     title: 'Expert Revenue Tracking',
     description:
-      'See every paid unlock and your total token revenue in one clean dashboard — no spreadsheets required.',
+      'See every paid unlock and your total revenue in one clean dashboard — no spreadsheets required.',
   },
   {
     icon: BarChart3,
@@ -79,7 +79,7 @@ const MENTOR_STEPS = [
   {
     title: 'Earn from paid access',
     description:
-      'Charge tokens for access or sell team voucher packages, and track the revenue.',
+      'Charge for access or sell team voucher packages, and track the revenue.',
   },
 ];
 
@@ -97,7 +97,7 @@ const USER_STEPS = [
   {
     title: 'Go further',
     description:
-      'Use tokens to unlock paid assessments, or redeem a company voucher to get access.',
+      'Top up your balance to unlock paid assessments, or redeem a company voucher to get access.',
   },
 ];
 
@@ -314,8 +314,8 @@ export default function HomePage() {
               {t('landing.pricingTitle')}
             </h2>
             <p className="text-muted-foreground">
-              Free assessments are always free. Paid assessments unlock with
-              tokens, or with a company voucher code.
+              Free assessments are always free. Paid assessments unlock from your
+              wallet balance, or with a company voucher code.
             </p>
           </div>
           <div className="mx-auto grid max-w-4xl gap-6 sm:grid-cols-2">
@@ -341,16 +341,16 @@ export default function HomePage() {
             <Card className="relative flex flex-col border-primary/40 shadow-sm">
               <CardHeader className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Coins className="h-5 w-5 text-primary" />
+                  <Wallet className="h-5 w-5 text-primary" />
                   <CardTitle className="text-xl">Paid assessments</CardTitle>
                 </div>
                 <CardDescription>
-                  Unlocked with tokens or a company voucher.
+                  Unlocked from your balance or a company voucher.
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex-1">
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• Top up a token wallet, then unlock access</li>
+                  <li>• Top up your wallet balance, then unlock access</li>
                   <li>• Or redeem a company voucher code</li>
                   <li>• Results delivered to your inbox</li>
                   <li>• Experts earn revenue on every unlock</li>

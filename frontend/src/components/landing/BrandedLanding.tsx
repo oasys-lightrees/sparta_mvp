@@ -1,6 +1,7 @@
 import { type CSSProperties } from 'react';
 import type { AssessmentApp, Plan } from '@/types/assessment-app';
 import type { AccessMode, PricingTier, PublicProduct } from '@/types';
+import { formatIdr } from '@/lib/currency';
 import { BrandedAuthChip } from '@/components/branded/BrandedAuthChip';
 import { VoucherRedeemBox } from '@/components/branded/VoucherRedeemBox';
 import './lato-theme.css';
@@ -74,7 +75,7 @@ export function BrandedLanding({
   homeHref = '#top',
   latoHref = '/',
   accessMode,
-  accessTokenCost = 0,
+  accessCost = 0,
 }: {
   app: AssessmentApp;
   product?: PublicProduct | null;
@@ -88,17 +89,17 @@ export function BrandedLanding({
   // The main LATO platform home (the "Back to LATO" button links here).
   latoHref?: string;
   accessMode?: AccessMode | null;
-  accessTokenCost?: number;
+  accessCost?: number;
 }) {
   const { brand, theme, landing, assessment, products, reports } = app;
-  // Primary CTA reflects the access model: paid shows the token cost, voucher
+  // Primary CTA reflects the access model: paid shows the access price, voucher
   // routes to redemption, free/freemium keep the configured copy. The actual
   // gate is enforced on the start page + backend — this only labels the door.
   const primaryLabel =
     accessMode === 'VOUCHER'
       ? 'Redeem a voucher to start'
       : accessMode === 'PAID'
-        ? `Get access · ${accessTokenCost} tokens`
+        ? `Get access · ${formatIdr(accessCost)}`
         : landing.hero.ctaPrimary;
   const primaryHref =
     accessMode === 'VOUCHER' ? (redeemHref ?? startHref) : startHref;
@@ -359,8 +360,8 @@ export function BrandedLanding({
  * Renders a published product's pricing tiers as wired cards. The tier's `kind`
  * decides where its button routes: a VOUCHER tier accepts a voucher (the redeem
  * flow); every other kind starts the assessment (the start page enforces the
- * real access gate). Each card shows the price, an optional token price, and an
- * optional image placed between the title and the button.
+ * real access gate). Each card shows the price (in Rupiah) and an optional image
+ * placed between the title and the button.
  */
 function ProductTierCards({
   tiers,
@@ -382,10 +383,10 @@ function ProductTierCards({
           className={`lato-plan${tier.highlight ? ' lato-plan--hot' : ''}`}
         >
           {tier.highlight ? <span className="lato-plan__badge">Most popular</span> : null}
-          {/* Order: title, photo, description, price (token), button */}
+          {/* Order: title, photo, description, price, button */}
           <div className="lato-plan__name">{tier.title || '—'}</div>
           {tier.imageUrl ? (
-            // Mentor-provided tier image, shown between the title and the price.
+            // Expert-provided tier image, shown between the title and the price.
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={tier.imageUrl}
@@ -401,15 +402,13 @@ function ProductTierCards({
             />
           ) : null}
           {tier.description ? <div className="lato-plan__tag">{tier.description}</div> : null}
-          {/* Token price is the focus — bold and prominent, above the description. */}
+          {/* Price is the focus — bold and prominent, above the description. */}
           <div className="lato-plan__price" style={{ fontWeight: 800 }}>
             <b>
-              {tier.tokenCost > 0
-                ? `${tier.tokenCost} token${tier.tokenCost === 1 ? '' : 's'}`
-                : tier.priceLabel || 'Free'}
+              {tier.amount > 0 ? formatIdr(tier.amount) : tier.priceLabel || 'Free'}
             </b>
           </div>
-          {tier.tokenCost > 0 && tier.priceLabel ? (
+          {tier.amount > 0 && tier.priceLabel ? (
             <div style={{ fontSize: '.82rem', color: 'var(--muted)', marginTop: 2 }}>
               {tier.priceLabel}
             </div>

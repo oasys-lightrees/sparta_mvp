@@ -22,7 +22,6 @@ type AssessmentConfig = {
   low_score_threshold?: number | null;
   high_score_threshold?: number | null;
   price?: number;
-  premium_token_cost?: number;
   free_report_template?: string | null;
   premium_report_description?: string | null;
   email_template?: string | null;
@@ -32,7 +31,7 @@ type AssessmentConfig = {
   study_video_url?: string | null;
   learning_resources?: LearningResourcesDoc | null;
   access_mode?: AccessMode | null;
-  access_token_cost?: number;
+  access_cost?: number;
 };
 
 export const assessmentApi = {
@@ -46,7 +45,7 @@ export const assessmentApi = {
   getAccess: (id: string) =>
     apiClient.get<AccessState>(`/api/assessments/${id}/access`),
 
-  // Access model: purchase start access with tokens (PAID mode; idempotent).
+  // Access model: purchase start access from balance (PAID mode; idempotent).
   purchaseAccess: (id: string) =>
     apiClient.post<PurchaseAccessResult>(`/api/assessments/${id}/access/purchase`),
 

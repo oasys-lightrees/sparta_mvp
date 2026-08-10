@@ -24,7 +24,6 @@ export type AssessmentPayload = {
   low_score_threshold: number | null;
   high_score_threshold: number | null;
   free_report_text: string | null;
-  premium_token_cost: number;
   free_report_template: string | null;
   premium_report_description: string | null;
   email_template: string | null;
@@ -34,7 +33,7 @@ export type AssessmentPayload = {
   study_video_url: string | null;
   learning_resources: LearningResourcesDoc | null;
   access_mode: AccessMode;
-  access_token_cost: number;
+  access_cost: number;
 };
 
 // Result-category editor rows (diagnostic/personality assessments). Codes are
@@ -50,7 +49,6 @@ type Props = {
     low_score_threshold: number | null;
     high_score_threshold: number | null;
     free_report_text: string | null;
-    premium_token_cost: number;
     free_report_template: string | null;
     premium_report_description: string | null;
     email_template: string | null;
@@ -60,7 +58,7 @@ type Props = {
     study_video_url: string | null;
     learning_resources: LearningResourcesDoc | null;
     access_mode: AccessMode | null;
-    access_token_cost: number;
+    access_cost: number;
   }>;
   submitLabel: string;
   submitting: boolean;
@@ -103,8 +101,8 @@ export function AssessmentForm({
     const m = initial?.access_mode ?? 'FREE';
     return m === 'FREEMIUM' ? 'FREE' : m;
   });
-  const [accessTokenCost, setAccessTokenCost] = useState(
-    numStr(initial?.access_token_cost),
+  const [accessCost, setAccessCost] = useState(
+    numStr(initial?.access_cost),
   );
   const [categories, setCategories] = useState<CategoryRow[]>(() => {
     const rc = initial?.result_categories;
@@ -174,9 +172,9 @@ export function AssessmentForm({
       setLocalError('Low score threshold must be <= high score threshold');
       return;
     }
-    const accessCost = accessTokenCost.trim() === '' ? 0 : Number(accessTokenCost);
-    if (accessMode === 'PAID' && accessCost <= 0) {
-      setLocalError('PAID assessments need a positive access cost (tokens)');
+    const cost = accessCost.trim() === '' ? 0 : Number(accessCost);
+    if (accessMode === 'PAID' && cost <= 0) {
+      setLocalError('PAID assessments need a positive access cost (Rp)');
       return;
     }
     onSubmit({
@@ -188,8 +186,6 @@ export function AssessmentForm({
       low_score_threshold: lowNum,
       high_score_threshold: highNum,
       free_report_text: freeText.trim() === '' ? null : freeText,
-      // Premium report removed — never charge a premium unlock.
-      premium_token_cost: 0,
       // Score template is a skill-mode field.
       free_report_template:
         isPersonality || freeTemplate.trim() === '' ? null : freeTemplate,
@@ -203,8 +199,8 @@ export function AssessmentForm({
         studyVideoUrl.trim() === '' ? null : studyVideoUrl.trim(),
       learning_resources: resourcesDoc,
       access_mode: accessMode,
-      // Access cost only applies to PAID; force 0 otherwise so it's never stale.
-      access_token_cost: accessMode === 'PAID' ? accessCost : 0,
+      // Access cost (Rp) only applies to PAID; force 0 otherwise so it's never stale.
+      access_cost: accessMode === 'PAID' ? cost : 0,
     });
   };
 
@@ -295,8 +291,8 @@ export function AssessmentForm({
         <div className="space-y-1">
           <Label>Access model</Label>
           <p className="text-xs text-muted-foreground">
-            Controls who can start this assessment. Payments are token-based:
-            takers fund a token wallet, then spend tokens to start a Paid
+            Controls who can start this assessment. Payments use a balance wallet:
+            takers top up their balance (in Rupiah), then spend it to start a Paid
             assessment. A Paid assessment can also be unlocked with a voucher
             code.
           </p>
@@ -305,7 +301,7 @@ export function AssessmentForm({
           {(
             [
               { value: 'FREE', title: 'Free', description: 'Anyone can start immediately. Full result included.' },
-              { value: 'PAID', title: 'Paid (tokens)', description: 'Spend tokens to start. Full result included. Vouchers also work.' },
+              { value: 'PAID', title: 'Paid', description: 'Pay from balance to start. Full result included. Vouchers also work.' },
               { value: 'VOUCHER', title: 'Voucher only', description: 'Must redeem a valid voucher before starting.' },
             ] as const
           ).map((opt) => (
@@ -330,19 +326,20 @@ export function AssessmentForm({
         </div>
         {accessMode === 'PAID' ? (
           <div className="space-y-2">
-            <Label htmlFor="access_token_cost">Access cost (tokens)</Label>
+            <Label htmlFor="access_cost">Access cost (Rp)</Label>
             <Input
-              id="access_token_cost"
+              id="access_cost"
               type="number"
-              min={1}
-              value={accessTokenCost}
-              onChange={(e) => setAccessTokenCost(e.target.value)}
-              placeholder="e.g. 30"
+              min={1000}
+              step={1000}
+              value={accessCost}
+              onChange={(e) => setAccessCost(e.target.value)}
+              placeholder="e.g. 30000"
             />
             <p className="text-xs text-muted-foreground">
-              Tokens a taker spends to unlock access before starting. They fund
-              their wallet via payment (Midtrans) or the demo top-up, then spend
-              it here. The full result is included.
+              The Rupiah amount a taker spends to unlock access before starting.
+              They top up their balance via payment (Midtrans) or the demo top-up,
+              then spend it here. The full result is included.
             </p>
           </div>
         ) : null}

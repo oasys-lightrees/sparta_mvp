@@ -9,7 +9,7 @@
  *  - FREEMIUM — anyone can start for free; full result included (kept as a
  *               distinct mode for backward compatibility; behaves like FREE now
  *               that the separate premium report has been removed).
- *  - PAID     — must purchase access (tokens) before starting; full result included.
+ *  - PAID     — must purchase access (from wallet balance) before starting; full result included.
  *  - VOUCHER  — must redeem a valid voucher before starting; full result included.
  *
  * Backward compatibility: existing rows default to FREEMIUM. There is no longer a

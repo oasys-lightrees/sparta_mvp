@@ -6,7 +6,7 @@ import type { Role } from '../middleware/auth.middleware';
 import { HttpError } from '../utils/http-error';
 
 /**
- * List all users (admin view), including their token balance.
+ * List all users (admin view), including their wallet balance (IDR).
  */
 export const listUsers = async () => {
   return db
@@ -15,7 +15,7 @@ export const listUsers = async () => {
       name: users.name,
       email: users.email,
       role: users.role,
-      token_balance: users.tokenBalance,
+      balance: users.balance,
       created_at: users.createdAt,
     })
     .from(users)
@@ -23,15 +23,16 @@ export const listUsers = async () => {
 };
 
 /**
- * Grant tokens to a user and record an ADMIN_GRANT transaction. 404 if missing.
+ * Grant balance (IDR) to a user and record an ADMIN_GRANT transaction. 404 if
+ * missing.
  */
-export const grantTokens = async (userId: string, amount: number) => {
+export const grantBalance = async (userId: string, amount: number) => {
   return db.transaction(async (tx) => {
     const [updated] = await tx
       .update(users)
-      .set({ tokenBalance: sql`${users.tokenBalance} + ${amount}` })
+      .set({ balance: sql`${users.balance} + ${amount}` })
       .where(eq(users.id, userId))
-      .returning({ id: users.id, token_balance: users.tokenBalance });
+      .returning({ id: users.id, balance: users.balance });
 
     if (!updated) {
       throw new HttpError(404, 'User not found');
@@ -93,8 +94,8 @@ export const getStats = async () => {
 /**
  * Visual analytics for the admin dashboard charts.
  *
- *  - platformGrowth:   total users, mentors and assessments (bar)
- *  - revenueOverview:  total token transactions vs premium unlock volume (bar)
+ *  - platformGrowth:   total users, experts and assessments (bar)
+ *  - revenueOverview:  total transactions vs paid-access purchases (bar)
  *  - activityOverTime: submissions per day (line)
  */
 export const getAnalytics = async () => {
@@ -103,7 +104,7 @@ export const getAnalytics = async () => {
     [mentorCount],
     [assessmentCount],
     [txnCount],
-    [premiumCount],
+    [accessCount],
   ] = await Promise.all([
     db.select({ value: count() }).from(users),
     db.select({ value: count() }).from(users).where(eq(users.role, 'MENTOR')),
@@ -112,7 +113,7 @@ export const getAnalytics = async () => {
     db
       .select({ value: count() })
       .from(transactions)
-      .where(eq(transactions.type, 'PREMIUM_UNLOCK')),
+      .where(eq(transactions.type, 'ACCESS_PURCHASE')),
   ]);
 
   const dateExpr = sql<string>`to_char(${attempts.createdAt}, 'YYYY-MM-DD')`;
@@ -129,8 +130,8 @@ export const getAnalytics = async () => {
       { name: 'Assessments', value: Number(assessmentCount.value) },
     ],
     revenueOverview: [
-      { name: 'Token Transactions', value: Number(txnCount.value) },
-      { name: 'Premium Unlocks', value: Number(premiumCount.value) },
+      { name: 'Transactions', value: Number(txnCount.value) },
+      { name: 'Paid Unlocks', value: Number(accessCount.value) },
     ],
     activityOverTime: activityRows.map((r) => ({
       date: r.date,

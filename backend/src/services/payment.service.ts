@@ -2,27 +2,27 @@ import 'dotenv/config';
 import { createHash, randomUUID } from 'node:crypto';
 import { and, eq, ne, sql } from 'drizzle-orm';
 import { db } from '../db/client';
-import { tokenOrders, transactions, users } from '../db/schema';
+import { orders, transactions, users } from '../db/schema';
 import { HttpError } from '../utils/http-error';
 
 /**
- * Midtrans token-purchase integration. Backend-only — the server key never
- * reaches the browser. Uses the Snap REST API directly (no SDK), mirroring how
- * ai.service talks to OpenAI.
+ * Midtrans balance top-up integration. Backend-only — the server key never
+ * reaches the browser. Uses the Snap REST API directly (no SDK).
+ *
+ * The wallet holds IDR (whole rupiah) directly: there is no token/currency
+ * conversion. The amount a user tops up is exactly the amount charged by
+ * Midtrans and credited to their balance (1:1).
  *
  * Config (env only):
- *   MIDTRANS_SERVER_KEY   (required for real payments; absent -> demo fallback)
- *   MIDTRANS_CLIENT_KEY   (returned to the browser for the Snap widget)
+ *   MIDTRANS_SERVER_KEY    (required for real payments; absent -> demo fallback)
+ *   MIDTRANS_CLIENT_KEY    (returned to the browser for the Snap widget)
  *   MIDTRANS_IS_PRODUCTION ('true' -> live endpoints; default sandbox)
- *   TOKEN_PRICE_IDR       (price of one token in IDR; default 1000)
  *
  * When MIDTRANS_SERVER_KEY is unset the platform degrades gracefully to the
- * demo top-up so local dev and the MVP demo keep working (same philosophy as
- * the AI/email features).
+ * demo top-up so local dev and the MVP demo keep working.
  */
 
 const TIMEOUT_MS = 20_000;
-const DEFAULT_TOKEN_PRICE_IDR = 1000;
 
 export const isPaymentConfigured = (): boolean =>
   Boolean(process.env.MIDTRANS_SERVER_KEY);
@@ -31,10 +31,10 @@ const isProduction = (): boolean =>
   process.env.MIDTRANS_IS_PRODUCTION === 'true';
 
 /**
- * Whether the no-gateway "demo credit" paths (immediate free tokens) are
+ * Whether the no-gateway "demo credit" paths (immediate free balance) are
  * allowed. Enabled for local dev and the demo, but DISABLED in production so a
- * live deployment can never mint free tokens — real purchases must go through
- * the payment gateway. Production is signalled by MIDTRANS_IS_PRODUCTION=true.
+ * live deployment can never mint free balance — real top-ups must go through the
+ * payment gateway. Production is signalled by MIDTRANS_IS_PRODUCTION=true.
  */
 export const isDemoBillingAllowed = (): boolean => !isProduction();
 
@@ -43,17 +43,11 @@ const snapBaseUrl = (): string =>
     ? 'https://app.midtrans.com/snap/v1'
     : 'https://app.sandbox.midtrans.com/snap/v1';
 
-const tokenPriceIdr = (): number => {
-  const raw = Number(process.env.TOKEN_PRICE_IDR);
-  return Number.isFinite(raw) && raw > 0 ? Math.round(raw) : DEFAULT_TOKEN_PRICE_IDR;
-};
-
 /**
- * Public pricing info for the wallet UI: the per-token price and whether a real
- * gateway is configured (so the UI can show a price vs. an instant demo credit).
+ * Public pricing info for the wallet UI: the currency and whether a real gateway
+ * is configured (so the UI can show a charge vs. an instant demo credit).
  */
 export const getPricing = () => ({
-  token_price_idr: tokenPriceIdr(),
   currency: 'IDR',
   payment_configured: isPaymentConfigured(),
 });
@@ -66,47 +60,48 @@ export type CreateOrderResult =
       token: string;
       redirect_url: string;
       client_key: string;
-      gross_amount: number;
+      amount: number;
     };
 
 /**
- * Demo (no-gateway) top-up: credit the wallet immediately and record a
- * TOKEN_TOPUP transaction. Used directly by the legacy endpoint and as the
- * fallback when Midtrans is not configured.
+ * Demo (no-gateway) top-up: credit the wallet immediately and record a TOPUP
+ * transaction. Used directly by the legacy endpoint and as the fallback when
+ * Midtrans is not configured. `amount` is IDR (whole rupiah).
  */
 export const topupDemo = async (userId: string, amount: number) => {
   return db.transaction(async (tx) => {
     const [updated] = await tx
       .update(users)
-      .set({ tokenBalance: sql`${users.tokenBalance} + ${amount}` })
+      .set({ balance: sql`${users.balance} + ${amount}` })
       .where(eq(users.id, userId))
-      .returning({ balance: users.tokenBalance });
+      .returning({ balance: users.balance });
 
     if (!updated) {
       throw new HttpError(404, 'User not found');
     }
 
-    await tx.insert(transactions).values({ userId, amount, type: 'TOKEN_TOPUP' });
+    await tx.insert(transactions).values({ userId, amount, type: 'TOPUP' });
     return { balance: updated.balance };
   });
 };
 
 /**
- * Start a token purchase. When Midtrans is configured, creates a PENDING order
+ * Start a balance top-up. When Midtrans is configured, creates a PENDING order
  * and a Snap transaction, returning the redirect URL / token for the browser.
- * Otherwise falls back to an immediate demo credit.
+ * Otherwise falls back to an immediate demo credit. `amount` is IDR (whole
+ * rupiah) — the amount charged and credited.
  */
-export const createTokenOrder = async (
+export const createOrder = async (
   userId: string,
-  tokenAmount: number,
+  amount: number,
 ): Promise<CreateOrderResult> => {
   if (!isPaymentConfigured()) {
     // No gateway: credit immediately for local/demo, but never in production —
-    // otherwise a live deployment would hand out free tokens.
+    // otherwise a live deployment would hand out free balance.
     if (!isDemoBillingAllowed()) {
       throw new HttpError(503, 'Payments are temporarily unavailable');
     }
-    const { balance } = await topupDemo(userId, tokenAmount);
+    const { balance } = await topupDemo(userId, amount);
     return { mode: 'demo', balance };
   }
 
@@ -119,15 +114,9 @@ export const createTokenOrder = async (
     throw new HttpError(404, 'User not found');
   }
 
-  const grossAmount = tokenAmount * tokenPriceIdr();
-  const orderId = `LATO-TOKENS-${randomUUID()}`;
+  const orderId = `LATO-TOPUP-${randomUUID()}`;
 
-  await db.insert(tokenOrders).values({
-    userId,
-    orderId,
-    tokenAmount,
-    grossAmount,
-  });
+  await db.insert(orders).values({ userId, orderId, amount });
 
   const serverKey = process.env.MIDTRANS_SERVER_KEY as string;
   const auth = Buffer.from(`${serverKey}:`).toString('base64');
@@ -143,13 +132,13 @@ export const createTokenOrder = async (
         Authorization: `Basic ${auth}`,
       },
       body: JSON.stringify({
-        transaction_details: { order_id: orderId, gross_amount: grossAmount },
+        transaction_details: { order_id: orderId, gross_amount: amount },
         item_details: [
           {
-            id: 'LATO_TOKENS',
-            name: `${tokenAmount} LATO tokens`,
-            price: tokenPriceIdr(),
-            quantity: tokenAmount,
+            id: 'LATO_BALANCE',
+            name: 'LATO balance top-up',
+            price: amount,
+            quantity: 1,
           },
         ],
         customer_details: {
@@ -170,9 +159,9 @@ export const createTokenOrder = async (
     if (!res.ok || !data?.token || !data?.redirect_url) {
       // Mark the order failed so it never lingers as PENDING.
       await db
-        .update(tokenOrders)
+        .update(orders)
         .set({ status: 'FAILED' })
-        .where(eq(tokenOrders.orderId, orderId));
+        .where(eq(orders.orderId, orderId));
       const detail = data?.error_messages?.join(', ') ?? `status ${res.status}`;
       throw new HttpError(502, `Payment gateway error (${detail})`);
     }
@@ -183,7 +172,7 @@ export const createTokenOrder = async (
       token: data.token,
       redirect_url: data.redirect_url,
       client_key: process.env.MIDTRANS_CLIENT_KEY ?? '',
-      gross_amount: grossAmount,
+      amount,
     };
   } catch (err) {
     if (err instanceof HttpError) throw err;
@@ -273,9 +262,9 @@ export const handleNotification = async (
     tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   ): Promise<string> => {
     const [order] = await tx
-      .select({ status: tokenOrders.status })
-      .from(tokenOrders)
-      .where(eq(tokenOrders.orderId, orderId))
+      .select({ status: orders.status })
+      .from(orders)
+      .where(eq(orders.orderId, orderId))
       .limit(1);
     if (!order) throw new HttpError(404, 'Order not found');
     return order.status;
@@ -292,28 +281,26 @@ export const handleNotification = async (
       // RETURNING means a duplicate/replayed webhook credits AT MOST ONCE: the
       // second delivery matches 0 rows and is a no-op.
       const claimed = await tx
-        .update(tokenOrders)
+        .update(orders)
         .set({ status: 'PAID' })
-        .where(
-          and(eq(tokenOrders.orderId, orderId), ne(tokenOrders.status, 'PAID')),
-        )
+        .where(and(eq(orders.orderId, orderId), ne(orders.status, 'PAID')))
         .returning({
-          userId: tokenOrders.userId,
-          tokenAmount: tokenOrders.tokenAmount,
+          userId: orders.userId,
+          amount: orders.amount,
         });
       if (claimed.length === 0) {
         // Either no such order, or it was already PAID (already credited).
         return { order_id: orderId, status: await currentStatus(tx) };
       }
-      const { userId, tokenAmount } = claimed[0];
+      const { userId, amount } = claimed[0];
       await tx
         .update(users)
-        .set({ tokenBalance: sql`${users.tokenBalance} + ${tokenAmount}` })
+        .set({ balance: sql`${users.balance} + ${amount}` })
         .where(eq(users.id, userId));
       await tx.insert(transactions).values({
         userId,
-        amount: tokenAmount,
-        type: 'TOKEN_TOPUP',
+        amount,
+        type: 'TOPUP',
       });
       return { order_id: orderId, status: 'PAID' };
     }
@@ -321,12 +308,10 @@ export const handleNotification = async (
     // FAILED / EXPIRED — set the terminal status, but never override a PAID order
     // (a late fail/expire after settlement is ignored).
     const updated = await tx
-      .update(tokenOrders)
+      .update(orders)
       .set({ status: next })
-      .where(
-        and(eq(tokenOrders.orderId, orderId), ne(tokenOrders.status, 'PAID')),
-      )
-      .returning({ status: tokenOrders.status });
+      .where(and(eq(orders.orderId, orderId), ne(orders.status, 'PAID')))
+      .returning({ status: orders.status });
     if (updated.length === 0) {
       return { order_id: orderId, status: await currentStatus(tx) };
     }
@@ -335,19 +320,19 @@ export const handleNotification = async (
 };
 
 /**
- * Order status for the current user (used by the browser to confirm a purchase
+ * Order status for the current user (used by the browser to confirm a top-up
  * after returning from the Midtrans redirect). 404 if it isn't the user's order.
  */
 export const getOrderStatus = async (userId: string, orderId: string) => {
   const [order] = await db
     .select({
-      orderId: tokenOrders.orderId,
-      userId: tokenOrders.userId,
-      tokenAmount: tokenOrders.tokenAmount,
-      status: tokenOrders.status,
+      orderId: orders.orderId,
+      userId: orders.userId,
+      amount: orders.amount,
+      status: orders.status,
     })
-    .from(tokenOrders)
-    .where(eq(tokenOrders.orderId, orderId))
+    .from(orders)
+    .where(eq(orders.orderId, orderId))
     .limit(1);
 
   if (!order || order.userId !== userId) {
@@ -355,7 +340,7 @@ export const getOrderStatus = async (userId: string, orderId: string) => {
   }
 
   const [wallet] = await db
-    .select({ balance: users.tokenBalance })
+    .select({ balance: users.balance })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
@@ -363,7 +348,7 @@ export const getOrderStatus = async (userId: string, orderId: string) => {
   return {
     order_id: order.orderId,
     status: order.status,
-    token_amount: order.tokenAmount,
+    amount: order.amount,
     balance: wallet?.balance ?? 0,
   };
 };
