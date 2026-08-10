@@ -154,7 +154,7 @@ export function BrandedCompany({
             <h3 style={{ fontWeight: 700 }}>Buy voucher codes</h3>
             <span style={{ fontSize: '.85rem', color: 'var(--muted)' }}>
               Your balance: <b style={{ color: 'var(--ink)' }}>{balance === null ? '—' : formatIdr(balance)}</b>{' '}
-              · <a href="/dashboard" style={{ color: 'var(--b1)', fontWeight: 600 }}>Top up</a>
+              · <a href={`/a/${assessmentId}/dashboard`} style={{ color: 'var(--b1)', fontWeight: 600 }}>Top up</a>
             </span>
           </div>
           <p style={{ color: 'var(--muted)', fontSize: '.92rem', marginTop: 4 }}>

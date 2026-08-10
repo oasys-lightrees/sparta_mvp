@@ -39,11 +39,14 @@ balance.post('/purchase', authMiddleware, async (c) => {
   if (!body || !Number.isInteger(body.amount) || body.amount <= 0) {
     return c.json(error('amount must be a positive integer'), 400);
   }
+  const returnUrl =
+    typeof body.return_url === 'string' ? body.return_url : undefined;
 
   try {
     const result = await paymentService.createOrder(
       c.get('user').id,
       body.amount,
+      returnUrl,
     );
     return c.json(success(result), 200);
   } catch (err) {

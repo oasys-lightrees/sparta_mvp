@@ -128,8 +128,8 @@ export function BrandedLanding({
             </span>
           </a>
           <nav className="lato-links" aria-label="Primary">
+            <a href="#top">Overview</a>
             <a href="#products">Products</a>
-            <a href={homeHref}>About</a>
           </nav>
           <div className="lato-nav__r">
             <BrandedAuthChip loginHref={loginHref} dashboardHref={dashboardHref} />
@@ -138,8 +138,8 @@ export function BrandedLanding({
                 <Icon name="arrow" size={18} />
               </summary>
               <div className="lato-mnav__panel">
+                <a href="#top">Overview</a>
                 <a href="#products">Products</a>
-                <a href={homeHref}>About</a>
                 <BrandedAuthChip loginHref={loginHref} dashboardHref={dashboardHref} />
               </div>
             </details>

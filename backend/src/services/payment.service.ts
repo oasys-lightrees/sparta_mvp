@@ -43,6 +43,29 @@ const snapBaseUrl = (): string =>
     ? 'https://app.midtrans.com/snap/v1'
     : 'https://app.sandbox.midtrans.com/snap/v1';
 
+// Origins the browser may be sent back to after payment (same allowlist as CORS).
+const allowedOrigins = (): string[] =>
+  (process.env.CORS_ORIGINS ?? 'https://lato.example.com,http://localhost:3000')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+
+/**
+ * Validate a caller-supplied post-payment return URL. Only http(s) URLs whose
+ * origin is in the CORS allowlist are honored, so the finish redirect can never
+ * point off-platform. Returns undefined (no override) otherwise.
+ */
+const resolveReturnUrl = (raw?: string): string | undefined => {
+  if (!raw) return undefined;
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return undefined;
+    return allowedOrigins().includes(u.origin) ? u.toString() : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 /**
  * Public pricing info for the wallet UI: the currency and whether a real gateway
  * is configured (so the UI can show a charge vs. an instant demo credit).
@@ -94,6 +117,7 @@ export const topupDemo = async (userId: string, amount: number) => {
 export const createOrder = async (
   userId: string,
   amount: number,
+  returnUrl?: string,
 ): Promise<CreateOrderResult> => {
   if (!isPaymentConfigured()) {
     // No gateway: credit immediately for local/demo, but never in production —
@@ -115,6 +139,7 @@ export const createOrder = async (
   }
 
   const orderId = `LATO-TOPUP-${randomUUID()}`;
+  const finish = resolveReturnUrl(returnUrl);
 
   await db.insert(orders).values({ userId, orderId, amount });
 
@@ -146,6 +171,9 @@ export const createOrder = async (
           email: user.email,
         },
         credit_card: { secure: true },
+        // Return the browser to the page it started from (branded dashboard or
+        // the platform wallet). Midtrans appends order_id to confirm on arrival.
+        ...(finish ? { callbacks: { finish } } : {}),
       }),
       signal: controller.signal,
     });

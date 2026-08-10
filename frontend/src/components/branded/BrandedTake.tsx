@@ -103,7 +103,10 @@ function AccessGate({
             <p style={{ color: 'var(--muted)', fontSize: '.9rem', marginBottom: 12 }}>
               You need {formatIdr(cost - balance)} more in your balance.
             </p>
-            <a href="/dashboard" className="lato-btn lato-btn--grad lato-btn--lg">
+            <a
+              href={`/a/${assessmentId}/dashboard`}
+              className="lato-btn lato-btn--grad lato-btn--lg"
+            >
               Top up balance
             </a>
           </>

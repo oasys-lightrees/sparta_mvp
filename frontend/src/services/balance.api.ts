@@ -14,8 +14,13 @@ export const balanceApi = {
 
   // Start a real (Midtrans) top-up. Falls back to a demo credit when the gateway
   // is not configured — see the discriminated PurchaseResult. `amount` is IDR.
-  purchase: (amount: number) =>
-    apiClient.post<PurchaseResult>('/api/balance/purchase', { amount }),
+  // `returnUrl` (absolute) is where Midtrans returns the browser after payment;
+  // it must be on an allowed origin or the backend ignores it.
+  purchase: (amount: number, returnUrl?: string) =>
+    apiClient.post<PurchaseResult>('/api/balance/purchase', {
+      amount,
+      ...(returnUrl ? { return_url: returnUrl } : {}),
+    }),
 
   // Poll a top-up's status after returning from the Midtrans redirect.
   getOrder: (orderId: string) =>

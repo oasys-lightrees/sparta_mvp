@@ -120,6 +120,8 @@ export type MyAttempt = {
   assessment_id: string;
   assessment_title: string;
   score: number;
+  // Winning result category for personality assessments; null for score-based.
+  result_profile: { code: string; name: string } | null;
   created_at: string;
   report_id: string | null;
   report_type: ReportType | null;

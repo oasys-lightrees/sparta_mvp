@@ -151,7 +151,10 @@ function DashboardHome() {
     setActionError('');
     setActionNotice('');
     try {
-      const result = await balanceApi.purchase(amount);
+      const result = await balanceApi.purchase(
+        amount,
+        `${window.location.origin}/dashboard`,
+      );
       if (result.mode === 'midtrans') {
         // Hand off to the Midtrans hosted payment page; the webhook credits the
         // wallet and we confirm on return (see the effect above).
@@ -268,7 +271,9 @@ function DashboardHome() {
                       <TableCell className="font-medium">
                         {a.assessment_title}
                       </TableCell>
-                      <TableCell>{a.score}</TableCell>
+                      <TableCell>
+                        {a.result_profile ? a.result_profile.name : a.score}
+                      </TableCell>
                       <TableCell>
                         {new Date(a.created_at).toLocaleDateString()}
                       </TableCell>
