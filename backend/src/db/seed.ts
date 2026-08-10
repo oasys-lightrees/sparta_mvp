@@ -55,9 +55,9 @@ const HIGH = 21;
 
 const FREE_TEMPLATE =
   'You scored {{score}} on the {{assessment_title}}, which places you at the ' +
-  '{{category}} level.\n\n{{summary}}\n\nThis is a quick snapshot of where you ' +
-  'are today. Unlock your premium report for a personalized breakdown of your ' +
-  'strengths, the gaps holding you back, and a 30-day plan to level up.';
+  '{{category}} level.\n\n{{summary}}\n\nThis is your snapshot of where you ' +
+  'are today: your strengths, the gaps holding you back, and a 30-day plan to ' +
+  'level up.';
 
 type Band = 'LOW' | 'MEDIUM' | 'HIGH';
 const CATEGORY: Record<Band, string> = {
@@ -132,7 +132,7 @@ const SHOWCASE: Record<string, Showcase> = {
       { value: '2,400+', label: 'companies onboard' },
     ],
     testimonials: [
-      { quote: 'The AI report read like a mentor who had actually seen my work. The roadmap was the useful part.', name: 'Maya Chen', role: 'Product Lead', company: 'Cobalt' },
+      { quote: 'The report read like a mentor who had actually seen my work. The roadmap was the useful part.', name: 'Maya Chen', role: 'Product Lead', company: 'Cobalt' },
       { quote: 'We rolled it out to 60 people with voucher codes in an afternoon. The HR dashboard sold it.', name: 'David Okoro', role: 'Head of People', company: 'Northwind' },
       { quote: 'Finally an assessment that tells you what to do next instead of just labeling you.', name: 'Priya Nair', role: 'Engineering Manager', company: 'Vantly' },
     ],
