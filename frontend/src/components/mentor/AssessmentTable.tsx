@@ -33,7 +33,6 @@ export function AssessmentTable({
         <TableRow>
           <TableHead>Title</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead>Price</TableHead>
           <TableHead>Attempts</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
@@ -60,7 +59,6 @@ export function AssessmentTable({
                   {item.status}
                 </Badge>
               </TableCell>
-              <TableCell>{item.price > 0 ? `$${item.price}` : 'Free'}</TableCell>
               <TableCell>{item.totalAttempts}</TableCell>
               <TableCell>
                 <div className="flex justify-end gap-2">
