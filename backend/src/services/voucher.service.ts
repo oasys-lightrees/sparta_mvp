@@ -10,7 +10,7 @@ import {
   voucherBatches,
   vouchers,
 } from '../db/schema';
-import { grantAccess } from './access.service';
+import { grantAccess, splitEarnings } from './access.service';
 import { HttpError } from '../utils/http-error';
 
 const MAX_CREDITS = 1000;
@@ -49,6 +49,7 @@ export const createBatch = async (buyerId: string, input: CreateBatchInput) => {
       status: assessments.status,
       title: assessments.title,
       mentorId: assessments.mentorId,
+      platformFeePercent: assessments.platformFeePercent,
     })
     .from(assessments)
     .where(eq(assessments.id, input.assessmentId))
@@ -112,11 +113,19 @@ export const createBatch = async (buyerId: string, input: CreateBatchInput) => {
       .values([...codes].map((code) => ({ batchId: batch.id, code })));
 
     if (cost > 0) {
+      // The platform keeps its fee; the rest is credited to the expert's wallet.
+      const { expertShare } = splitEarnings(cost, assessment.platformFeePercent);
+      if (expertShare > 0) {
+        await tx
+          .update(users)
+          .set({ balance: sql`${users.balance} + ${expertShare}` })
+          .where(eq(users.id, assessment.mentorId));
+      }
       await tx.insert(transactions).values({
         userId: buyerId,
         mentorId: assessment.mentorId,
         assessmentId: input.assessmentId,
-        amount: cost,
+        amount: expertShare,
         type: 'VOUCHER_PURCHASE',
       });
     }

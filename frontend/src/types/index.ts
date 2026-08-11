@@ -390,6 +390,7 @@ export type AdminAssessment = {
   title: string;
   status: AssessmentStatus;
   price: number;
+  platform_fee_percent: number;
   mentor_email: string;
   totalAttempts: number;
 };

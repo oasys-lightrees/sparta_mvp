@@ -66,6 +66,20 @@ export function AssessmentManagement() {
     run(a.id, () => adminApi.updateAssessment(a.id, { price }));
   };
 
+  const editFee = (a: AdminAssessment) => {
+    const input = window.prompt(
+      `Platform fee % for "${a.title}" (0–100). The rest of each paid purchase goes to the expert's balance.`,
+      String(a.platform_fee_percent),
+    );
+    if (input === null) return;
+    const pct = Number(input);
+    if (!Number.isInteger(pct) || pct < 0 || pct > 100) {
+      setError('Platform fee must be a whole number between 0 and 100');
+      return;
+    }
+    run(a.id, () => adminApi.updateAssessment(a.id, { platform_fee_percent: pct }));
+  };
+
   const remove = (a: AdminAssessment) => {
     if (!window.confirm(`Delete "${a.title}"? This cannot be undone.`)) return;
     run(a.id, () => adminApi.deleteAssessment(a.id));
@@ -86,6 +100,7 @@ export function AssessmentManagement() {
             <TableHead>Expert</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Price</TableHead>
+            <TableHead>Platform fee</TableHead>
             <TableHead>Attempts</TableHead>
             <TableHead>Revenue</TableHead>
             <TableHead className="text-right">Actions</TableHead>
@@ -104,6 +119,7 @@ export function AssessmentManagement() {
                 </Badge>
               </TableCell>
               <TableCell>{a.price > 0 ? `$${a.price}` : 'Free'}</TableCell>
+              <TableCell>{a.platform_fee_percent}%</TableCell>
               <TableCell>{a.totalAttempts}</TableCell>
               <TableCell>${a.price * a.totalAttempts}</TableCell>
               <TableCell>
@@ -123,6 +139,14 @@ export function AssessmentManagement() {
                     disabled={busyId === a.id}
                   >
                     Price
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => editFee(a)}
+                    disabled={busyId === a.id}
+                  >
+                    Fee
                   </Button>
                   <Button
                     variant="destructive"
