@@ -204,10 +204,6 @@ function DetailView({ id }: { id: string }) {
             <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
               <Info label="Description" value={detail.description ?? '—'} />
               <Info
-                label="Price"
-                value={detail.price > 0 ? `$${detail.price}` : 'Free'}
-              />
-              <Info
                 label="Low threshold"
                 value={detail.low_score_threshold ?? '—'}
               />
