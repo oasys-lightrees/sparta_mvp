@@ -370,10 +370,8 @@ export type MentorRevenue = {
 export type ChartPoint = { name: string; value: number };
 
 export type MentorAnalytics = {
-  assessmentPerformance: { name: string; attempts: number }[];
+  purchasesByDate: { date: string; count: number }[];
   revenueByDate: { date: string; amount: number }[];
-  scoreDistribution: ChartPoint[];
-  conversionFunnel: { stage: string; value: number }[];
 };
 
 export type AdminAnalytics = {
