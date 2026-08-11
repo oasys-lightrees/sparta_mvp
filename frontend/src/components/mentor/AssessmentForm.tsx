@@ -12,7 +12,7 @@ import {
   type ResourceProfile,
 } from '@/components/mentor/LearningResourcesEditor';
 import { cn } from '@/lib/utils';
-import type { AccessMode, LearningResourcesDoc, ResultCategories } from '@/types';
+import type { LearningResourcesDoc, ResultCategories } from '@/types';
 
 type AssessmentMode = 'SKILL' | 'PERSONALITY';
 
@@ -32,8 +32,6 @@ export type AssessmentPayload = {
   result_categories: ResultCategories | null;
   study_video_url: string | null;
   learning_resources: LearningResourcesDoc | null;
-  access_mode: AccessMode;
-  access_cost: number;
 };
 
 // Result-category editor rows (diagnostic/personality assessments). Codes are
@@ -57,8 +55,6 @@ type Props = {
     result_categories: ResultCategories | null;
     study_video_url: string | null;
     learning_resources: LearningResourcesDoc | null;
-    access_mode: AccessMode | null;
-    access_cost: number;
   }>;
   submitLabel: string;
   submitting: boolean;
@@ -95,14 +91,6 @@ export function AssessmentForm({
   );
   const [resourcesDoc, setResourcesDoc] = useState<LearningResourcesDoc | null>(
     initial?.learning_resources ?? null,
-  );
-  const [accessMode, setAccessMode] = useState<AccessMode>(() => {
-    // FREEMIUM is retired (premium report removed); treat legacy rows as FREE.
-    const m = initial?.access_mode ?? 'FREE';
-    return m === 'FREEMIUM' ? 'FREE' : m;
-  });
-  const [accessCost, setAccessCost] = useState(
-    numStr(initial?.access_cost),
   );
   const [categories, setCategories] = useState<CategoryRow[]>(() => {
     const rc = initial?.result_categories;
@@ -172,11 +160,8 @@ export function AssessmentForm({
       setLocalError('Low score threshold must be <= high score threshold');
       return;
     }
-    const cost = accessCost.trim() === '' ? 0 : Number(accessCost);
-    if (accessMode === 'PAID' && cost <= 0) {
-      setLocalError('PAID assessments need a positive access cost (Rp)');
-      return;
-    }
+    // Access model (mode + cost) is derived from the product's pricing tiers in
+    // the Product & pricing editor, so this form never sets it.
     onSubmit({
       title: title.trim(),
       description: description.trim() === '' ? null : description,
@@ -198,9 +183,6 @@ export function AssessmentForm({
       study_video_url:
         studyVideoUrl.trim() === '' ? null : studyVideoUrl.trim(),
       learning_resources: resourcesDoc,
-      access_mode: accessMode,
-      // Access cost (Rp) only applies to PAID; force 0 otherwise so it's never stale.
-      access_cost: accessMode === 'PAID' ? cost : 0,
     });
   };
 
@@ -284,82 +266,8 @@ export function AssessmentForm({
         placeholder="https://example.com/image.jpg"
         helpText="Optional cover shown on the assessment card. Use a 16:9 (widescreen) image, recommended 1280×720 (min 640×360). It's cropped to fill, so keep the subject centered. PNG, JPG, JPEG or WEBP · up to 5 MB."
       />
-      {/* Access model — how takers get to start this assessment. Any cost the
-          mode needs (access cost for Paid) is set inside the card, so experts
-          only see the field relevant to their mode. */}
-      <div className="space-y-3 rounded-md border p-4">
-        <div className="space-y-1">
-          <Label>Access model</Label>
-          <p className="text-xs text-muted-foreground">
-            Controls who can start this assessment. Payments use a balance wallet:
-            takers top up their balance (in Rupiah), then spend it to start a Paid
-            assessment. A Paid assessment can also be unlocked with a voucher
-            code.
-          </p>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {(
-            [
-              { value: 'FREE', title: 'Free', description: 'Anyone can start immediately. Full result included.' },
-              { value: 'PAID', title: 'Paid', description: 'Pay from balance to start. Full result included. Vouchers also work.' },
-              { value: 'VOUCHER', title: 'Voucher only', description: 'Must redeem a valid voucher before starting.' },
-            ] as const
-          ).map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => setAccessMode(opt.value)}
-              aria-pressed={accessMode === opt.value}
-              className={cn(
-                'rounded-md border p-3 text-left transition-colors',
-                accessMode === opt.value
-                  ? 'border-primary bg-accent/40 ring-1 ring-primary'
-                  : 'hover:bg-accent/30',
-              )}
-            >
-              <span className="block text-sm font-medium">{opt.title}</span>
-              <span className="mt-0.5 block text-xs text-muted-foreground">
-                {opt.description}
-              </span>
-            </button>
-          ))}
-        </div>
-        {accessMode === 'PAID' ? (
-          <div className="space-y-2">
-            <Label htmlFor="access_cost">Access cost (Rp)</Label>
-            <Input
-              id="access_cost"
-              type="number"
-              min={1000}
-              step={1000}
-              value={accessCost}
-              onChange={(e) => setAccessCost(e.target.value)}
-              placeholder="e.g. 30000"
-            />
-            <p className="text-xs text-muted-foreground">
-              The Rupiah amount a taker spends to unlock access before starting.
-              They top up their balance via payment (Midtrans) or the demo top-up,
-              then spend it here. The full result is included.
-            </p>
-          </div>
-        ) : null}
-        {accessMode === 'VOUCHER' ? (
-          <div className="space-y-1 rounded-md border border-dashed bg-accent/20 p-3">
-            <p className="text-xs font-medium text-foreground">
-              How voucher access works
-            </p>
-            <p className="text-xs text-muted-foreground">
-              You don&apos;t set a price here. Instead, a company buys a batch of
-              seats for this assessment on the branded Company page
-              (<code>/a/&lt;id&gt;/company</code>), which generates unique voucher
-              codes. A taker enters a code on the Redeem page
-              (<code>/a/&lt;id&gt;/redeem</code>); redeeming grants them access to
-              start, one code = one seat. Publish the assessment first so those
-              pages are live.
-            </p>
-          </div>
-        ) : null}
-      </div>
+      {/* Access model (free / paid / voucher) and any price are set in the
+          Product & pricing editor, so they are intentionally not edited here. */}
 
       {/* Score thresholds — skill mode only. */}
       {!isPersonality ? (
