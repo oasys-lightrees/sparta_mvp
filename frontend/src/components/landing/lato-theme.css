@@ -282,8 +282,10 @@
 .lato-intro__meta b{color:var(--ink)}
 .lato-field{display:block;text-align:left;max-width:360px;margin:18px auto 0}
 .lato-field label{font-size:.8rem;font-weight:600;color:var(--ink-2)}
-.lato-field input{width:100%;margin-top:6px;padding:.7em .8em;border:1px solid var(--line-2);border-radius:var(--r-btn);background:var(--ground);color:var(--ink);font:inherit}
-.lato-field input:focus{outline:2px solid var(--b1);outline-offset:1px}
+.lato-field input,.lato-field select,.lato-field textarea{width:100%;margin-top:6px;padding:.7em .8em;border:1px solid var(--line-2);border-radius:var(--r-btn);background:var(--ground);color:var(--ink);font:inherit}
+.lato-field select{appearance:none;-webkit-appearance:none;cursor:pointer;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right .7em center;padding-right:2.2em}
+.lato-field option{background:var(--ground);color:var(--ink)}
+.lato-field input:focus,.lato-field select:focus,.lato-field textarea:focus{outline:2px solid var(--b1);outline-offset:1px}
 
 /* ---- report ---- */
 .lato-report{max-width:820px;margin:0 auto}
