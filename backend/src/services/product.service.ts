@@ -2,7 +2,11 @@ import { and, desc, eq } from 'drizzle-orm';
 import { db } from '../db/client';
 import { assessments, products } from '../db/schema';
 import type { ProductTiers } from '../db/schema';
-import { ProductTiersSchema, VoucherPackagesSchema } from '../config/product.schema';
+import {
+  ProductContentSchema,
+  ProductTiersSchema,
+  VoucherPackagesSchema,
+} from '../config/product.schema';
 import { HttpError } from '../utils/http-error';
 
 // The caller's identity + role, used to authorize mentor operations.
@@ -16,6 +20,7 @@ export type UpsertProductInput = {
   status?: 'DRAFT' | 'PUBLISHED';
   tiers?: unknown;
   voucherPackages?: unknown;
+  content?: unknown;
 };
 
 const defaultTiers = (): ProductTiers =>
@@ -89,6 +94,7 @@ const toDto = (p: ProductRow) => ({
   status: p.status,
   tiers: p.tiers ?? defaultTiers(),
   voucher_packages: p.voucherPackages ?? [],
+  content: p.content ?? [],
   created_at: p.createdAt,
   updated_at: p.updatedAt,
 });
@@ -137,6 +143,7 @@ export const getPublicForAssessment = async (assessmentId: string) => {
     description: p.description,
     tiers: p.tiers ?? defaultTiers(),
     voucher_packages: p.voucherPackages ?? [],
+    content: p.content ?? [],
   };
 };
 
@@ -212,6 +219,7 @@ export const upsertForAssessment = async (
 
   const tiers = ProductTiersSchema.parse(input.tiers ?? {});
   const voucherPackages = VoucherPackagesSchema.parse(input.voucherPackages ?? []);
+  const content = ProductContentSchema.parse(input.content ?? []);
   const name = (input.name ?? '').trim() || assessment.title;
   const status = input.status === 'PUBLISHED' ? 'PUBLISHED' : 'DRAFT';
   const description =
@@ -235,7 +243,7 @@ export const upsertForAssessment = async (
     if (existing) {
       [saved] = await tx
         .update(products)
-        .set({ name, description, tiers, voucherPackages, status })
+        .set({ name, description, tiers, voucherPackages, content, status })
         .where(eq(products.id, existing.id))
         .returning();
     } else {
@@ -251,6 +259,7 @@ export const upsertForAssessment = async (
           description,
           tiers,
           voucherPackages,
+          content,
           status,
         })
         .returning();

@@ -577,6 +577,18 @@ export type VoucherPackage = {
 export type VoucherPackages = VoucherPackage[];
 
 /**
+ * Product content: an ordered list of blocks shown in the product's section on
+ * the landing page. Each block is either a video (a YouTube/Vimeo/hosted URL) or
+ * a text paragraph. A product can mix any number of both. See config/product.schema.ts.
+ */
+export type ProductContentBlock = {
+  id: string;
+  type: 'video' | 'text';
+  value: string;
+};
+export type ProductContent = ProductContentBlock[];
+
+/**
  * products
  * A sellable wrapper around exactly one assessment (1:1). Gives the mentor a
  * place to name the offering, publish it, and configure its three tiers
@@ -602,6 +614,9 @@ export const products = pgTable('products', {
   // Company/batch seat packages a buyer can purchase from their balance (each
   // yields that many voucher codes). Null/empty -> batch buying is not offered.
   voucherPackages: jsonb('voucher_packages').$type<VoucherPackages>(),
+  // Ordered video/text content blocks shown in the product section on the
+  // landing page. Null/empty -> no extra content.
+  content: jsonb('content').$type<ProductContent>(),
   status: productStatus('status').notNull().default('DRAFT'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')

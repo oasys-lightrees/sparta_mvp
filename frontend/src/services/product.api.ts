@@ -1,6 +1,7 @@
 import { apiClient } from '@/services/api';
 import type {
   MentorProduct,
+  ProductContentBlock,
   ProductStatus,
   ProductTiers,
   PublicProduct,
@@ -13,6 +14,7 @@ export type UpsertProductInput = {
   status?: ProductStatus;
   tiers?: ProductTiers;
   voucherPackages?: VoucherPackage[];
+  content?: ProductContentBlock[];
 };
 
 export const productApi = {

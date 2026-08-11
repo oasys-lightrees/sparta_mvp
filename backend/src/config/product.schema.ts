@@ -61,3 +61,25 @@ export type VoucherPackageInput = z.input<typeof VoucherPackageSchema>;
 /** Validate an unknown value as VoucherPackages. */
 export const parseVoucherPackages = (value: unknown) =>
   VoucherPackagesSchema.parse(value);
+
+/**
+ * Product content blocks: an ordered list, each either a video (URL) or a text
+ * paragraph. Empty-value blocks are dropped so blank rows never render.
+ */
+const ProductContentBlockSchema = z.object({
+  id: z.string().min(1),
+  type: z.enum(['video', 'text']),
+  value: z.string().default(''),
+});
+
+export const ProductContentSchema = z
+  .array(ProductContentBlockSchema)
+  .max(20)
+  .default([])
+  .transform((blocks) => blocks.filter((b) => b.value.trim() !== ''));
+
+export type ProductContentBlockInput = z.input<typeof ProductContentBlockSchema>;
+
+/** Validate an unknown value as ProductContent (dropping empty blocks). */
+export const parseProductContent = (value: unknown) =>
+  ProductContentSchema.parse(value);

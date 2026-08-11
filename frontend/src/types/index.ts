@@ -254,6 +254,13 @@ export type VoucherPackage = {
   seats: number;
   amount: number;
 };
+// An ordered content block shown in the product section on the landing page:
+// either a video (a YouTube/Vimeo/hosted URL) or a text paragraph.
+export type ProductContentBlock = {
+  id: string;
+  type: 'video' | 'text';
+  value: string;
+};
 // Full product as seen by its owning mentor.
 export type MentorProduct = {
   id: string;
@@ -264,6 +271,7 @@ export type MentorProduct = {
   status: ProductStatus;
   tiers: ProductTiers;
   voucher_packages: VoucherPackage[];
+  content: ProductContentBlock[];
   created_at: string;
   updated_at: string;
 };
@@ -273,6 +281,7 @@ export type PublicProduct = {
   description: string | null;
   tiers: ProductTiers;
   voucher_packages: VoucherPackage[];
+  content: ProductContentBlock[];
 };
 
 // --- Mentor ---
