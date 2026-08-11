@@ -148,6 +148,13 @@
       "when": 1786418191598,
       "tag": "0020_hot_namora",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1786423567219,
+      "tag": "0021_violet_slyde",
+      "breakpoints": true
     }
   ]
 }

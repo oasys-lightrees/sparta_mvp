@@ -21,6 +21,7 @@ import { ImageSourceField } from '@/components/mentor/ImageSourceField';
 import type {
   MentorProduct,
   PricingTier,
+  ProductContentBlock,
   ProductStatus,
   ProductTierKind,
   VoucherPackage,
@@ -101,7 +102,17 @@ type Form = {
   status: ProductStatus;
   tiers: PricingTier[];
   voucherPackages: VoucherPackage[];
+  content: ProductContentBlock[];
 };
+
+const normalizeContent = (content: unknown): ProductContentBlock[] =>
+  Array.isArray(content) ? (content as ProductContentBlock[]) : [];
+
+const makeContentBlock = (type: 'video' | 'text'): ProductContentBlock => ({
+  id: newId(),
+  type,
+  value: '',
+});
 
 const fromProduct = (p: MentorProduct): Form => ({
   name: p.name,
@@ -109,6 +120,7 @@ const fromProduct = (p: MentorProduct): Form => ({
   status: p.status,
   tiers: normalizeTiers(p.tiers),
   voucherPackages: normalizePackages(p.voucher_packages),
+  content: normalizeContent(p.content),
 });
 
 /**
@@ -161,6 +173,7 @@ export function ProductEditor({
             status: 'DRAFT',
             tiers: DEFAULT_TIERS(),
             voucherPackages: [],
+            content: [],
           },
     );
     setSaveError('');
@@ -204,12 +217,40 @@ export function ProductEditor({
       f ? { ...f, voucherPackages: f.voucherPackages.filter((_, i) => i !== index) } : f,
     );
 
+  const setContent = (index: number, patch: Partial<ProductContentBlock>) =>
+    setForm((f) =>
+      f
+        ? { ...f, content: f.content.map((b, i) => (i === index ? { ...b, ...patch } : b)) }
+        : f,
+    );
+
+  const addContent = (type: 'video' | 'text') =>
+    setForm((f) =>
+      f && f.content.length < 20
+        ? { ...f, content: [...f.content, makeContentBlock(type)] }
+        : f,
+    );
+
+  const removeContent = (index: number) =>
+    setForm((f) => (f ? { ...f, content: f.content.filter((_, i) => i !== index) } : f));
+
+  const moveContent = (index: number, dir: -1 | 1) =>
+    setForm((f) => {
+      if (!f) return f;
+      const next = index + dir;
+      if (next < 0 || next >= f.content.length) return f;
+      const content = [...f.content];
+      [content[index], content[next]] = [content[next], content[index]];
+      return { ...f, content };
+    });
+
   const persist = async (payload: {
     name: string;
     description: string | null;
     status: ProductStatus;
     tiers: PricingTier[];
     voucherPackages: VoucherPackage[];
+    content: ProductContentBlock[];
   }) => {
     const saved = await productApi.upsert(assessmentId, payload);
     setProduct(saved);
@@ -228,6 +269,7 @@ export function ProductEditor({
         status: form.status,
         tiers: form.tiers,
         voucherPackages: form.voucherPackages,
+        content: form.content,
       });
       setForm(fromProduct(saved));
       setEditing(false);
@@ -256,6 +298,7 @@ export function ProductEditor({
         status: next,
         tiers: normalizeTiers(product.tiers),
         voucherPackages: normalizePackages(product.voucher_packages),
+        content: normalizeContent(product.content),
       });
       setNotice(next === 'PUBLISHED' ? 'Product published.' : 'Product unpublished.');
     } catch (e) {
@@ -586,6 +629,106 @@ export function ProductEditor({
               {form.voucherPackages.length === 0 ? (
                 <p className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">
                   No packages. Add one to let companies buy voucher codes in bulk.
+                </p>
+              ) : null}
+            </div>
+
+            {/* Product content — ordered video/text blocks for the landing page */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Product content
+                </h4>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addContent('text')}
+                    disabled={form.content.length >= 20}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Text
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addContent('video')}
+                    disabled={form.content.length >= 20}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Video
+                  </Button>
+                </div>
+              </div>
+              <p className="rounded-md border border-dashed bg-accent/20 px-3 py-2 text-xs text-muted-foreground">
+                Optional videos and text shown in your product section on the
+                landing page, in this order. Videos accept a YouTube, Vimeo or
+                direct video link.
+              </p>
+
+              {form.content.map((b, i) => (
+                <div key={b.id} className="space-y-2 rounded-md border p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      {b.type === 'video' ? 'Video' : 'Text'}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="px-2"
+                        onClick={() => moveContent(i, -1)}
+                        disabled={i === 0}
+                        aria-label="Move up"
+                      >
+                        ↑
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="px-2"
+                        onClick={() => moveContent(i, 1)}
+                        disabled={i === form.content.length - 1}
+                        aria-label="Move down"
+                      >
+                        ↓
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeContent(i)}
+                        aria-label="Remove block"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                  {b.type === 'video' ? (
+                    <Input
+                      type="url"
+                      value={b.value}
+                      onChange={(e) => setContent(i, { value: e.target.value })}
+                      placeholder="https://youtube.com/watch?v=…"
+                    />
+                  ) : (
+                    <Textarea
+                      value={b.value}
+                      onChange={(e) => setContent(i, { value: e.target.value })}
+                      placeholder="Write a paragraph about this offering…"
+                    />
+                  )}
+                </div>
+              ))}
+
+              {form.content.length === 0 ? (
+                <p className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">
+                  No content yet. Add a text or video block to enrich your product
+                  section.
                 </p>
               ) : null}
             </div>

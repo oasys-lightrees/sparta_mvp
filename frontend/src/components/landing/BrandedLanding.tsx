@@ -1,7 +1,13 @@
 import { type CSSProperties } from 'react';
 import type { AssessmentApp, Plan } from '@/types/assessment-app';
-import type { AccessMode, PricingTier, PublicProduct } from '@/types';
+import type {
+  AccessMode,
+  PricingTier,
+  ProductContentBlock,
+  PublicProduct,
+} from '@/types';
 import { formatIdr } from '@/lib/currency';
+import { isDirectVideo, toEmbedUrl } from '@/lib/video';
 import { BrandedAuthChip } from '@/components/branded/BrandedAuthChip';
 import { VoucherRedeemBox } from '@/components/branded/VoucherRedeemBox';
 import './lato-theme.css';
@@ -286,6 +292,9 @@ export function BrandedLanding({
               </p>
             ) : null}
           </div>
+          {product?.content?.length ? (
+            <ProductContentBlocks blocks={product.content} />
+          ) : null}
           <div className="lato-wrap">
             {hasProductTiers && product ? (
               <ProductTierCards
@@ -373,6 +382,61 @@ export function BrandedLanding({
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+/**
+ * Ordered video/text content blocks the expert configured for the product,
+ * shown above the pricing tiers. Videos embed a YouTube/Vimeo player or a native
+ * <video> for direct files; anything unrecognized falls back to a plain link.
+ */
+function ProductContentBlocks({ blocks }: { blocks: ProductContentBlock[] }) {
+  return (
+    <div className="lato-wrap lato-pcontent">
+      {blocks.map((b) => {
+        if (b.type === 'text') {
+          return (
+            <p key={b.id} className="lato-pcontent__text" style={{ whiteSpace: 'pre-line' }}>
+              {b.value}
+            </p>
+          );
+        }
+        const embed = toEmbedUrl(b.value);
+        if (embed) {
+          return (
+            <div key={b.id} className="lato-video">
+              <iframe
+                src={embed}
+                title="Product video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          );
+        }
+        if (isDirectVideo(b.value)) {
+          return (
+            <video
+              key={b.id}
+              controls
+              src={b.value}
+              style={{ width: '100%', borderRadius: 14, background: '#000' }}
+            />
+          );
+        }
+        return (
+          <a
+            key={b.id}
+            href={b.value}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="lato-btn lato-btn--ghost"
+          >
+            Watch video
+          </a>
+        );
+      })}
     </div>
   );
 }
