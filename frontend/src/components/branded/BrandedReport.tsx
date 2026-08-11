@@ -326,7 +326,71 @@ export function BrandedReport({
           lockedCount={0}
           profileName={report.result_profile?.name ?? null}
         />
+
+        <ProductContent blocks={report.product_content} />
       </div>
     </BrandedShell>
+  );
+}
+
+/**
+ * Bonus video/text the expert attached to the purchased product tier. Delivered
+ * here (never on the public landing) now that the buyer has finished. Videos
+ * embed a YouTube/Vimeo player or a native <video>; anything else falls back to
+ * a link.
+ */
+function ProductContent({ blocks }: { blocks: AttemptReport['product_content'] }) {
+  if (!blocks || blocks.length === 0) return null;
+  return (
+    <div className="lato-card" style={{ marginTop: 20 }}>
+      <span className="lato-eyebrow">
+        <LatoIcon name="spark" size={14} /> Your content
+      </span>
+      <div style={{ display: 'grid', gap: 16, marginTop: 14 }}>
+        {blocks.map((b) => {
+          if (b.type === 'text') {
+            return (
+              <div key={b.id} className="lato-prose" style={{ whiteSpace: 'pre-line' }}>
+                {b.value}
+              </div>
+            );
+          }
+          const embed = embedUrl(b.value);
+          if (embed) {
+            return (
+              <div key={b.id} className="lato-video">
+                <iframe
+                  src={embed}
+                  title="Product video"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            );
+          }
+          if (isDirectVideo(b.value)) {
+            return (
+              <video
+                key={b.id}
+                controls
+                src={b.value}
+                style={{ width: '100%', borderRadius: 12, background: '#000' }}
+              />
+            );
+          }
+          return (
+            <a
+              key={b.id}
+              href={b.value}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="lato-btn lato-btn--ghost"
+            >
+              <LatoIcon name="play" size={14} /> Open video
+            </a>
+          );
+        })}
+      </div>
+    </div>
   );
 }

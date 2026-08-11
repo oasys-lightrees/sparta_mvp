@@ -560,6 +560,10 @@ export type PricingTier = {
   ctaLabel: string;
   imageUrl: string | null;
   highlight: boolean;
+  // Ordered video/text blocks delivered to a buyer of THIS tier after they
+  // finish the assessment (shown on the result page, never on the public
+  // landing). Empty -> no bonus content for the tier.
+  content: ProductContentBlock[];
 };
 export type ProductTiers = PricingTier[];
 
@@ -614,8 +618,9 @@ export const products = pgTable('products', {
   // Company/batch seat packages a buyer can purchase from their balance (each
   // yields that many voucher codes). Null/empty -> batch buying is not offered.
   voucherPackages: jsonb('voucher_packages').$type<VoucherPackages>(),
-  // Ordered video/text content blocks shown in the product section on the
-  // landing page. Null/empty -> no extra content.
+  // Legacy: product-wide content blocks. Content now lives per pricing tier
+  // (PricingTier.content) and is delivered on the result page after purchase,
+  // so this column is retained only for backward compatibility and unused.
   content: jsonb('content').$type<ProductContent>(),
   status: productStatus('status').notNull().default('DRAFT'),
   createdAt: timestamp('created_at').notNull().defaultNow(),

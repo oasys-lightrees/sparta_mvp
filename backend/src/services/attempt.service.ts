@@ -1,6 +1,13 @@
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import { db } from '../db/client';
-import { assessments, attempts, reports } from '../db/schema';
+import {
+  assessmentAccess,
+  assessments,
+  attempts,
+  products,
+  reports,
+} from '../db/schema';
+import type { ProductContentBlock } from '../db/schema';
 import { resolveLearningResources } from '../config/learning-resources.schema';
 import { normalizeMode } from '../config/access';
 import { HttpError } from '../utils/http-error';
@@ -102,6 +109,15 @@ export const getReport = async (userId: string, attemptId: string) => {
       }
     : null;
 
+  // Bonus content the expert attached to the product's pricing tiers, delivered
+  // here (never on the public landing) now that the buyer has finished. A gated
+  // tier's (PAID/VOUCHER) content is only included when the user actually holds
+  // an access grant for the assessment; open tiers (FREE/FREEMIUM) always show.
+  const productContent = await resolveProductContent(
+    userId,
+    attempt.assessmentId,
+  );
+
   return {
     attempt_id: attempt.id,
     score: attempt.totalScore,
@@ -115,7 +131,45 @@ export const getReport = async (userId: string, attemptId: string) => {
     study_video_url: assessment?.studyVideoUrl ?? null,
     // Learning resources for this result — all of them, no premium gating.
     learning_resources: resources.items,
+    // Expert-authored bonus blocks unlocked by purchasing this product's tier.
+    product_content: productContent,
   };
+};
+
+/**
+ * Collect the bonus content the buyer is entitled to for an assessment's
+ * product. Content lives per pricing tier; an open tier's content shows to
+ * anyone who finished, while a gated tier's (PAID/VOUCHER) content requires a
+ * start-access grant. Returns the blocks in tier order, then block order.
+ */
+const resolveProductContent = async (
+  userId: string,
+  assessmentId: string,
+): Promise<ProductContentBlock[]> => {
+  const [product] = await db
+    .select({ tiers: products.tiers })
+    .from(products)
+    .where(eq(products.assessmentId, assessmentId))
+    .limit(1);
+  const tiers = product?.tiers ?? [];
+  if (tiers.length === 0) return [];
+
+  const [grant] = await db
+    .select({ id: assessmentAccess.id })
+    .from(assessmentAccess)
+    .where(
+      and(
+        eq(assessmentAccess.userId, userId),
+        eq(assessmentAccess.assessmentId, assessmentId),
+      ),
+    )
+    .limit(1);
+  const hasAccess = Boolean(grant);
+
+  return tiers
+    .filter((t) => t.enabled)
+    .filter((t) => t.kind === 'FREE' || t.kind === 'FREEMIUM' || hasAccess)
+    .flatMap((t) => t.content ?? []);
 };
 
 /**
