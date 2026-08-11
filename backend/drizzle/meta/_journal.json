@@ -141,6 +141,13 @@
       "when": 1786334209724,
       "tag": "0019_balance_system",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1786418191598,
+      "tag": "0020_hot_namora",
+      "breakpoints": true
     }
   ]
 }

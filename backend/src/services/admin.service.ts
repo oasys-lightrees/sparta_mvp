@@ -151,6 +151,7 @@ export const listAllAssessments = async () => {
       title: assessments.title,
       status: assessments.status,
       price: assessments.price,
+      platform_fee_percent: assessments.platformFeePercent,
       mentor_email: users.email,
       totalAttempts: count(attempts.id),
     })
@@ -164,15 +165,22 @@ export const listAllAssessments = async () => {
 };
 
 /**
- * Admin moderation: update an assessment's status and/or price. 404 if missing.
+ * Admin moderation: update an assessment's status, price and/or platform fee.
+ * 404 if missing.
  */
 export const updateAssessment = async (
   id: string,
-  input: { status?: AssessmentStatus; price?: number },
+  input: { status?: AssessmentStatus; price?: number; platformFeePercent?: number },
 ) => {
-  const values: Partial<{ status: AssessmentStatus; price: number }> = {};
+  const values: Partial<{
+    status: AssessmentStatus;
+    price: number;
+    platformFeePercent: number;
+  }> = {};
   if (input.status !== undefined) values.status = input.status;
   if (input.price !== undefined) values.price = input.price;
+  if (input.platformFeePercent !== undefined)
+    values.platformFeePercent = input.platformFeePercent;
 
   const [updated] = await db
     .update(assessments)
@@ -182,6 +190,7 @@ export const updateAssessment = async (
       id: assessments.id,
       status: assessments.status,
       price: assessments.price,
+      platform_fee_percent: assessments.platformFeePercent,
     });
 
   if (!updated) {

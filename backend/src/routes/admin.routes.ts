@@ -109,7 +109,7 @@ admin.get('/assessments', authMiddleware, requireRole('ADMIN'), async (c) => {
   }
 });
 
-// PATCH /api/admin/assessments/:id — update status and/or price
+// PATCH /api/admin/assessments/:id — update status, price and/or platform fee
 admin.patch(
   '/assessments/:id',
   authMiddleware,
@@ -137,7 +137,22 @@ admin.patch(
     ) {
       return c.json(error('price must be a non-negative integer'), 400);
     }
-    if (body.status === undefined && body.price === undefined) {
+    if (
+      body.platform_fee_percent !== undefined &&
+      (!Number.isInteger(body.platform_fee_percent) ||
+        body.platform_fee_percent < 0 ||
+        body.platform_fee_percent > 100)
+    ) {
+      return c.json(
+        error('platform_fee_percent must be an integer between 0 and 100'),
+        400,
+      );
+    }
+    if (
+      body.status === undefined &&
+      body.price === undefined &&
+      body.platform_fee_percent === undefined
+    ) {
       return c.json(error('Nothing to update'), 400);
     }
 
@@ -145,6 +160,7 @@ admin.patch(
       const updated = await adminService.updateAssessment(id, {
         status: body.status,
         price: body.price,
+        platformFeePercent: body.platform_fee_percent,
       });
       return c.json(success(updated), 200);
     } catch (err) {

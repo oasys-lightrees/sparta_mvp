@@ -37,12 +37,18 @@ export const adminApi = {
 
   updateAssessment: (
     id: string,
-    input: { status?: AssessmentStatus; price?: number },
+    input: {
+      status?: AssessmentStatus;
+      price?: number;
+      platform_fee_percent?: number;
+    },
   ) =>
-    apiClient.patch<{ id: string; status: AssessmentStatus; price: number }>(
-      `/api/admin/assessments/${id}`,
-      input,
-    ),
+    apiClient.patch<{
+      id: string;
+      status: AssessmentStatus;
+      price: number;
+      platform_fee_percent: number;
+    }>(`/api/admin/assessments/${id}`, input),
 
   deleteAssessment: (id: string) =>
     apiClient.del<{ id: string }>(`/api/admin/assessments/${id}`),

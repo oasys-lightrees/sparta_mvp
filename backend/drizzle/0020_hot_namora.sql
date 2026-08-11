@@ -1,0 +1,1 @@
+ALTER TABLE "assessments" ADD COLUMN "platform_fee_percent" integer DEFAULT 0 NOT NULL;

@@ -143,6 +143,10 @@ export const assessments = pgTable('assessments', {
   // Access cost in IDR (whole rupiah) to purchase start access when accessMode
   // is PAID (0 otherwise).
   accessCost: integer('access_cost').notNull().default(0),
+  // Platform fee (0–100 %) the platform keeps on each paid purchase / voucher
+  // sale of this assessment; the remainder is credited to the expert's balance.
+  // Set by an admin. Default 0 -> the expert receives the full amount.
+  platformFeePercent: integer('platform_fee_percent').notNull().default(0),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')
     .notNull()

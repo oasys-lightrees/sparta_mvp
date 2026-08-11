@@ -18,6 +18,17 @@ import { HttpError } from '../utils/http-error';
 type Db = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 /**
+ * Split a gross sale (IDR) into the platform's fee and the expert's net share.
+ * The fee is floored so the expert never loses more than the configured percent
+ * to rounding. `feePercent` is clamped to 0–100.
+ */
+export const splitEarnings = (gross: number, feePercent: number) => {
+  const pct = Math.min(100, Math.max(0, feePercent));
+  const fee = Math.floor((gross * pct) / 100);
+  return { fee, expertShare: gross - fee };
+};
+
+/**
  * Idempotently grant a user start-access to an assessment. Safe to call inside
  * an existing transaction; the unique (user, assessment) constraint means a
  * repeat grant is a no-op.
@@ -60,6 +71,7 @@ type AssessmentAccessRow = {
   mentorId: string;
   accessMode: AccessMode | null;
   accessCost: number;
+  platformFeePercent: number;
   price: number;
 };
 
@@ -73,6 +85,7 @@ const loadAssessment = async (
       mentorId: assessments.mentorId,
       accessMode: assessments.accessMode,
       accessCost: assessments.accessCost,
+      platformFeePercent: assessments.platformFeePercent,
       price: assessments.price,
     })
     .from(assessments)
@@ -204,11 +217,19 @@ export const purchaseAccess = async (userId: string, assessmentId: string) => {
       if (debited.length === 0) {
         throw new HttpError(400, 'Not enough balance');
       }
+      // The platform keeps its fee; the rest is credited to the expert's wallet.
+      const { expertShare } = splitEarnings(cost, a.platformFeePercent);
+      if (expertShare > 0) {
+        await tx
+          .update(users)
+          .set({ balance: sql`${users.balance} + ${expertShare}` })
+          .where(eq(users.id, a.mentorId));
+      }
       await tx.insert(transactions).values({
         userId,
         mentorId: a.mentorId,
         assessmentId: a.id,
-        amount: cost,
+        amount: expertShare,
         type: 'ACCESS_PURCHASE',
       });
     }
