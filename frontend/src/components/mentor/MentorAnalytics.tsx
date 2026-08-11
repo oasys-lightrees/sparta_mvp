@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { mentorApi } from '@/services/mentor.api';
 import { BarChartCard } from '@/components/charts/BarChartCard';
 import { LineChartCard } from '@/components/charts/LineChartCard';
-import { PieChartCard } from '@/components/charts/PieChartCard';
 import type { MentorAnalytics as MentorAnalyticsData } from '@/types';
 
 export function MentorAnalytics() {
@@ -34,13 +33,13 @@ export function MentorAnalytics() {
       <h2 className="text-xl font-semibold tracking-tight">Analytics</h2>
       <div className="grid gap-6 lg:grid-cols-2">
         <BarChartCard
-          title="Assessment performance"
-          description="Attempts per assessment"
-          data={data ? data.assessmentPerformance : null}
-          xKey="name"
-          yKey="attempts"
+          title="Assessments bought"
+          description="Purchases per day"
+          data={data ? data.purchasesByDate : null}
+          xKey="date"
+          yKey="count"
           error={error}
-          emptyLabel="No attempts yet"
+          emptyLabel="No purchases yet"
         />
         <LineChartCard
           title="Revenue over time"
@@ -50,22 +49,6 @@ export function MentorAnalytics() {
           yKey="amount"
           error={error}
           emptyLabel="No paid revenue yet"
-        />
-        <PieChartCard
-          title="Score distribution"
-          description="Beginner · Intermediate · Advanced"
-          data={data ? data.scoreDistribution : null}
-          error={error}
-          emptyLabel="No attempts yet"
-        />
-        <BarChartCard
-          title="Conversion funnel"
-          description="Submissions to paid unlocks"
-          data={data ? data.conversionFunnel : null}
-          xKey="stage"
-          yKey="value"
-          error={error}
-          emptyLabel="No activity yet"
         />
       </div>
     </section>

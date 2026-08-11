@@ -106,45 +106,40 @@ export const getRevenue = async (mentorId: string) => {
 /**
  * Visual analytics for the mentor dashboard charts.
  *
- *  - assessmentPerformance: attempts per assessment (bar)
- *  - revenueByDate:         balance (IDR) earned per day from paid unlocks (line)
- *  - scoreDistribution:     attempts bucketed Beginner/Intermediate/Advanced (pie)
- *  - conversionFunnel:      submissions -> paid unlocks (bar)
+ *  - purchasesByDate: number of assessments bought per day (bar)
+ *  - revenueByDate:   balance (IDR) earned per day from paid unlocks (line)
  *
- * Page views are not tracked, so the funnel starts at submissions.
+ * A purchase is a paid access or voucher-batch transaction crediting this
+ * mentor; free assessments create no transaction and so do not appear.
  */
 export const getAnalytics = async (mentorId: string) => {
-  // 1. Attempts per assessment.
-  const perfRows = await db
-    .select({
-      name: assessments.title,
-      attempts: count(attempts.id),
-    })
-    .from(assessments)
-    .leftJoin(attempts, eq(attempts.assessmentId, assessments.id))
-    .where(eq(assessments.mentorId, mentorId))
-    .groupBy(assessments.id)
-    .orderBy(desc(count(attempts.id)));
+  const dateExpr = sql<string>`to_char(${transactions.createdAt}, 'YYYY-MM-DD')`;
+  const purchaseFilter = and(
+    eq(transactions.mentorId, mentorId),
+    inArray(transactions.type, ['ACCESS_PURCHASE', 'VOUCHER_PURCHASE']),
+  );
 
-  const assessmentPerformance = perfRows.map((r) => ({
-    name: r.name,
-    attempts: Number(r.attempts),
+  // 1. Assessments bought per day.
+  const purchaseRows = await db
+    .select({ date: dateExpr, count: count() })
+    .from(transactions)
+    .where(purchaseFilter)
+    .groupBy(dateExpr)
+    .orderBy(dateExpr);
+
+  const purchasesByDate = purchaseRows.map((r) => ({
+    date: r.date,
+    count: Number(r.count),
   }));
 
   // 2. Balance revenue per day (paid unlocks crediting this mentor).
-  const dateExpr = sql<string>`to_char(${transactions.createdAt}, 'YYYY-MM-DD')`;
   const revRows = await db
     .select({
       date: dateExpr,
       amount: sql<string>`coalesce(sum(${transactions.amount}), 0)`,
     })
     .from(transactions)
-    .where(
-      and(
-        eq(transactions.mentorId, mentorId),
-        inArray(transactions.type, ['ACCESS_PURCHASE', 'VOUCHER_PURCHASE']),
-      ),
-    )
+    .where(purchaseFilter)
     .groupBy(dateExpr)
     .orderBy(dateExpr);
 
@@ -153,48 +148,9 @@ export const getAnalytics = async (mentorId: string) => {
     amount: Number(r.amount),
   }));
 
-  // 3. Score distribution by each assessment's own thresholds.
-  const bandExpr = sql<string>`case
-    when ${assessments.lowScoreThreshold} is not null and ${attempts.totalScore} <= ${assessments.lowScoreThreshold} then 'Beginner'
-    when ${assessments.highScoreThreshold} is not null and ${attempts.totalScore} >= ${assessments.highScoreThreshold} then 'Advanced'
-    else 'Intermediate' end`;
-  const bandRows = await db
-    .select({ band: bandExpr, value: count() })
-    .from(attempts)
-    .innerJoin(assessments, eq(attempts.assessmentId, assessments.id))
-    .where(eq(assessments.mentorId, mentorId))
-    .groupBy(bandExpr);
-
-  const bandCounts: Record<string, number> = {};
-  for (const row of bandRows) bandCounts[row.band] = Number(row.value);
-  const scoreDistribution = ['Beginner', 'Intermediate', 'Advanced'].map(
-    (name) => ({ name, value: bandCounts[name] ?? 0 }),
-  );
-
-  // 4. Conversion funnel: submissions -> paid unlocks.
-  const submissions = assessmentPerformance.reduce(
-    (sum, a) => sum + a.attempts,
-    0,
-  );
-  const [unlockAgg] = await db
-    .select({ value: count() })
-    .from(transactions)
-    .where(
-      and(
-        eq(transactions.mentorId, mentorId),
-        inArray(transactions.type, ['ACCESS_PURCHASE', 'VOUCHER_PURCHASE']),
-      ),
-    );
-  const conversionFunnel = [
-    { stage: 'Submissions', value: submissions },
-    { stage: 'Paid Unlocks', value: Number(unlockAgg?.value ?? 0) },
-  ];
-
   return {
-    assessmentPerformance,
+    purchasesByDate,
     revenueByDate,
-    scoreDistribution,
-    conversionFunnel,
   };
 };
 
