@@ -1,12 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { assessmentApi } from '@/services/assessment.api';
+import { productApi } from '@/services/product.api';
 import { formatIdr } from '@/lib/currency';
 import { useAuth } from '@/hooks/useAuth';
 import type { AssessmentApp } from '@/types/assessment-app';
-import type { AccessState, AssessmentDetail } from '@/types';
+import type { AccessState, AssessmentDetail, PricingTier, PublicProduct } from '@/types';
 import { BrandedShell, LatoIcon } from './shell';
 
 type Phase = 'intro' | 'taking' | 'submitting';
@@ -18,6 +19,9 @@ function AccessGate({
   purchasing,
   error,
   assessmentId,
+  cost,
+  tierTitle,
+  tierId,
   onPurchase,
 }: {
   access: AccessState | null;
@@ -25,10 +29,19 @@ function AccessGate({
   purchasing: boolean;
   error: string;
   assessmentId: string;
+  // The price to charge — the selected paid tier's amount, or the assessment's
+  // access cost as a fallback.
+  cost: number;
+  // The selected paid tier's title, shown so buyers know what they're buying.
+  tierTitle?: string | null;
+  // The selected paid tier's id, preserved across the login round-trip.
+  tierId?: string | null;
   onPurchase: () => void;
 }) {
   if (!access) return null;
-  const next = encodeURIComponent(`/a/${assessmentId}/start`);
+  const next = encodeURIComponent(
+    `/a/${assessmentId}/start${tierId ? `?tier=${encodeURIComponent(tierId)}` : ''}`,
+  );
 
   // Must be logged in to pay/redeem.
   if (needsAuth) {
@@ -69,14 +82,13 @@ function AccessGate({
     );
   }
 
-  // PAID: purchase access from wallet balance.
-  const cost = access.access_cost;
+  // PAID: purchase the selected tier from wallet balance.
   const balance = access.balance ?? 0;
   const affordable = balance >= cost;
   return (
     <div className="lato-card" style={{ marginTop: 24, textAlign: 'center' }}>
       <span className="lato-pill">
-        <LatoIcon name="lock" size={13} /> Paid assessment
+        <LatoIcon name="lock" size={13} /> {tierTitle || 'Paid assessment'}
       </span>
       <h3 style={{ margin: '12px 0 6px', fontWeight: 750 }}>
         Get access for {formatIdr(cost)}
@@ -124,8 +136,11 @@ export function BrandedTake({
   assessmentId: string;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const tierParam = searchParams.get('tier');
   const { user, loading: authLoading } = useAuth();
   const [detail, setDetail] = useState<AssessmentDetail | null>(null);
+  const [product, setProduct] = useState<PublicProduct | null>(null);
   const [error, setError] = useState('');
   const [phase, setPhase] = useState<Phase>('intro');
   const [step, setStep] = useState(0);
@@ -143,6 +158,12 @@ export function BrandedTake({
       .catch(
         (e) => active && setError(e instanceof Error ? e.message : 'Failed to load'),
       );
+    productApi
+      .getPublic(assessmentId)
+      .then((p) => active && setProduct(p))
+      .catch(() => {
+        /* non-fatal: no product tiers, fall back to the assessment access cost */
+      });
     return () => {
       active = false;
     };
@@ -164,11 +185,35 @@ export function BrandedTake({
     void loadAccess();
   }, [authLoading, user, loadAccess]);
 
+  // Resolve which paid tier this visit is buying. A `?tier=` from a landing card
+  // selects that tier; otherwise, a gated assessment defaults to the first paid
+  // tier so a direct /start visit still has a price to charge.
+  const paidTiers = (product?.tiers ?? []).filter(
+    (t) => t.enabled && t.kind === 'PAID',
+  );
+  const selectedTier: PricingTier | null =
+    (tierParam ? paidTiers.find((t) => t.id === tierParam) : undefined) ?? null;
+  const gatedNoGrant = Boolean(
+    access?.start_requires_grant && !access?.has_access,
+  );
+  const effectiveTier: PricingTier | null =
+    selectedTier ?? (gatedNoGrant ? paidTiers[0] ?? null : null);
+  const purchasedTiers = access?.purchased_tiers ?? [];
+  // A chosen paid tier the user hasn't bought must be purchased even when the
+  // assessment itself is free to take (the tier sells its own bonus content).
+  const needsTierPurchase = Boolean(
+    selectedTier && !purchasedTiers.includes(selectedTier.id),
+  );
+  const purchaseCost = effectiveTier?.amount ?? access?.access_cost ?? 0;
+
   const purchaseAccess = async () => {
     setPurchasing(true);
     setAccessError('');
     try {
-      const result = await assessmentApi.purchaseAccess(assessmentId);
+      const result = await assessmentApi.purchaseAccess(
+        assessmentId,
+        effectiveTier?.id,
+      );
       setAccess(result);
     } catch (e) {
       setAccessError(e instanceof Error ? e.message : 'Purchase failed');
@@ -177,9 +222,12 @@ export function BrandedTake({
     }
   };
 
-  // Gate: gated modes (PAID/VOUCHER) need a grant before starting.
-  const gated = Boolean(access?.start_requires_grant && !access?.has_access);
-  const needsAuth = Boolean(access?.requires_auth_to_start && !user);
+  // Gate: gated modes (PAID/VOUCHER) need a grant, or a selected paid tier still
+  // needs buying.
+  const gated = gatedNoGrant || needsTierPurchase;
+  const needsAuth = Boolean(
+    (access?.requires_auth_to_start || needsTierPurchase) && !user,
+  );
 
   const questions = detail?.questions ?? [];
   const total = questions.length;
@@ -287,6 +335,9 @@ export function BrandedTake({
               purchasing={purchasing}
               error={accessError}
               assessmentId={assessmentId}
+              cost={purchaseCost}
+              tierTitle={effectiveTier?.title ?? null}
+              tierId={effectiveTier?.id ?? null}
               onPurchase={purchaseAccess}
             />
           ) : (

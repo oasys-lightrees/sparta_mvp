@@ -45,9 +45,14 @@ export const assessmentApi = {
   getAccess: (id: string) =>
     apiClient.get<AccessState>(`/api/assessments/${id}/access`),
 
-  // Access model: purchase start access from balance (PAID mode; idempotent).
-  purchaseAccess: (id: string) =>
-    apiClient.post<PurchaseAccessResult>(`/api/assessments/${id}/access/purchase`),
+  // Access model: purchase from balance (idempotent). With a tierId it buys that
+  // specific product pricing tier at its own price; without one it buys the
+  // assessment's single access cost.
+  purchaseAccess: (id: string, tierId?: string) =>
+    apiClient.post<PurchaseAccessResult>(
+      `/api/assessments/${id}/access/purchase`,
+      tierId ? { tier_id: tierId } : {},
+    ),
 
   submit: (
     id: string,

@@ -372,6 +372,40 @@ export const assessmentAccessRelations = relations(assessmentAccess, ({ one }) =
 }));
 
 /**
+ * tier_purchases
+ * One row per (user, assessment, product pricing tier) the user has bought.
+ * A product's tiers each carry their own price and their own bonus content, so
+ * a buyer purchases a specific tier: the row records which tier and the price
+ * paid, gates that tier's result-page content, and its unique constraint makes
+ * a repeat purchase of the same tier a no-op. Buying any paid tier also grants
+ * the binary assessment_access (the right to take the assessment).
+ */
+export const tierPurchases = pgTable(
+  'tier_purchases',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    assessmentId: uuid('assessment_id')
+      .notNull()
+      .references(() => assessments.id, { onDelete: 'cascade' }),
+    // The PricingTier.id within the assessment's product (a stable string key).
+    tierId: varchar('tier_id', { length: 255 }).notNull(),
+    // IDR (whole rupiah) actually charged for this tier at purchase time.
+    amount: integer('amount').notNull().default(0),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => [
+    unique('tier_purchases_user_assessment_tier_unique').on(
+      t.userId,
+      t.assessmentId,
+      t.tierId,
+    ),
+  ],
+);
+
+/**
  * blogs
  * Marketing articles shown on the landing page. Only PUBLISHED blogs are
  * exposed publicly.

@@ -211,8 +211,10 @@ assessment.get('/:id/access', async (c) => {
   }
 });
 
-// POST /api/assessments/:id/access/purchase — buy start access from the wallet
-// balance (PAID mode only). Idempotent. Requires auth.
+// POST /api/assessments/:id/access/purchase — buy from the wallet balance.
+// With a `tier_id` it buys that specific product pricing tier at its own price;
+// without one it falls back to the assessment's single access cost. Idempotent.
+// Requires auth.
 assessment.post(
   '/:id/access/purchase',
   authMiddleware,
@@ -221,9 +223,14 @@ assessment.post(
     if (!UUID_REGEX.test(id)) {
       return c.json(error('Invalid assessment id'), 400);
     }
+    const body = await c.req.json().catch(() => null);
+    const tierId = body && typeof body.tier_id === 'string' ? body.tier_id : null;
     try {
-      const result = await accessService.purchaseAccess(c.get('user').id, id);
-      const state = await accessService.getAccessState(id, c.get('user').id);
+      const userId = c.get('user').id;
+      const result = tierId
+        ? await accessService.purchaseTier(userId, id, tierId)
+        : await accessService.purchaseAccess(userId, id);
+      const state = await accessService.getAccessState(id, userId);
       return c.json(success({ ...state, ...result }), 200);
     } catch (err) {
       return handleError(c, err);

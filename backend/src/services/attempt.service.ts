@@ -6,6 +6,7 @@ import {
   attempts,
   products,
   reports,
+  tierPurchases,
 } from '../db/schema';
 import type { ProductContentBlock } from '../db/schema';
 import { resolveLearningResources } from '../config/learning-resources.schema';
@@ -138,9 +139,11 @@ export const getReport = async (userId: string, attemptId: string) => {
 
 /**
  * Collect the bonus content the buyer is entitled to for an assessment's
- * product. Content lives per pricing tier; an open tier's content shows to
- * anyone who finished, while a gated tier's (PAID/VOUCHER) content requires a
- * start-access grant. Returns the blocks in tier order, then block order.
+ * product. Content lives per pricing tier. Each tier gates its own content:
+ *  - FREE/FREEMIUM tiers show to anyone who finished;
+ *  - PAID tiers show only when the user bought THAT specific tier;
+ *  - VOUCHER tiers show when the user holds a voucher-sourced access grant.
+ * Returns the blocks in tier order, then block order.
  */
 const resolveProductContent = async (
   userId: string,
@@ -154,21 +157,40 @@ const resolveProductContent = async (
   const tiers = product?.tiers ?? [];
   if (tiers.length === 0) return [];
 
-  const [grant] = await db
+  const purchasedRows = await db
+    .select({ tierId: tierPurchases.tierId })
+    .from(tierPurchases)
+    .where(
+      and(
+        eq(tierPurchases.userId, userId),
+        eq(tierPurchases.assessmentId, assessmentId),
+      ),
+    );
+  const purchasedTierIds = new Set(purchasedRows.map((r) => r.tierId));
+
+  const [voucherGrant] = await db
     .select({ id: assessmentAccess.id })
     .from(assessmentAccess)
     .where(
       and(
         eq(assessmentAccess.userId, userId),
         eq(assessmentAccess.assessmentId, assessmentId),
+        eq(assessmentAccess.source, 'VOUCHER'),
       ),
     )
     .limit(1);
-  const hasAccess = Boolean(grant);
+  const hasVoucherAccess = Boolean(voucherGrant);
+
+  const entitled = (t: (typeof tiers)[number]): boolean => {
+    if (t.kind === 'FREE' || t.kind === 'FREEMIUM') return true;
+    if (t.kind === 'PAID') return purchasedTierIds.has(t.id);
+    if (t.kind === 'VOUCHER') return hasVoucherAccess;
+    return false;
+  };
 
   return tiers
     .filter((t) => t.enabled)
-    .filter((t) => t.kind === 'FREE' || t.kind === 'FREEMIUM' || hasAccess)
+    .filter(entitled)
     .flatMap((t) => t.content ?? []);
 };
 
