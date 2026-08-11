@@ -3,6 +3,8 @@ import { db } from '../db/client';
 import {
   assessmentAccess,
   assessments,
+  products,
+  tierPurchases,
   transactions,
   users,
 } from '../db/schema';
@@ -45,6 +47,23 @@ export const grantAccess = async (
     .onConflictDoNothing({
       target: [assessmentAccess.userId, assessmentAccess.assessmentId],
     });
+};
+
+/** The product pricing-tier ids the user has purchased for this assessment. */
+export const listPurchasedTierIds = async (
+  userId: string,
+  assessmentId: string,
+): Promise<string[]> => {
+  const rows = await db
+    .select({ tierId: tierPurchases.tierId })
+    .from(tierPurchases)
+    .where(
+      and(
+        eq(tierPurchases.userId, userId),
+        eq(tierPurchases.assessmentId, assessmentId),
+      ),
+    );
+  return rows.map((r) => r.tierId);
 };
 
 /** True if the user already holds a start-access grant for the assessment. */
@@ -114,6 +133,7 @@ export const getAccessState = async (
 
   let hasAccess = !policy.startRequiresGrant;
   let balance: number | null = null;
+  let purchasedTiers: string[] = [];
   if (userId) {
     if (policy.startRequiresGrant) hasAccess = await hasGrant(userId, assessmentId);
     const [wallet] = await db
@@ -122,6 +142,7 @@ export const getAccessState = async (
       .where(eq(users.id, userId))
       .limit(1);
     balance = wallet?.balance ?? null;
+    purchasedTiers = await listPurchasedTierIds(userId, assessmentId);
   }
 
   return {
@@ -135,6 +156,9 @@ export const getAccessState = async (
     price: a.price,
     has_access: hasAccess,
     balance,
+    // Product pricing-tier ids this user has already bought (each paid tier is
+    // a separate purchase at its own price).
+    purchased_tiers: purchasedTiers,
   };
 };
 
@@ -234,5 +258,104 @@ export const purchaseAccess = async (userId: string, assessmentId: string) => {
       });
     }
     return { charged: cost, already_purchased: false };
+  });
+};
+
+/**
+ * Purchase a specific product pricing tier at its own price. Each paid tier is
+ * an independent purchase: it charges that tier's amount, records a
+ * tier_purchases row (unique per user/assessment/tier, so a repeat is a no-op),
+ * grants the binary assessment access, and unlocks that tier's bonus content on
+ * the result page. Credits the platform fee + expert share exactly like
+ * purchaseAccess.
+ */
+export const purchaseTier = async (
+  userId: string,
+  assessmentId: string,
+  tierId: string,
+) => {
+  const a = await loadAssessment(assessmentId);
+
+  const [product] = await db
+    .select({ tiers: products.tiers })
+    .from(products)
+    .where(eq(products.assessmentId, assessmentId))
+    .limit(1);
+  const tier = (product?.tiers ?? []).find((t) => t.id === tierId && t.enabled);
+  if (!tier) {
+    throw new HttpError(404, 'Pricing tier not found');
+  }
+  if (tier.kind !== 'PAID') {
+    throw new HttpError(400, 'This tier is not purchasable');
+  }
+  const cost = tier.amount;
+
+  // Fast path: already bought this tier (also enforced atomically below).
+  const [existing] = await db
+    .select({ id: tierPurchases.id })
+    .from(tierPurchases)
+    .where(
+      and(
+        eq(tierPurchases.userId, userId),
+        eq(tierPurchases.assessmentId, assessmentId),
+        eq(tierPurchases.tierId, tierId),
+      ),
+    )
+    .limit(1);
+  if (existing) {
+    return { charged: 0, already_purchased: true, tier_id: tierId };
+  }
+
+  return db.transaction(async (tx) => {
+    // Claim the tier purchase atomically; the loser of a concurrent double-buy
+    // gets 0 rows and is charged nothing.
+    const claimed = await tx
+      .insert(tierPurchases)
+      .values({ userId, assessmentId, tierId, amount: cost })
+      .onConflictDoNothing({
+        target: [
+          tierPurchases.userId,
+          tierPurchases.assessmentId,
+          tierPurchases.tierId,
+        ],
+      })
+      .returning({ id: tierPurchases.id });
+    if (claimed.length === 0) {
+      return { charged: 0, already_purchased: true, tier_id: tierId };
+    }
+
+    // Buying any paid tier grants the right to take the assessment (idempotent).
+    await tx
+      .insert(assessmentAccess)
+      .values({ userId, assessmentId, source: 'PAYMENT' })
+      .onConflictDoNothing({
+        target: [assessmentAccess.userId, assessmentAccess.assessmentId],
+      });
+
+    if (cost > 0) {
+      const debited = await tx
+        .update(users)
+        .set({ balance: sql`${users.balance} - ${cost}` })
+        .where(and(eq(users.id, userId), gte(users.balance, cost)))
+        .returning({ balance: users.balance });
+      if (debited.length === 0) {
+        throw new HttpError(400, 'Not enough balance');
+      }
+      const { expertShare } = splitEarnings(cost, a.platformFeePercent);
+      if (expertShare > 0) {
+        await tx
+          .update(users)
+          .set({ balance: sql`${users.balance} + ${expertShare}` })
+          .where(eq(users.id, a.mentorId));
+      }
+      await tx.insert(transactions).values({
+        userId,
+        mentorId: a.mentorId,
+        assessmentId: a.id,
+        amount: expertShare,
+        type: 'ACCESS_PURCHASE',
+      });
+    }
+    return { charged: cost, already_purchased: false, tier_id: tierId };
   });
 };

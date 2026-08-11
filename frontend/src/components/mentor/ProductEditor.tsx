@@ -423,11 +423,11 @@ export function ProductEditor({
                 </Button>
               </div>
               <p className="rounded-md border border-dashed bg-accent/20 px-3 py-2 text-xs text-muted-foreground">
-                Prices are in Rupiah and charged for real. Saving sets this
-                assessment&apos;s access from the tiers: a <strong>Paid</strong>{' '}
-                tier&apos;s price becomes the start-access cost, a{' '}
-                <strong>Voucher</strong> tier makes the assessment redeemable with a
-                code, and a <strong>Free</strong> tier keeps it open to everyone.
+                Prices are in Rupiah and charged for real. Each{' '}
+                <strong>Paid</strong> tier is bought on its own at its own price,
+                unlocking that tier&apos;s bonus content for the buyer. A{' '}
+                <strong>Voucher</strong> tier makes the assessment redeemable with
+                a code, and a <strong>Free</strong> tier keeps it open to everyone.
               </p>
 
               {form.tiers.map((tier, i) => (

@@ -400,8 +400,15 @@ function ProductTierCards({
   startHref: string;
   redeemHref?: string;
 }) {
-  const hrefFor = (tier: PricingTier): string =>
-    tier.kind === 'VOUCHER' ? (redeemHref ?? startHref) : startHref;
+  const hrefFor = (tier: PricingTier): string => {
+    if (tier.kind === 'VOUCHER') return redeemHref ?? startHref;
+    // A paid tier carries its own price + content, so route to its own checkout.
+    if (tier.kind === 'PAID') {
+      const sep = startHref.includes('?') ? '&' : '?';
+      return `${startHref}${sep}tier=${encodeURIComponent(tier.id)}`;
+    }
+    return startHref;
+  };
 
   return (
     <div className="lato-plans">

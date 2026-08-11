@@ -155,6 +155,13 @@
       "when": 1786423567219,
       "tag": "0021_violet_slyde",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1786439636448,
+      "tag": "0022_last_scourge",
+      "breakpoints": true
     }
   ]
 }

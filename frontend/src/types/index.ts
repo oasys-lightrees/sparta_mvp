@@ -33,10 +33,15 @@ export type AccessState = {
   price: number;
   has_access: boolean;
   balance: number | null;
+  // Product pricing-tier ids the current user has already bought (each paid
+  // tier is a separate purchase at its own price).
+  purchased_tiers: string[];
 };
 export type PurchaseAccessResult = AccessState & {
   charged: number;
   already_purchased: boolean;
+  // The tier that was purchased, when buying a specific pricing tier.
+  tier_id?: string;
 };
 
 // --- Public assessment ---
