@@ -48,6 +48,7 @@ export function BrandedDashboard({
   }, [user, authLoading, assessmentId]);
 
   const home = `/a/${assessmentId}`;
+  const homeBack = { href: home, label: 'Home' };
 
   // Confirm a top-up after returning from the Midtrans redirect (order_id in
   // the query), then clean the URL — mirrors the platform dashboard.
@@ -102,7 +103,7 @@ export function BrandedDashboard({
   if (!authLoading && !user) {
     const next = encodeURIComponent(`/a/${assessmentId}/dashboard`);
     return (
-      <BrandedShell app={app} homeHref={home}>
+      <BrandedShell app={app} homeHref={home} back={homeBack}>
         <div className="lato-intro">
           <div className="lato-card__i" style={{ margin: '0 auto 16px' }}>
             <LatoIcon name="lock" />
@@ -135,7 +136,7 @@ export function BrandedDashboard({
       : first.score;
 
   return (
-    <BrandedShell app={app} homeHref={home}>
+    <BrandedShell app={app} homeHref={home} back={homeBack}>
       <div className="lato-dash">
         <div className="lato-dash__head">
           <div>

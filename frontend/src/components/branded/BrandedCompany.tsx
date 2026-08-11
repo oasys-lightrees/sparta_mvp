@@ -96,12 +96,13 @@ export function BrandedCompany({
   };
 
   const home = `/a/${assessmentId}`;
+  const homeBack = { href: home, label: 'Home' };
   const dashboardBack = { href: `${home}/dashboard`, label: 'Dashboard' };
 
   if (!authLoading && !user) {
     const next = encodeURIComponent(`/a/${assessmentId}/company`);
     return (
-      <BrandedShell app={app} homeHref={home}>
+      <BrandedShell app={app} homeHref={home} back={homeBack}>
         <div className="lato-intro">
           <div className="lato-card__i" style={{ margin: '0 auto 16px' }}>
             <LatoIcon name="lock" />

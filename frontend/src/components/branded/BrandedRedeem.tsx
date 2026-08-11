@@ -23,6 +23,7 @@ export function BrandedRedeem({
   const [result, setResult] = useState<RedeemResult | null>(null);
 
   const home = `/a/${assessmentId}`;
+  const homeBack = { href: home, label: 'Home' };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +44,7 @@ export function BrandedRedeem({
     const redeemPath = `/a/${assessmentId}/redeem${code ? `?code=${encodeURIComponent(code)}` : ''}`;
     const next = encodeURIComponent(redeemPath);
     return (
-      <BrandedShell app={app} homeHref={home}>
+      <BrandedShell app={app} homeHref={home} back={homeBack}>
         <div className="lato-intro">
           <div className="lato-card__i" style={{ margin: '0 auto 16px' }}>
             <LatoIcon name="lock" />
@@ -66,7 +67,7 @@ export function BrandedRedeem({
   }
 
   return (
-    <BrandedShell app={app} homeHref={home}>
+    <BrandedShell app={app} homeHref={home} back={homeBack}>
       <div className="lato-intro">
         <span className="lato-eyebrow" style={{ justifyContent: 'center' }}>
           {app.brand.brandName}

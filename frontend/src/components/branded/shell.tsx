@@ -88,6 +88,12 @@ export function BrandedShell({
     >
       <header className="lato-topbar">
         <div className="lato-topbar__in">
+          {back ? (
+            <a className="lato-back" href={back.href}>
+              <LatoIcon name="arrowLeft" size={15} />
+              {back.label}
+            </a>
+          ) : null}
           {homeHref ? (
             <a
               className="lato-brand lato-brand--link"
@@ -99,17 +105,7 @@ export function BrandedShell({
           ) : (
             <span className="lato-brand">{brandInner}</span>
           )}
-          {back || right ? (
-            <div className="lato-topbar__r">
-              {back ? (
-                <a className="lato-back" href={back.href}>
-                  <LatoIcon name="arrowLeft" size={15} />
-                  {back.label}
-                </a>
-              ) : null}
-              {right}
-            </div>
-          ) : null}
+          {right ? <div className="lato-topbar__r">{right}</div> : null}
         </div>
       </header>
       <div className="lato-stage">{children}</div>

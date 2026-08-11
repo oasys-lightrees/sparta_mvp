@@ -212,7 +212,7 @@ export function BrandedTake({
   // loading / error
   if (error && !detail) {
     return (
-      <BrandedShell app={app} homeHref={home}>
+      <BrandedShell app={app} homeHref={home} back={exitBack}>
         <div className="lato-note" style={{ maxWidth: 520, margin: '40px auto' }}>
           {error}
         </div>
@@ -221,7 +221,7 @@ export function BrandedTake({
   }
   if (!detail) {
     return (
-      <BrandedShell app={app} homeHref={home}>
+      <BrandedShell app={app} homeHref={home} back={exitBack}>
         <div className="lato-loading">
           <div className="lato-spinner" />
         </div>
@@ -232,7 +232,7 @@ export function BrandedTake({
   // submitting / completion
   if (phase === 'submitting') {
     return (
-      <BrandedShell app={app} homeHref={home}>
+      <BrandedShell app={app} homeHref={home} back={exitBack}>
         <div className="lato-loading">
           <div className="lato-spinner" />
           <h3 style={{ fontSize: '1.3rem' }}>{app.assessment.completion.title}</h3>
