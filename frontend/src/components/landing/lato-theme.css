@@ -232,6 +232,7 @@
   .lato-hero__in{grid-template-columns:1fr;gap:40px}
   .lato-hero__media{order:-1;max-width:460px}
   .lato-links{display:none}
+  .lato-back-lato{display:none}
   .lato-mnav{display:block}
   .lato-fgrid{grid-template-columns:1fr 1fr}
 }
