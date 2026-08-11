@@ -95,6 +95,12 @@ export interface Landing {
   process: Step[];
   testimonials: Testimonial[];
   faq: Faq[];
+  about: {
+    enabled: boolean;
+    title: string;
+    body: string;
+    imageUrl: string | null;
+  };
   finalCta: {
     enabled: boolean;
     title: string;

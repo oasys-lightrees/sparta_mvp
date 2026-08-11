@@ -37,6 +37,10 @@ type Form = {
   heroImageUrl: string;
   ctaPrimary: string;
   ctaSecondary: string;
+  aboutEnabled: boolean;
+  aboutTitle: string;
+  aboutBody: string;
+  aboutImageUrl: string;
   finalEnabled: boolean;
   finalTitle: string;
   finalSubtitle: string;
@@ -62,6 +66,10 @@ const fromConfig = (a: AssessmentApp): Form => ({
   heroImageUrl: a.landing.hero.heroImageUrl ?? '',
   ctaPrimary: a.landing.hero.ctaPrimary,
   ctaSecondary: a.landing.hero.ctaSecondary,
+  aboutEnabled: a.landing.about.enabled,
+  aboutTitle: a.landing.about.title,
+  aboutBody: a.landing.about.body,
+  aboutImageUrl: a.landing.about.imageUrl ?? '',
   finalEnabled: a.landing.finalCta.enabled,
   finalTitle: a.landing.finalCta.title,
   finalSubtitle: a.landing.finalCta.subtitle,
@@ -89,6 +97,12 @@ const toPatch = (f: Form): AppConfigPatch => ({
       heroImageUrl: f.heroImageUrl.trim() === '' ? null : f.heroImageUrl.trim(),
       ctaPrimary: f.ctaPrimary.trim(),
       ctaSecondary: f.ctaSecondary,
+    },
+    about: {
+      enabled: f.aboutEnabled,
+      title: f.aboutTitle.trim() === '' ? 'About' : f.aboutTitle.trim(),
+      body: f.aboutBody,
+      imageUrl: f.aboutImageUrl.trim() === '' ? null : f.aboutImageUrl.trim(),
     },
     finalCta: {
       enabled: f.finalEnabled,
@@ -391,6 +405,55 @@ export function LandingPageEditor({
                 <TextField label="Primary button" value={form.ctaPrimary} onChange={(v) => set({ ctaPrimary: v })} />
                 <TextField label="Secondary button" value={form.ctaSecondary} onChange={(v) => set({ ctaSecondary: v })} />
               </div>
+            </div>
+
+            {/* About */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  About section
+                </h4>
+                <label className="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={form.aboutEnabled}
+                    onChange={(e) => set({ aboutEnabled: e.target.checked })}
+                  />
+                  Show About section
+                </label>
+              </div>
+              {form.aboutEnabled ? (
+                <>
+                  <p className="text-xs text-muted-foreground">
+                    A section with your title and description on the left and a
+                    photo on the right.
+                  </p>
+                  <TextField
+                    label="Title"
+                    value={form.aboutTitle}
+                    onChange={(v) => set({ aboutTitle: v })}
+                    placeholder="e.g. About this assessment"
+                  />
+                  <TextField
+                    label="Description"
+                    value={form.aboutBody}
+                    onChange={(v) => set({ aboutBody: v })}
+                    placeholder="Tell visitors who you are and what they'll get. Line breaks are kept."
+                    textarea
+                  />
+                  <ImageSourceField
+                    label="About photo"
+                    value={form.aboutImageUrl}
+                    onChange={(v) => set({ aboutImageUrl: v })}
+                    placeholder="https://example.com/about.jpg"
+                    helpText="Shown on the right of the About section. A 4:3 (landscape) image works best. PNG, SVG, JPG, JPEG or WEBP · up to 5 MB."
+                  />
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  The About section is hidden on your landing page.
+                </p>
+              )}
             </div>
 
             {/* Final CTA */}
