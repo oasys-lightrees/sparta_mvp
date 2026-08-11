@@ -72,6 +72,8 @@
 /* Real uploaded/URL logo: no badge background, shadow or clipping — show it as-is. */
 .lato-brand__m--img{background:none;box-shadow:none;border-radius:0;overflow:visible}
 .lato-brand__n small{display:block;font:500 .68rem/1 var(--mono);letter-spacing:.06em;color:var(--muted);margin-top:3px}
+.lato-tolato{display:inline-flex;align-items:center;gap:4px;font-size:.75rem;font-weight:500;color:var(--muted);padding:.3em .5em;border-radius:7px;white-space:nowrap}
+.lato-tolato:hover{color:var(--ink);background:var(--raise)}
 .lato-links{display:flex;gap:6px;margin-left:12px}
 .lato-links a{padding:.5em .75em;border-radius:8px;color:var(--ink-2);font-size:.925rem;font-weight:500}
 .lato-links a:hover{color:var(--ink);background:var(--raise)}

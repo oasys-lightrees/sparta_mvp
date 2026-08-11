@@ -122,6 +122,9 @@ export function BrandedLanding({
       {/* NAV */}
       <header className="lato-nav">
         <div className="lato-wrap lato-nav__in">
+          <Link href="/" className="lato-tolato lato-back-lato" aria-label="Back to LATO">
+            <Icon name="arrowLeft" size={13} /> LATO
+          </Link>
           <a className="lato-brand" href={homeHref} aria-label={brand.brandName}>
             <BrandMark app={app} />
             <span className="lato-brand__n">
@@ -134,9 +137,6 @@ export function BrandedLanding({
             <a href="#products">Products</a>
           </nav>
           <div className="lato-nav__r">
-            <Link href="/" className="lato-btn lato-btn--ghost lato-back-lato">
-              <Icon name="arrowLeft" size={15} /> LATO
-            </Link>
             <BrandedAuthChip loginHref={loginHref} dashboardHref={dashboardHref} />
             <details className="lato-mnav">
               <summary aria-label="Menu">
