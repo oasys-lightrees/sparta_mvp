@@ -1,4 +1,5 @@
 import { type CSSProperties } from 'react';
+import Link from 'next/link';
 import type { AssessmentApp, Plan } from '@/types/assessment-app';
 import type { AccessMode, PricingTier, PublicProduct } from '@/types';
 import { formatIdr } from '@/lib/currency';
@@ -22,6 +23,7 @@ const ICONS: Record<string, string> = {
   chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   check: '<path d="M20 6L9 17l-5-5"/>',
   arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  arrowLeft: '<path d="M19 12H5M11 6l-6 6 6 6"/>',
 };
 function Icon({ name, size = 22 }: { name: string; size?: number }) {
   const path = ICONS[name] ?? ICONS.spark;
@@ -132,6 +134,9 @@ export function BrandedLanding({
             <a href="#products">Products</a>
           </nav>
           <div className="lato-nav__r">
+            <Link href="/" className="lato-btn lato-btn--ghost lato-back-lato">
+              <Icon name="arrowLeft" size={15} /> LATO
+            </Link>
             <BrandedAuthChip loginHref={loginHref} dashboardHref={dashboardHref} />
             <details className="lato-mnav">
               <summary aria-label="Menu">
@@ -140,6 +145,7 @@ export function BrandedLanding({
               <div className="lato-mnav__panel">
                 <a href="#top">Overview</a>
                 <a href="#products">Products</a>
+                <Link href="/">Back to LATO</Link>
                 <BrandedAuthChip loginHref={loginHref} dashboardHref={dashboardHref} />
               </div>
             </details>

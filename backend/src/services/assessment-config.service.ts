@@ -40,31 +40,48 @@ const loadRow = async (assessmentId: string): Promise<AssessmentRow> => {
   return row;
 };
 
+/** The assessment's current number of questions (relational source of truth). */
+const countQuestions = async (assessmentId: string): Promise<number> => {
+  const [q] = await db
+    .select({ n: count() })
+    .from(questions)
+    .where(eq(questions.assessmentId, assessmentId));
+  return Number(q?.n ?? 0);
+};
+
 /**
  * Build a complete default config for an assessment from its own fields, so an
  * assessment with no saved config still renders as a finished product.
  */
-const deriveDefault = async (row: AssessmentRow): Promise<AssessmentApp> => {
-  const [q] = await db
-    .select({ n: count() })
-    .from(questions)
-    .where(eq(questions.assessmentId, row.id));
-
-  return defaultAssessmentApp({
+const deriveDefault = async (row: AssessmentRow): Promise<AssessmentApp> =>
+  defaultAssessmentApp({
     brandName: row.title,
     assessmentTitle: row.title,
     description: row.description,
-    questionCount: Number(q?.n ?? 0),
+    questionCount: await countQuestions(row.id),
   });
-};
 
 /**
  * The saved config, or a generated default when none is stored yet. Stored
  * configs are re-parsed so any newly-added fields are filled with their
  * defaults on read — existing documents stay valid with no migration.
+ *
+ * `questionCount` is derived data (the relational question count), not a
+ * mentor-edited field, so it is always overwritten with the live count — a
+ * stored config saved when the assessment had fewer questions never goes stale.
  */
-const resolveConfig = async (row: AssessmentRow): Promise<AssessmentApp> =>
-  row.appConfig ? parseAssessmentApp(row.appConfig) : deriveDefault(row);
+const resolveConfig = async (row: AssessmentRow): Promise<AssessmentApp> => {
+  if (!row.appConfig) return deriveDefault(row);
+  const cfg = parseAssessmentApp(row.appConfig);
+  const questionCount = await countQuestions(row.id);
+  return {
+    ...cfg,
+    assessment: {
+      ...cfg.assessment,
+      meta: { ...cfg.assessment.meta, questionCount },
+    },
+  };
+};
 
 /**
  * Public config for the branded landing/app. Only PUBLISHED assessments are
