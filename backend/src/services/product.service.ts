@@ -3,7 +3,6 @@ import { db } from '../db/client';
 import { assessments, products } from '../db/schema';
 import type { ProductTiers } from '../db/schema';
 import {
-  ProductContentSchema,
   ProductTiersSchema,
   VoucherPackagesSchema,
 } from '../config/product.schema';
@@ -20,7 +19,6 @@ export type UpsertProductInput = {
   status?: 'DRAFT' | 'PUBLISHED';
   tiers?: unknown;
   voucherPackages?: unknown;
-  content?: unknown;
 };
 
 const defaultTiers = (): ProductTiers =>
@@ -94,7 +92,6 @@ const toDto = (p: ProductRow) => ({
   status: p.status,
   tiers: p.tiers ?? defaultTiers(),
   voucher_packages: p.voucherPackages ?? [],
-  content: p.content ?? [],
   created_at: p.createdAt,
   updated_at: p.updatedAt,
 });
@@ -138,12 +135,14 @@ export const getPublicForAssessment = async (assessmentId: string) => {
     .where(and(eq(products.assessmentId, assessmentId), eq(products.status, 'PUBLISHED')))
     .limit(1);
   if (!p) return null;
+  // Strip each tier's bonus content: it's a paid deliverable shown on the result
+  // page after purchase, so it must never be exposed on the public landing.
+  const tiers = (p.tiers ?? defaultTiers()).map(({ content: _content, ...t }) => t);
   return {
     name: p.name,
     description: p.description,
-    tiers: p.tiers ?? defaultTiers(),
+    tiers,
     voucher_packages: p.voucherPackages ?? [],
-    content: p.content ?? [],
   };
 };
 
@@ -219,7 +218,6 @@ export const upsertForAssessment = async (
 
   const tiers = ProductTiersSchema.parse(input.tiers ?? {});
   const voucherPackages = VoucherPackagesSchema.parse(input.voucherPackages ?? []);
-  const content = ProductContentSchema.parse(input.content ?? []);
   const name = (input.name ?? '').trim() || assessment.title;
   const status = input.status === 'PUBLISHED' ? 'PUBLISHED' : 'DRAFT';
   const description =
@@ -243,7 +241,7 @@ export const upsertForAssessment = async (
     if (existing) {
       [saved] = await tx
         .update(products)
-        .set({ name, description, tiers, voucherPackages, content, status })
+        .set({ name, description, tiers, voucherPackages, status })
         .where(eq(products.id, existing.id))
         .returning();
     } else {
@@ -259,7 +257,6 @@ export const upsertForAssessment = async (
           description,
           tiers,
           voucherPackages,
-          content,
           status,
         })
         .returning();

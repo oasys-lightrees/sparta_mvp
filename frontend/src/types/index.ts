@@ -113,6 +113,9 @@ export type AttemptReport = {
   study_video_url: string | null;
   // Learning resources for this result.
   learning_resources: LearningResource[];
+  // Expert-authored bonus video/text unlocked by buying this product's tier,
+  // shown on the result page after finishing.
+  product_content: ProductContentBlock[];
 };
 
 export type MyAttempt = {
@@ -243,6 +246,9 @@ export type PricingTier = {
   ctaLabel: string;
   imageUrl: string | null;
   highlight: boolean;
+  // Bonus video/text delivered to a buyer of this tier on the result page (never
+  // shown on the public landing). Empty on the public product payload.
+  content: ProductContentBlock[];
 };
 export type ProductTiers = PricingTier[];
 export type ProductStatus = 'DRAFT' | 'PUBLISHED';
@@ -271,17 +277,16 @@ export type MentorProduct = {
   status: ProductStatus;
   tiers: ProductTiers;
   voucher_packages: VoucherPackage[];
-  content: ProductContentBlock[];
   created_at: string;
   updated_at: string;
 };
-// Public tiers surfaced on the landing page (PUBLISHED products only).
+// Public tiers surfaced on the landing page (PUBLISHED products only). Tier
+// `content` arrives empty here — it's a paid deliverable served on the result page.
 export type PublicProduct = {
   name: string;
   description: string | null;
   tiers: ProductTiers;
   voucher_packages: VoucherPackage[];
-  content: ProductContentBlock[];
 };
 
 // --- Mentor ---
