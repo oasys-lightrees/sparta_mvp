@@ -384,7 +384,7 @@ export function LandingPageEditor({
                 label="Landing page / hero photo (optional)"
                 value={form.heroImageUrl}
                 onChange={(v) => set({ heroImageUrl: v })}
-                placeholder="https://example.com/hero.jpg — replaces the default preview"
+                placeholder="https://example.com/hero.jpg (replaces the default preview)"
                 helpText="Shown as the hero image, replacing the default preview. PNG, SVG, JPG, JPEG or WEBP · up to 5 MB."
               />
               <div className="grid gap-3 sm:grid-cols-2">

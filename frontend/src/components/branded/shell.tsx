@@ -38,19 +38,46 @@ export function LatoIcon({ name, size = 18 }: { name: string; size?: number }) {
   );
 }
 
+/** A single, consistently-styled back/exit link for the branded top bar. */
+export type BrandedBack = { href: string; label: string };
+
 /**
  * Branded app shell: the themed wrapper + a lightweight top bar. Used by every
- * branded surface (take / report / dashboard) so they inherit the same identity.
+ * branded surface (take / report / dashboard / company / redeem) so they inherit
+ * the same identity and the same navigation model:
+ *   - the brand mark on the left links home (pass `homeHref`);
+ *   - one clear back/exit link on the right (pass `back`).
+ * `right` is kept for the rare extra node; prefer `back` for navigation.
  */
 export function BrandedShell({
   app,
+  homeHref,
+  back,
   right,
   children,
 }: {
   app: AssessmentApp;
+  homeHref?: string;
+  back?: BrandedBack;
   right?: ReactNode;
   children: ReactNode;
 }) {
+  const brandInner = (
+    <>
+      <span
+        className={`lato-brand__m${app.brand.logoUrl ? ' lato-brand__m--img' : ''}`}
+      >
+        {app.brand.logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={app.brand.logoUrl} alt={app.brand.brandName} />
+        ) : (
+          app.brand.monogram
+        )}
+      </span>
+      <span className="lato-brand__n">{app.brand.brandName}</span>
+    </>
+  );
+
   return (
     <div
       className="lato-app"
@@ -61,19 +88,23 @@ export function BrandedShell({
     >
       <header className="lato-topbar">
         <div className="lato-topbar__in">
-          <span className="lato-brand">
-            <span
-              className={`lato-brand__m${app.brand.logoUrl ? ' lato-brand__m--img' : ''}`}
+          {back ? (
+            <a className="lato-back" href={back.href}>
+              <LatoIcon name="arrowLeft" size={15} />
+              {back.label}
+            </a>
+          ) : null}
+          {homeHref ? (
+            <a
+              className="lato-brand lato-brand--link"
+              href={homeHref}
+              aria-label={`${app.brand.brandName} home`}
             >
-              {app.brand.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={app.brand.logoUrl} alt={app.brand.brandName} />
-              ) : (
-                app.brand.monogram
-              )}
-            </span>
-            <span className="lato-brand__n">{app.brand.brandName}</span>
-          </span>
+              {brandInner}
+            </a>
+          ) : (
+            <span className="lato-brand">{brandInner}</span>
+          )}
           {right ? <div className="lato-topbar__r">{right}</div> : null}
         </div>
       </header>

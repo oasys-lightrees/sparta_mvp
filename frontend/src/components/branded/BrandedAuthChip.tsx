@@ -1,11 +1,12 @@
 'use client';
 
 import { useAuth } from '@/hooks/useAuth';
-import { useTokenBalance } from '@/hooks/useTokenBalance';
+import { useBalance } from '@/hooks/useBalance';
+import { formatIdr } from '@/lib/currency';
 
 /**
  * Auth area for the branded landing nav: when signed in it shows the user's
- * token balance + email (linking to their dashboard); otherwise a "Log in"
+ * wallet balance + email (linking to their dashboard); otherwise a "Log in"
  * link. Styled with the branded (.lato-*) classes so it inherits the tenant
  * theme. A client component embedded in the server-rendered BrandedLanding.
  */
@@ -17,7 +18,7 @@ export function BrandedAuthChip({
   dashboardHref: string;
 }) {
   const { user, loading } = useAuth();
-  const balance = useTokenBalance();
+  const balance = useBalance();
 
   if (loading) return null;
   if (!user) {
@@ -37,7 +38,7 @@ export function BrandedAuthChip({
     >
       {balance !== null ? (
         <span className="lato-pill" style={{ fontSize: '.72rem' }}>
-          ◎ {balance} token{balance === 1 ? '' : 's'}
+          ◎ {formatIdr(balance)}
         </span>
       ) : null}
       <span

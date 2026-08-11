@@ -104,7 +104,7 @@ function AdminHome() {
 
 export default function AdminPage() {
   return (
-    <ProtectedRoute roles={['ADMIN']}>
+    <ProtectedRoute roles={['ADMIN']} loginPath="/admin/login">
       <AdminHome />
     </ProtectedRoute>
   );

@@ -18,8 +18,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 
-export function LoginForm() {
-  const { login } = useAuth();
+export function LoginForm({ admin = false }: { admin?: boolean }) {
+  const { login, logout } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,6 +32,17 @@ export function LoginForm() {
     setSubmitting(true);
     try {
       const user = await login(email, password);
+      if (admin) {
+        // Admin console is gated: only administrators may enter here.
+        if (user.role !== 'ADMIN') {
+          logout();
+          setError('This account does not have admin access.');
+          setSubmitting(false);
+          return;
+        }
+        router.replace('/admin');
+        return;
+      }
       // If a guest attempt is pending, continue to claim + report; else role home.
       const pending = getPendingAttempt();
       router.replace(pending ? `/reports/${pending}` : roleHome(user.role));
@@ -44,8 +55,12 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle>Sign in</CardTitle>
-        <CardDescription>Welcome back to LATO.</CardDescription>
+        <CardTitle>{admin ? 'Admin sign in' : 'Sign in'}</CardTitle>
+        <CardDescription>
+          {admin
+            ? 'Sign in to the LATO admin console.'
+            : 'Welcome back to LATO.'}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-4">
@@ -73,12 +88,14 @@ export function LoginForm() {
           <Button type="submit" className="w-full" disabled={submitting}>
             {submitting ? 'Signing in…' : 'Sign in'}
           </Button>
-          <p className="text-center text-sm text-muted-foreground">
-            No account?{' '}
-            <Link href="/register" className="text-primary hover:underline">
-              Register
-            </Link>
-          </p>
+          {admin ? null : (
+            <p className="text-center text-sm text-muted-foreground">
+              No account?{' '}
+              <Link href="/register" className="text-primary hover:underline">
+                Register
+              </Link>
+            </p>
+          )}
         </form>
       </CardContent>
     </Card>

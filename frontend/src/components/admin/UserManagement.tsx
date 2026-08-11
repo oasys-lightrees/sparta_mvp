@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { adminApi } from '@/services/admin.api';
+import { formatIdr } from '@/lib/currency';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -47,21 +48,21 @@ export function UserManagement() {
     }
   };
 
-  const grantTokens = async (id: string) => {
-    const input = window.prompt('How many tokens to grant?', '10');
+  const grantBalance = async (id: string) => {
+    const input = window.prompt('How much balance to grant (Rp)?', '50000');
     if (input === null) return;
     const amount = Number(input);
     if (!Number.isInteger(amount) || amount <= 0) {
-      setError('Token amount must be a positive whole number');
+      setError('Amount must be a positive whole number');
       return;
     }
     setBusyId(id);
     setError('');
     try {
-      await adminApi.grantTokens(id, amount);
+      await adminApi.grantBalance(id, amount);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to grant tokens');
+      setError(err instanceof Error ? err.message : 'Failed to grant balance');
     } finally {
       setBusyId(null);
     }
@@ -81,7 +82,7 @@ export function UserManagement() {
             <TableHead>Name</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Role</TableHead>
-            <TableHead>Tokens</TableHead>
+            <TableHead>Balance</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -105,15 +106,15 @@ export function UserManagement() {
                   ))}
                 </div>
               </TableCell>
-              <TableCell className="font-medium">{u.token_balance}</TableCell>
+              <TableCell className="font-medium">{formatIdr(u.balance)}</TableCell>
               <TableCell className="text-right">
                 <Button
                   size="sm"
                   variant="outline"
                   disabled={busyId === u.id}
-                  onClick={() => grantTokens(u.id)}
+                  onClick={() => grantBalance(u.id)}
                 >
-                  Grant Tokens
+                  Grant Balance
                 </Button>
               </TableCell>
             </TableRow>

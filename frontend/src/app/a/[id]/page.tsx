@@ -98,9 +98,8 @@ export default async function BrandedAssessmentPage({
       companyHref={`/a/${id}/company`}
       redeemHref={`/a/${id}/redeem`}
       homeHref={`/a/${id}`}
-      latoHref="/"
       accessMode={access?.mode ?? null}
-      accessTokenCost={access?.access_token_cost ?? 0}
+      accessCost={access?.access_cost ?? 0}
     />
   );
 }

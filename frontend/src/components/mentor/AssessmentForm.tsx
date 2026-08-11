@@ -24,7 +24,6 @@ export type AssessmentPayload = {
   low_score_threshold: number | null;
   high_score_threshold: number | null;
   free_report_text: string | null;
-  premium_token_cost: number;
   free_report_template: string | null;
   premium_report_description: string | null;
   email_template: string | null;
@@ -34,11 +33,11 @@ export type AssessmentPayload = {
   study_video_url: string | null;
   learning_resources: LearningResourcesDoc | null;
   access_mode: AccessMode;
-  access_token_cost: number;
+  access_cost: number;
 };
 
 // Result-category editor rows (diagnostic/personality assessments). Codes are
-// mentor-defined (e.g. PB, PO, GR) — not limited to A/B/C/D.
+// expert-defined (e.g. PB, PO, GR) — not limited to A/B/C/D.
 type CategoryRow = { code: string; name: string; knowledge: string };
 
 type Props = {
@@ -50,7 +49,6 @@ type Props = {
     low_score_threshold: number | null;
     high_score_threshold: number | null;
     free_report_text: string | null;
-    premium_token_cost: number;
     free_report_template: string | null;
     premium_report_description: string | null;
     email_template: string | null;
@@ -60,7 +58,7 @@ type Props = {
     study_video_url: string | null;
     learning_resources: LearningResourcesDoc | null;
     access_mode: AccessMode | null;
-    access_token_cost: number;
+    access_cost: number;
   }>;
   submitLabel: string;
   submitting: boolean;
@@ -92,10 +90,6 @@ export function AssessmentForm({
   const [emailTemplate, setEmailTemplate] = useState(
     str(initial?.email_template),
   );
-  const [baseKnowledge, setBaseKnowledge] = useState(
-    str(initial?.base_knowledge),
-  );
-  const [aiEnabled, setAiEnabled] = useState(Boolean(initial?.ai_enabled));
   const [studyVideoUrl, setStudyVideoUrl] = useState(
     str(initial?.study_video_url),
   );
@@ -107,8 +101,8 @@ export function AssessmentForm({
     const m = initial?.access_mode ?? 'FREE';
     return m === 'FREEMIUM' ? 'FREE' : m;
   });
-  const [accessTokenCost, setAccessTokenCost] = useState(
-    numStr(initial?.access_token_cost),
+  const [accessCost, setAccessCost] = useState(
+    numStr(initial?.access_cost),
   );
   const [categories, setCategories] = useState<CategoryRow[]>(() => {
     const rc = initial?.result_categories;
@@ -178,9 +172,9 @@ export function AssessmentForm({
       setLocalError('Low score threshold must be <= high score threshold');
       return;
     }
-    const accessCost = accessTokenCost.trim() === '' ? 0 : Number(accessTokenCost);
-    if (accessMode === 'PAID' && accessCost <= 0) {
-      setLocalError('PAID assessments need a positive access cost (tokens)');
+    const cost = accessCost.trim() === '' ? 0 : Number(accessCost);
+    if (accessMode === 'PAID' && cost <= 0) {
+      setLocalError('PAID assessments need a positive access cost (Rp)');
       return;
     }
     onSubmit({
@@ -192,23 +186,21 @@ export function AssessmentForm({
       low_score_threshold: lowNum,
       high_score_threshold: highNum,
       free_report_text: freeText.trim() === '' ? null : freeText,
-      // Premium report removed — never charge a premium unlock.
-      premium_token_cost: 0,
       // Score template is a skill-mode field.
       free_report_template:
         isPersonality || freeTemplate.trim() === '' ? null : freeTemplate,
       premium_report_description: null,
       email_template: emailTemplate.trim() === '' ? null : emailTemplate,
-      base_knowledge: baseKnowledge.trim() === '' ? null : baseKnowledge,
-      ai_enabled: aiEnabled,
+      base_knowledge: null,
+      ai_enabled: false,
       // Categories only apply to personality mode.
       result_categories: isPersonality ? buildResultCategories() : null,
       study_video_url:
         studyVideoUrl.trim() === '' ? null : studyVideoUrl.trim(),
       learning_resources: resourcesDoc,
       access_mode: accessMode,
-      // Access cost only applies to PAID; force 0 otherwise so it's never stale.
-      access_token_cost: accessMode === 'PAID' ? accessCost : 0,
+      // Access cost (Rp) only applies to PAID; force 0 otherwise so it's never stale.
+      access_cost: accessMode === 'PAID' ? cost : 0,
     });
   };
 
@@ -290,17 +282,17 @@ export function AssessmentForm({
         value={imageUrl}
         onChange={setImageUrl}
         placeholder="https://example.com/image.jpg"
-        helpText="Optional cover shown on the assessment card. Use a 16:9 (widescreen) image — recommended 1280×720 (min 640×360). It's cropped to fill, so keep the subject centered. PNG, JPG, JPEG or WEBP · up to 5 MB."
+        helpText="Optional cover shown on the assessment card. Use a 16:9 (widescreen) image, recommended 1280×720 (min 640×360). It's cropped to fill, so keep the subject centered. PNG, JPG, JPEG or WEBP · up to 5 MB."
       />
       {/* Access model — how takers get to start this assessment. Any cost the
-          mode needs (premium unlock for Freemium, access cost for Paid) is set
-          inside the card, so mentors only see the field relevant to their mode. */}
+          mode needs (access cost for Paid) is set inside the card, so experts
+          only see the field relevant to their mode. */}
       <div className="space-y-3 rounded-md border p-4">
         <div className="space-y-1">
           <Label>Access model</Label>
           <p className="text-xs text-muted-foreground">
-            Controls who can start this assessment. Payments are token-based:
-            takers fund a token wallet, then spend tokens to start a Paid
+            Controls who can start this assessment. Payments use a balance wallet:
+            takers top up their balance (in Rupiah), then spend it to start a Paid
             assessment. A Paid assessment can also be unlocked with a voucher
             code.
           </p>
@@ -309,7 +301,7 @@ export function AssessmentForm({
           {(
             [
               { value: 'FREE', title: 'Free', description: 'Anyone can start immediately. Full result included.' },
-              { value: 'PAID', title: 'Paid (tokens)', description: 'Spend tokens to start. Full result included. Vouchers also work.' },
+              { value: 'PAID', title: 'Paid', description: 'Pay from balance to start. Full result included. Vouchers also work.' },
               { value: 'VOUCHER', title: 'Voucher only', description: 'Must redeem a valid voucher before starting.' },
             ] as const
           ).map((opt) => (
@@ -334,19 +326,20 @@ export function AssessmentForm({
         </div>
         {accessMode === 'PAID' ? (
           <div className="space-y-2">
-            <Label htmlFor="access_token_cost">Access cost (tokens)</Label>
+            <Label htmlFor="access_cost">Access cost (Rp)</Label>
             <Input
-              id="access_token_cost"
+              id="access_cost"
               type="number"
-              min={1}
-              value={accessTokenCost}
-              onChange={(e) => setAccessTokenCost(e.target.value)}
-              placeholder="e.g. 30"
+              min={1000}
+              step={1000}
+              value={accessCost}
+              onChange={(e) => setAccessCost(e.target.value)}
+              placeholder="e.g. 30000"
             />
             <p className="text-xs text-muted-foreground">
-              Tokens a taker spends to unlock access before starting. They fund
-              their wallet via payment (Midtrans) or the demo top-up, then spend
-              it here. The full result is included — no separate premium unlock.
+              The Rupiah amount a taker spends to unlock access before starting.
+              They top up their balance via payment (Midtrans) or the demo top-up,
+              then spend it here. The full result is included.
             </p>
           </div>
         ) : null}
@@ -361,7 +354,7 @@ export function AssessmentForm({
               (<code>/a/&lt;id&gt;/company</code>), which generates unique voucher
               codes. A taker enters a code on the Redeem page
               (<code>/a/&lt;id&gt;/redeem</code>); redeeming grants them access to
-              start — one code = one seat. Publish the assessment first so those
+              start, one code = one seat. Publish the assessment first so those
               pages are live.
             </p>
           </div>
@@ -477,7 +470,7 @@ export function AssessmentForm({
             <Textarea
               value={c.knowledge}
               onChange={(e) => setCategory(i, { knowledge: e.target.value })}
-              placeholder="Knowledge — what people with this result are like"
+              placeholder="Knowledge: what people with this result are like"
             />
           </div>
         ))}
@@ -503,37 +496,6 @@ export function AssessmentForm({
           placeholder={
             'Optional. Variables: {{assessment_title}}, {{score}}, {{category}}, {{summary}}, {{free_report}}'
           }
-        />
-      </div>
-
-      <div className="space-y-2 rounded-md border p-4">
-        <div className="flex items-center justify-between">
-          <Label>AI assistant</Label>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant={aiEnabled ? 'default' : 'outline'}
-              onClick={() => setAiEnabled(true)}
-            >
-              On
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant={!aiEnabled ? 'default' : 'outline'}
-              onClick={() => setAiEnabled(false)}
-            >
-              Off
-            </Button>
-          </div>
-        </div>
-        <Label htmlFor="base_knowledge">Assessment Knowledge</Label>
-        <Textarea
-          id="base_knowledge"
-          value={baseKnowledge}
-          onChange={(e) => setBaseKnowledge(e.target.value)}
-          placeholder="Explain your framework, scoring logic, and how AI should interpret results."
         />
       </div>
 

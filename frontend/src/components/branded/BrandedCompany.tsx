@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { voucherApi } from '@/services/voucher.api';
 import { productApi } from '@/services/product.api';
-import { tokenApi } from '@/services/token.api';
+import { balanceApi } from '@/services/balance.api';
+import { formatIdr } from '@/lib/currency';
 import { useAuth } from '@/hooks/useAuth';
 import type { AssessmentApp } from '@/types/assessment-app';
 import type { VoucherBatchDetail, VoucherBatchSummary, VoucherPackage } from '@/types';
@@ -36,12 +37,12 @@ export function BrandedCompany({
   useEffect(() => {
     if (authLoading || !user) return;
     load().catch((e) => setError(e instanceof Error ? e.message : 'Failed to load'));
-    // Available seat packages (published product) + the buyer's token balance.
+    // Available seat packages (published product) + the buyer's wallet balance.
     productApi
       .getPublic(assessmentId)
       .then((p) => setPackages(p?.voucher_packages ?? []))
       .catch(() => setPackages([]));
-    tokenApi
+    balanceApi
       .getBalance()
       .then((w) => setBalance(w.balance))
       .catch(() => {});
@@ -71,8 +72,8 @@ export function BrandedCompany({
       setCompany('');
       setBalance(res.balance);
       setNotice(
-        `Purchased ${res.credits} codes for ${res.charged} tokens.` +
-          (res.balance !== null ? ` Balance: ${res.balance} tokens.` : ''),
+        `Purchased ${res.credits} codes for ${formatIdr(res.charged)}.` +
+          (res.balance !== null ? ` Balance: ${formatIdr(res.balance)}.` : ''),
       );
       await load();
       await open(res.batch_id);
@@ -94,16 +95,14 @@ export function BrandedCompany({
       .catch(() => {});
   };
 
-  const right = (
-    <a href={`/a/${assessmentId}`} style={{ color: 'inherit' }}>
-      {app.brand.brandName}
-    </a>
-  );
+  const home = `/a/${assessmentId}`;
+  const homeBack = { href: home, label: 'Home' };
+  const dashboardBack = { href: `${home}/dashboard`, label: 'Dashboard' };
 
   if (!authLoading && !user) {
     const next = encodeURIComponent(`/a/${assessmentId}/company`);
     return (
-      <BrandedShell app={app} right={right}>
+      <BrandedShell app={app} homeHref={home} back={homeBack}>
         <div className="lato-intro">
           <div className="lato-card__i" style={{ margin: '0 auto 16px' }}>
             <LatoIcon name="lock" />
@@ -128,7 +127,7 @@ export function BrandedCompany({
   const a = selected?.analytics;
 
   return (
-    <BrandedShell app={app} right={right}>
+    <BrandedShell app={app} homeHref={home} back={dashboardBack}>
       <div className="lato-dash">
         <div className="lato-dash__head">
           <div>
@@ -155,14 +154,14 @@ export function BrandedCompany({
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
             <h3 style={{ fontWeight: 700 }}>Buy voucher codes</h3>
             <span style={{ fontSize: '.85rem', color: 'var(--muted)' }}>
-              Your balance: <b style={{ color: 'var(--ink)' }}>{balance ?? '—'} tokens</b>{' '}
-              · <a href="/dashboard" style={{ color: 'var(--b1)', fontWeight: 600 }}>Top up</a>
+              Your balance: <b style={{ color: 'var(--ink)' }}>{balance === null ? '—' : formatIdr(balance)}</b>{' '}
+              · <a href={`/a/${assessmentId}/dashboard`} style={{ color: 'var(--b1)', fontWeight: 600 }}>Top up</a>
             </span>
           </div>
           <p style={{ color: 'var(--muted)', fontSize: '.92rem', marginTop: 4 }}>
-            Buy a seat package with tokens. We generate one unique code per seat —
-            share them with employees; each code unlocks one assessment and results
-            roll up here.
+            Buy a seat package from your balance. We generate one unique code per
+            seat to share with employees; each code unlocks one assessment and
+            results roll up here.
           </p>
 
           {packages.length === 0 ? (
@@ -170,7 +169,7 @@ export function BrandedCompany({
               className="lato-note"
               style={{ marginTop: 16 }}
             >
-              No voucher packages are offered for this assessment yet. The mentor
+              No voucher packages are offered for this assessment yet. The expert
               sets these up in the product editor.
             </p>
           ) : (
@@ -192,7 +191,7 @@ export function BrandedCompany({
                   <option value="">Select a package…</option>
                   {packages.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {(p.label || `${p.seats} seats`)} · {p.seats} seats · {p.tokenCost} tokens
+                      {(p.label || `${p.seats} seats`)} · {p.seats} seats · {formatIdr(p.amount)}
                     </option>
                   ))}
                 </select>
@@ -202,7 +201,7 @@ export function BrandedCompany({
                 className="lato-btn lato-btn--grad"
                 disabled={busy || !company.trim() || !packageId}
               >
-                {busy ? 'Purchasing…' : 'Buy with tokens'}
+                {busy ? 'Purchasing…' : 'Buy from balance'}
               </button>
             </form>
           )}
@@ -350,8 +349,8 @@ export function BrandedCompany({
                 </button>
               </div>
               <p style={{ color: 'var(--muted)', fontSize: '.85rem', margin: '6px 0 12px' }}>
-                Share one code per employee. Each covers a full assessment and premium
-                report; their score rolls up under Individual results above.
+                Share one code per employee. Each covers a full assessment;
+                their score rolls up under Individual results above.
               </p>
               <div className="lato-codes">
                 {selected.codes.map((c) => (

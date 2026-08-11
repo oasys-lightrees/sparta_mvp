@@ -127,7 +127,7 @@ function MentorHome() {
       <div className="mb-8 flex items-center justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight">
-            Mentor Dashboard
+            Expert Dashboard
           </h1>
           <p className="text-muted-foreground">
             Create and manage your assessments, questions and results.
@@ -188,8 +188,8 @@ function MentorHome() {
           <Loading />
         ) : items.length === 0 ? (
           <EmptyState
-            title="Create your first AI assessment"
-            description="Build a test, generate questions with AI, and start collecting responses and revenue."
+            title="Create your first assessment"
+            description="Build an assessment, add your questions, and start collecting responses and revenue."
             action={
               !showCreate ? (
                 <Button variant="bronze" onClick={() => setShowCreate(true)}>

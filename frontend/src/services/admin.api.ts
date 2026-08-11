@@ -20,9 +20,9 @@ export const adminApi = {
       { role },
     ),
 
-  grantTokens: (id: string, amount: number) =>
-    apiClient.patch<{ id: string; token_balance: number }>(
-      `/api/admin/users/${id}/tokens`,
+  grantBalance: (id: string, amount: number) =>
+    apiClient.patch<{ id: string; balance: number }>(
+      `/api/admin/users/${id}/balance`,
       { amount },
     ),
 

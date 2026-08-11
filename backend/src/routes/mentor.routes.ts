@@ -28,7 +28,7 @@ mentor.get('/stats', authMiddleware, requireRole('MENTOR'), async (c) => {
   }
 });
 
-// GET /api/mentor/revenue — token revenue from premium unlocks
+// GET /api/mentor/revenue — balance revenue from paid unlocks
 mentor.get('/revenue', authMiddleware, requireRole('MENTOR'), async (c) => {
   try {
     const revenue = await mentorService.getRevenue(c.get('user').id);

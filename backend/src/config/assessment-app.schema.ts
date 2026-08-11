@@ -226,8 +226,8 @@ export const ReportsSchema = z.object({
     .object({ title: NonEmpty.default('Your free report') })
     .default({ title: 'Your free report' }),
   premium: z
-    .object({ title: NonEmpty.default('Your premium report') })
-    .default({ title: 'Your premium report' }),
+    .object({ title: NonEmpty.default('Your full report') })
+    .default({ title: 'Your full report' }),
   competencies: z.array(z.object({ key: NonEmpty })).default([]),
   roadmapEnabled: z.boolean().default(true),
   pdf: z
@@ -305,8 +305,8 @@ export const EmailsSchema = z
     welcome: { subject: 'Welcome', heading: 'Welcome', body: '' },
     voucher: { subject: 'Your voucher code', heading: 'Your voucher code', body: '' },
     premiumUnlock: {
-      subject: 'Your premium report is unlocked',
-      heading: 'Premium unlocked',
+      subject: 'Your report is ready',
+      heading: 'Your report is ready',
       body: '',
     },
     reportReady: {
@@ -414,7 +414,6 @@ export type DefaultConfigInput = {
   monogram?: string;
   colors?: { primary?: string; secondary?: string; accent?: string };
   premiumPrice?: string; // display string, e.g. "$29"
-  premiumTokenCost?: number;
   questionCount?: number;
   estimatedMinutes?: number;
   description?: string | null;
@@ -460,11 +459,11 @@ export const defaultAssessmentApp = (
     theme: { radius: 'soft', spacing: 'regular', gradients: true, animations: 'full' },
     landing: {
       hero: {
-        eyebrow: 'AI Assessment',
+        eyebrow: 'Assessment',
         title: `Know where you stand with ${title}.`,
-        subtitle: `${title} measures what matters and turns your result into a personalized AI plan.`,
+        subtitle: `${title} measures what matters and turns your result into a personalized plan.`,
         description:
-          'Take the assessment for free and get an instant report — with an optional AI deep-dive.',
+          'Take the assessment for free and get an instant report.',
         heroImageUrl: null,
         ctaPrimary: 'Start free assessment',
         ctaSecondary: 'See how it works',
@@ -480,19 +479,19 @@ export const defaultAssessmentApp = (
       },
       features: [
         { icon: 'target', title: 'Discover strengths', body: 'See where you already outperform, backed by your own answers.' },
-        { icon: 'gauge', title: 'Identify gaps', body: 'Pinpoint the specific areas holding you back — no vague feedback.' },
-        { icon: 'spark', title: 'Personalized AI insight', body: 'A tailored report written from your responses, not a template.' },
+        { icon: 'gauge', title: 'Identify gaps', body: 'Pinpoint the specific areas holding you back, with no vague feedback.' },
+        { icon: 'spark', title: 'Personalized insight', body: 'A tailored report written from your responses, not a template.' },
         { icon: 'map', title: 'A clear next step', body: 'Concrete recommendations and a roadmap matched to your level.' },
       ],
       process: [
         { title: 'Answer questions', body: 'A short set of questions. A few minutes, no account needed.' },
-        { title: 'Get your free report', body: 'An instant score, level, and summary of your strengths.' },
-        { title: 'Unlock the AI report', body: 'A personalized deep-dive into your gaps and how to close them.' },
+        { title: 'Get your report', body: 'An instant score, level, and summary of your strengths.' },
+        { title: 'See your full result', body: 'A personalized breakdown of your gaps and how to close them.' },
         { title: 'Follow your roadmap', body: 'A focused action plan you can start on immediately.' },
       ],
       testimonials: [],
       faq: [
-        { q: 'Is the assessment free?', a: 'Yes. The full assessment and your score, level, and summary are free. The AI deep-dive report is the paid upgrade.' },
+        { q: 'Is the assessment free?', a: 'Yes, unless the creator has set an access price. Either way your full report is included when you finish.' },
         { q: 'How long does it take?', a: `About ${input.estimatedMinutes ?? 12} minutes.` },
         { q: 'How do company voucher codes work?', a: 'Buy a seat package and we generate that many unique codes. Share them with your team; each unlocks one assessment and feeds a team dashboard.' },
       ],
@@ -506,18 +505,18 @@ export const defaultAssessmentApp = (
     assessment: {
       intro: {
         title: `Welcome to ${title}`,
-        body: 'Answer honestly — there are no trick questions. Your progress saves automatically.',
+        body: 'Answer honestly; there are no trick questions. Your progress saves automatically.',
       },
       meta: {
         estimatedMinutes: input.estimatedMinutes ?? 12,
         questionCount: input.questionCount ?? 0,
         audience: 'For professionals',
-        benefits: ['Instant free report', 'Personalized AI insights', 'A clear next step'],
+        benefits: ['Instant free report', 'Personalized insights', 'A clear next step'],
       },
       timerEnabled: false,
       completion: {
         title: 'Analyzing your responses…',
-        body: 'Our AI is scoring your answers and preparing your personalized report.',
+        body: 'Scoring your answers and preparing your personalized report.',
       },
     },
     reports: {
@@ -533,7 +532,7 @@ export const defaultAssessmentApp = (
       subtitle: 'Start free. Upgrade for depth, or roll it out across your whole company.',
       plans: [
         { name: 'Free', price: '$0', period: 'forever', tagline: 'The essentials to get oriented.', features: ['Full assessment', 'Instant score & level', 'Strengths summary'], cta: 'Start free', highlight: false, voucher: false, badge: '' },
-        { name: 'Individual', price, period: 'one-time', tagline: 'Your complete personalized blueprint.', features: ['Everything in Free', 'Premium AI report', 'Study materials', 'Personalized recommendations'], cta: 'Unlock my report', highlight: true, voucher: false, badge: 'Most popular' },
+        { name: 'Individual', price, period: 'one-time', tagline: 'Your complete personalized blueprint.', features: ['Everything in Free', 'Full report', 'Study materials', 'Personalized recommendations'], cta: 'Get full access', highlight: true, voucher: false, badge: 'Most popular' },
         { name: 'Company', price: '$249', period: '/ 10 seats', tagline: 'Assess a team and see it all in one place.', features: ['10 voucher codes', 'Employee dashboard', 'Team & role reports', 'HR analytics'], cta: 'Buy team plan', highlight: false, voucher: true, badge: '' },
         { name: 'Enterprise', price: 'Custom', period: '', tagline: 'For org-wide rollout and integration.', features: ['Unlimited employees', 'Org-wide dashboard', 'API integration', 'SSO & security review', 'Dedicated support'], cta: 'Talk to sales', highlight: false, voucher: false, badge: '' },
       ],
@@ -554,13 +553,13 @@ export const defaultAssessmentApp = (
     emails: {
       welcome: { subject: `Welcome to ${name}`, heading: `Welcome to ${name}`, body: 'Thanks for joining. Take your first assessment any time.' },
       voucher: { subject: `Your ${name} voucher code`, heading: 'Here is your voucher code', body: 'Redeem it to take the assessment and unlock your report.' },
-      premiumUnlock: { subject: `Your ${name} premium report is ready`, heading: 'Premium unlocked', body: 'Your personalized AI report is now available.' },
+      premiumUnlock: { subject: `Your ${name} report is ready`, heading: 'Your report is ready', body: 'Your personalized report is now available.' },
       reportReady: { subject: `Your ${name} result`, heading: 'Your report is ready', body: 'View your score, level, and personalized summary.' },
     },
     seo: {
-      title: `${name} — ${title}`,
-      description: input.description?.trim() || `Take ${title}: an AI-powered assessment with an instant free report and a personalized premium blueprint.`,
-      keywords: [name.toLowerCase(), 'assessment', 'ai report'],
+      title: `${name} - ${title}`,
+      description: input.description?.trim() || `Take ${title}: an assessment with an instant free report and a personalized plan.`,
+      keywords: [name.toLowerCase(), 'assessment', 'report'],
       ogImageUrl: null,
     },
     integrations: {

@@ -3,9 +3,9 @@ import { z } from 'zod';
 /**
  * Product pricing tiers. A product exposes a list of pricing tiers; each is a
  * self-contained marketing card the mentor fully controls (title, description,
- * price, token cost, button, image) plus a pricing `kind` that mirrors the
- * assessment access models (free / freemium / paid / voucher) and decides where
- * the card's button routes on the landing page.
+ * price amount, button, image) plus a pricing `kind` that mirrors the assessment
+ * access models (free / freemium / paid / voucher) and decides where the card's
+ * button routes on the landing page.
  *
  * Presentation + routing only: actual access enforcement (start gating, voucher
  * redeem, premium unlock) stays on the assessment. A VOUCHER tier routes to the
@@ -21,10 +21,10 @@ const PricingTierSchema = z.object({
   title: z.string().default(''),
   description: z.string().default(''),
   kind: z.enum(TIER_KINDS).default('FREE'),
-  // Free-text price display, e.g. "$29", "Free", "From $199".
+  // Free-text price display, e.g. "Rp 29.000", "Free", "From Rp 199.000".
   priceLabel: z.string().default(''),
-  // Token price to surface on the card (0 -> hidden).
-  tokenCost: z.number().int().nonnegative().max(1_000_000).default(0),
+  // Price in IDR (whole rupiah) to surface on the card (0 -> hidden).
+  amount: z.number().int().nonnegative().max(1_000_000_000).default(0),
   // Custom button label.
   ctaLabel: z.string().default('Get started'),
   // Optional image/logo shown between the title and the button. Absolute URL
@@ -43,15 +43,15 @@ export type ProductTiersInput = z.input<typeof ProductTiersSchema>;
 export const parseTiers = (value: unknown) => ProductTiersSchema.parse(value);
 
 /**
- * Company/batch voucher packages. Buying a package charges `tokenCost` tokens
- * (typically cheaper per seat than the individual cost) and issues `seats`
- * voucher codes.
+ * Company/batch voucher packages. Buying a package charges `amount` (IDR, whole
+ * rupiah — typically cheaper per seat than the individual cost) and issues
+ * `seats` voucher codes.
  */
 const VoucherPackageSchema = z.object({
   id: z.string().min(1),
   label: z.string().default(''),
   seats: z.number().int().positive().max(1000),
-  tokenCost: z.number().int().nonnegative().max(1_000_000),
+  amount: z.number().int().nonnegative().max(1_000_000_000),
 });
 
 export const VoucherPackagesSchema = z.array(VoucherPackageSchema).max(10).default([]);

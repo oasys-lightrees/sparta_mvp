@@ -22,11 +22,8 @@ export function BrandedRedeem({
   const [error, setError] = useState('');
   const [result, setResult] = useState<RedeemResult | null>(null);
 
-  const right = (
-    <a href={`/a/${assessmentId}`} style={{ color: 'inherit' }}>
-      {app.brand.brandName}
-    </a>
-  );
+  const home = `/a/${assessmentId}`;
+  const homeBack = { href: home, label: 'Home' };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +44,7 @@ export function BrandedRedeem({
     const redeemPath = `/a/${assessmentId}/redeem${code ? `?code=${encodeURIComponent(code)}` : ''}`;
     const next = encodeURIComponent(redeemPath);
     return (
-      <BrandedShell app={app} right={right}>
+      <BrandedShell app={app} homeHref={home} back={homeBack}>
         <div className="lato-intro">
           <div className="lato-card__i" style={{ margin: '0 auto 16px' }}>
             <LatoIcon name="lock" />
@@ -70,7 +67,7 @@ export function BrandedRedeem({
   }
 
   return (
-    <BrandedShell app={app} right={right}>
+    <BrandedShell app={app} homeHref={home} back={homeBack}>
       <div className="lato-intro">
         <span className="lato-eyebrow" style={{ justifyContent: 'center' }}>
           {app.brand.brandName}
@@ -86,10 +83,7 @@ export function BrandedRedeem({
               <LatoIcon name="check" size={26} />
             </div>
             <p className="lato-sub" style={{ marginInline: 'auto' }}>
-              Success! You&apos;ve unlocked <b>{result.assessment_title}</b>
-              {result.granted_tokens > 0
-                ? ` and received ${result.granted_tokens} tokens for your premium report.`
-                : '.'}
+              Success! You&apos;ve unlocked <b>{result.assessment_title}</b>.
             </p>
             <div style={{ marginTop: 24 }}>
               <a
@@ -103,8 +97,8 @@ export function BrandedRedeem({
         ) : (
           <>
             <p className="lato-sub" style={{ marginInline: 'auto', marginTop: 12 }}>
-              Enter the code your company shared with you. It covers your full
-              assessment and premium report.
+              Enter the code your company shared with you. It unlocks full access
+              to this assessment.
             </p>
             <form onSubmit={submit} style={{ maxWidth: 360, margin: '22px auto 0' }}>
               <label className="lato-field">

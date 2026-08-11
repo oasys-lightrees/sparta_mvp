@@ -44,12 +44,12 @@ export function MentorAnalytics() {
         />
         <LineChartCard
           title="Revenue over time"
-          description="Tokens earned per day"
+          description="Balance (Rp) earned per day"
           data={data ? data.revenueByDate : null}
           xKey="date"
-          yKey="tokens"
+          yKey="amount"
           error={error}
-          emptyLabel="No premium revenue yet"
+          emptyLabel="No paid revenue yet"
         />
         <PieChartCard
           title="Score distribution"
@@ -60,7 +60,7 @@ export function MentorAnalytics() {
         />
         <BarChartCard
           title="Conversion funnel"
-          description="Submissions to premium unlocks"
+          description="Submissions to paid unlocks"
           data={data ? data.conversionFunnel : null}
           xKey="stage"
           yKey="value"

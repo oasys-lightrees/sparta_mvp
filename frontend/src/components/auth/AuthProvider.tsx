@@ -5,6 +5,7 @@ import { authApi } from '@/services/auth.api';
 import {
   clearAuth,
   getStoredUser,
+  getToken,
   setStoredUser,
   setToken,
 } from '@/lib/storage';
@@ -24,10 +25,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Hydrate from localStorage on first mount.
+  // Hydrate from localStorage on first mount, then refresh from /me so a stored
+  // user picks up any server-side changes (name, role). A failed refresh leaves
+  // the cached user in place rather than logging them out on a network hiccup.
   useEffect(() => {
-    setUser(getStoredUser());
+    const stored = getStoredUser();
+    setUser(stored);
     setLoading(false);
+    if (!stored || !getToken()) return;
+    let active = true;
+    authApi
+      .me()
+      .then((fresh) => {
+        if (!active) return;
+        setStoredUser(fresh);
+        setUser(fresh);
+      })
+      .catch(() => {
+        /* keep the cached user */
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const persist = (token: string, nextUser: User) => {

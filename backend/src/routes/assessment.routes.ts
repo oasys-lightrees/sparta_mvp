@@ -71,13 +71,6 @@ const validateConfigFields = (body: Record<string, unknown>): string | null => {
   ) {
     return 'price must be a non-negative integer';
   }
-  if (
-    body.premium_token_cost !== undefined &&
-    (!Number.isInteger(body.premium_token_cost) ||
-      (body.premium_token_cost as number) < 0)
-  ) {
-    return 'premium_token_cost must be a non-negative integer';
-  }
   if (!isNullableString(body.free_report_template)) {
     return 'free_report_template must be a string';
   }
@@ -107,20 +100,20 @@ const validateConfigFields = (body: Record<string, unknown>): string | null => {
     return `access_mode must be one of ${ACCESS_MODES.join(', ')}`;
   }
   if (
-    body.access_token_cost !== undefined &&
-    (!Number.isInteger(body.access_token_cost) ||
-      (body.access_token_cost as number) < 0)
+    body.access_cost !== undefined &&
+    (!Number.isInteger(body.access_cost) ||
+      (body.access_cost as number) < 0)
   ) {
-    return 'access_token_cost must be a non-negative integer';
+    return 'access_cost must be a non-negative integer';
   }
   // A PAID assessment needs a positive access cost, otherwise it is effectively
   // free and no payment could ever be completed.
   if (
     body.access_mode === 'PAID' &&
-    body.access_token_cost !== undefined &&
-    (body.access_token_cost as number) <= 0
+    body.access_cost !== undefined &&
+    (body.access_cost as number) <= 0
   ) {
-    return 'PAID assessments require a positive access_token_cost';
+    return 'PAID assessments require a positive access_cost';
   }
   return null;
 };
@@ -218,8 +211,8 @@ assessment.get('/:id/access', async (c) => {
   }
 });
 
-// POST /api/assessments/:id/access/purchase — buy start access with tokens
-// (PAID mode only). Idempotent. Requires auth.
+// POST /api/assessments/:id/access/purchase — buy start access from the wallet
+// balance (PAID mode only). Idempotent. Requires auth.
 assessment.post(
   '/:id/access/purchase',
   authMiddleware,
@@ -268,7 +261,6 @@ assessment.post('/', authMiddleware, requireRole('MENTOR'), async (c) => {
       low_score_threshold: body.low_score_threshold,
       high_score_threshold: body.high_score_threshold,
       price: body.price,
-      premium_token_cost: body.premium_token_cost,
       free_report_template: body.free_report_template,
       premium_report_description: body.premium_report_description,
       email_template: body.email_template,
@@ -278,7 +270,7 @@ assessment.post('/', authMiddleware, requireRole('MENTOR'), async (c) => {
       study_video_url: body.study_video_url,
       learning_resources: resources.value,
       access_mode: body.access_mode,
-      access_token_cost: body.access_token_cost,
+      access_cost: body.access_cost,
     });
     return c.json(success(created), 201);
   } catch (err) {
@@ -319,7 +311,6 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
     'low_score_threshold',
     'high_score_threshold',
     'price',
-    'premium_token_cost',
     'free_report_template',
     'premium_report_description',
     'email_template',
@@ -329,7 +320,7 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
     'study_video_url',
     'learning_resources',
     'access_mode',
-    'access_token_cost',
+    'access_cost',
   ];
   if (!updatableKeys.some((k) => body[k] !== undefined)) {
     return c.json(error('Nothing to update'), 400);
@@ -344,7 +335,6 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
       low_score_threshold: body.low_score_threshold,
       high_score_threshold: body.high_score_threshold,
       price: body.price,
-      premium_token_cost: body.premium_token_cost,
       free_report_template: body.free_report_template,
       premium_report_description: body.premium_report_description,
       email_template: body.email_template,
@@ -354,7 +344,7 @@ assessment.patch('/:id', authMiddleware, requireRole('MENTOR'), async (c) => {
       study_video_url: body.study_video_url,
       learning_resources: resources.value,
       access_mode: body.access_mode,
-      access_token_cost: body.access_token_cost,
+      access_cost: body.access_cost,
     });
     return c.json(success(updated), 200);
   } catch (err) {

@@ -38,7 +38,6 @@ type AssessmentForReport = {
   title: string;
   freeReportText: string | null;
   freeReportTemplate: string | null;
-  premiumReportDescription: string | null;
   emailTemplate: string | null;
   lowScoreThreshold: number | null;
   highScoreThreshold: number | null;
@@ -124,10 +123,8 @@ const STRINGS: Record<
     youScored: (s: number) => string;
     yourResult: string;
     yourPattern: string;
-    defaultUpsell: string;
     thankYou: (title: string) => string;
     yourResultLabel: string;
-    premiumLabel: string;
     emailSubject: string;
   }
 > = {
@@ -137,11 +134,8 @@ const STRINGS: Record<
     youScored: (s) => `You scored ${s}.`,
     yourResult: 'Your result',
     yourPattern: 'Your pattern',
-    defaultUpsell:
-      'Unlock the premium report for a deeper, personalized analysis.',
     thankYou: (title) => `Thank you for completing "${title}".`,
     yourResultLabel: 'Your result',
-    premiumLabel: 'Premium report',
     emailSubject: 'Your LATO Assessment Result',
   },
   id: {
@@ -150,11 +144,8 @@ const STRINGS: Record<
     youScored: (s) => `Skor Anda ${s}.`,
     yourResult: 'Hasil asesmen Anda',
     yourPattern: 'Pola jawaban Anda',
-    defaultUpsell:
-      'Buka laporan premium untuk analisis yang lebih mendalam dan personal.',
     thankYou: (title) => `Terima kasih telah menyelesaikan "${title}".`,
     yourResultLabel: 'Hasil Anda',
-    premiumLabel: 'Laporan premium',
     emailSubject: 'Hasil Asesmen LATO Anda',
   },
 };
@@ -246,11 +237,9 @@ const buildEmailBody = (
     });
   }
   const t = STRINGS[language];
-  const upsell = assessment.premiumReportDescription ?? t.defaultUpsell;
   return [
     t.thankYou(assessment.title),
     `${t.yourResultLabel}:\n${freeReport}`,
-    `${t.premiumLabel}:\n${upsell}`,
   ].join('\n\n');
 };
 
@@ -267,7 +256,6 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
       title: assessments.title,
       freeReportText: assessments.freeReportText,
       freeReportTemplate: assessments.freeReportTemplate,
-      premiumReportDescription: assessments.premiumReportDescription,
       emailTemplate: assessments.emailTemplate,
       lowScoreThreshold: assessments.lowScoreThreshold,
       highScoreThreshold: assessments.highScoreThreshold,

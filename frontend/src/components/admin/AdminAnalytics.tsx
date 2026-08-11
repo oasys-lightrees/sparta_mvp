@@ -34,7 +34,7 @@ export function AdminAnalytics() {
       <div className="grid gap-6 lg:grid-cols-2">
         <BarChartCard
           title="Platform growth"
-          description="Users, mentors and assessments"
+          description="Users, experts and assessments"
           data={data ? data.platformGrowth : null}
           xKey="name"
           yKey="value"
@@ -43,7 +43,7 @@ export function AdminAnalytics() {
         />
         <BarChartCard
           title="Revenue overview"
-          description="Token transactions and premium unlocks"
+          description="Transactions and paid unlocks"
           data={data ? data.revenueOverview : null}
           xKey="name"
           yKey="value"

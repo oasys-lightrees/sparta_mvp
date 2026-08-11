@@ -83,7 +83,7 @@ export function AssessmentManagement() {
         <TableHeader>
           <TableRow>
             <TableHead>Title</TableHead>
-            <TableHead>Mentor</TableHead>
+            <TableHead>Expert</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Price</TableHead>
             <TableHead>Attempts</TableHead>

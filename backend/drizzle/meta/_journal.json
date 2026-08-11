@@ -134,6 +134,13 @@
       "when": 1786002906860,
       "tag": "0018_voucher_packages",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1786334209724,
+      "tag": "0019_balance_system",
+      "breakpoints": true
     }
   ]
 }

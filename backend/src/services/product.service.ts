@@ -21,26 +21,26 @@ export type UpsertProductInput = {
 const defaultTiers = (): ProductTiers =>
   ProductTiersSchema.parse([
     {
-      id: 'basic',
+      id: 'free',
       enabled: true,
-      title: 'Basic',
+      title: 'Free',
       description: 'Take the assessment and get your instant report.',
       kind: 'FREE',
       priceLabel: 'Free',
-      tokenCost: 0,
+      amount: 0,
       ctaLabel: 'Start assessment',
       imageUrl: null,
       highlight: false,
     },
     {
-      id: 'premium',
+      id: 'paid',
       enabled: true,
-      title: 'Premium',
-      description: 'Unlock the full personalized AI report.',
-      kind: 'FREEMIUM',
+      title: 'Full access',
+      description: 'Pay to unlock and take the assessment.',
+      kind: 'PAID',
       priceLabel: '',
-      tokenCost: 0,
-      ctaLabel: 'Get premium',
+      amount: 0,
+      ctaLabel: 'Get access',
       imageUrl: null,
       highlight: true,
     },
@@ -51,7 +51,7 @@ const defaultTiers = (): ProductTiers =>
       description: 'Have a company voucher? Redeem it to unlock access.',
       kind: 'VOUCHER',
       priceLabel: '',
-      tokenCost: 0,
+      amount: 0,
       ctaLabel: 'Redeem a voucher',
       imageUrl: null,
       highlight: false,
@@ -162,53 +162,45 @@ export const listForMentor = async (mentorId: string) => {
 
 type AssessmentPricing = {
   accessMode: 'FREE' | 'FREEMIUM' | 'PAID' | 'VOUCHER';
-  accessTokenCost: number;
-  premiumTokenCost: number;
+  accessCost: number;
 };
 
 /**
- * Derive the assessment's access model + token costs from the product's enabled
+ * Derive the assessment's access model + access cost from the product's enabled
  * tiers, so the price a mentor sets on a tier is the price actually charged (and
  * shown on the landing/report). Returns null when there are no enabled tiers, so
  * the assessment is left untouched.
  *
  * Mapping:
- *  - A FREEMIUM tier's token cost -> the premium-report unlock cost.
- *  - A PAID tier's token cost     -> the start-access cost.
- *  - Start gating: a FREE/FREEMIUM tier lets anyone start for free (FREEMIUM
- *    when a paid premium upsell exists, else FREE); otherwise the entry is gated
- *    by PAID, or by VOUCHER (redeem a code).
+ *  - A PAID tier's amount (IDR) -> the start-access cost.
+ *  - Start gating: a FREE/FREEMIUM tier lets anyone start for free; otherwise the
+ *    entry is gated by PAID, or by VOUCHER (redeem a code).
  */
 const deriveAssessmentPricing = (tiers: ProductTiers): AssessmentPricing | null => {
   const enabled = tiers.filter((t) => t.enabled);
   if (enabled.length === 0) return null;
 
-  const premiumTokenCost = enabled.find((t) => t.kind === 'FREEMIUM')?.tokenCost ?? 0;
   const paid = enabled.find((t) => t.kind === 'PAID');
   const hasFreeEntry = enabled.some((t) => t.kind === 'FREE' || t.kind === 'FREEMIUM');
 
   if (hasFreeEntry) {
-    return {
-      accessMode: premiumTokenCost > 0 ? 'FREEMIUM' : 'FREE',
-      accessTokenCost: 0,
-      premiumTokenCost,
-    };
+    return { accessMode: 'FREE', accessCost: 0 };
   }
   if (paid) {
-    return { accessMode: 'PAID', accessTokenCost: paid.tokenCost, premiumTokenCost };
+    return { accessMode: 'PAID', accessCost: paid.amount };
   }
   if (enabled.some((t) => t.kind === 'VOUCHER')) {
-    return { accessMode: 'VOUCHER', accessTokenCost: 0, premiumTokenCost };
+    return { accessMode: 'VOUCHER', accessCost: 0 };
   }
-  return { accessMode: 'FREE', accessTokenCost: 0, premiumTokenCost };
+  return { accessMode: 'FREE', accessCost: 0 };
 };
 
 /**
  * Create or update the product for an assessment (1:1). Verifies the caller
  * owns the assessment, validates the tiers, and generates a unique slug on
  * first create. The product is the source of truth for pricing, so saving it
- * also syncs the derived access model + token costs onto the assessment (in one
- * transaction) — the tier's token price is what actually gets charged. Returns
+ * also syncs the derived access model + access cost onto the assessment (in one
+ * transaction) — the tier's price is what actually gets charged. Returns
  * the saved product.
  */
 export const upsertForAssessment = async (
@@ -269,8 +261,7 @@ export const upsertForAssessment = async (
         .update(assessments)
         .set({
           accessMode: pricing.accessMode,
-          accessTokenCost: pricing.accessTokenCost,
-          premiumTokenCost: pricing.premiumTokenCost,
+          accessCost: pricing.accessCost,
         })
         .where(eq(assessments.id, assessmentId));
     }

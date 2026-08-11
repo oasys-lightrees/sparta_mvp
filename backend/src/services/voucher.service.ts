@@ -10,7 +10,6 @@ import {
   voucherBatches,
   vouchers,
 } from '../db/schema';
-import { normalizeMode, policyFor } from '../config/access';
 import { grantAccess } from './access.service';
 import { HttpError } from '../utils/http-error';
 
@@ -33,10 +32,10 @@ export type CreateBatchInput = {
 
 /**
  * Purchase a voucher batch by buying one of the assessment product's seat
- * packages. Charges the buyer's token wallet the package's `tokenCost` (guarded,
- * so it can never go negative) and issues `seats` unique voucher codes — all in
- * one transaction. Redeeming a code only grants start-access (no tokens are
- * minted), so this is a straightforward token spend, safe in production.
+ * packages. Charges the buyer's wallet the package's `amount` (IDR, guarded so
+ * it can never go negative) and issues `seats` unique voucher codes — all in one
+ * transaction. Redeeming a code only grants start-access (no balance is minted),
+ * so this is a straightforward balance spend, safe in production.
  */
 export const createBatch = async (buyerId: string, input: CreateBatchInput) => {
   const companyName = input.companyName.trim();
@@ -58,7 +57,7 @@ export const createBatch = async (buyerId: string, input: CreateBatchInput) => {
     throw new HttpError(404, 'Assessment not found');
   }
 
-  // Seat packages (and their token prices) are defined by the mentor on the
+  // Seat packages (and their prices) are defined by the mentor on the
   // assessment's product. The server is the source of truth for price/size.
   const [product] = await db
     .select({ voucherPackages: products.voucherPackages })
@@ -70,7 +69,7 @@ export const createBatch = async (buyerId: string, input: CreateBatchInput) => {
     throw new HttpError(404, 'That voucher package is not available');
   }
   const seats = pkg.seats;
-  const cost = pkg.tokenCost;
+  const cost = pkg.amount;
   if (!Number.isInteger(seats) || seats < 1 || seats > MAX_CREDITS) {
     throw new HttpError(400, 'Invalid package size');
   }
@@ -87,16 +86,16 @@ export const createBatch = async (buyerId: string, input: CreateBatchInput) => {
     if (cost > 0) {
       const debited = await tx
         .update(users)
-        .set({ tokenBalance: sql`${users.tokenBalance} - ${cost}` })
-        .where(and(eq(users.id, buyerId), gte(users.tokenBalance, cost)))
-        .returning({ balance: users.tokenBalance });
+        .set({ balance: sql`${users.balance} - ${cost}` })
+        .where(and(eq(users.id, buyerId), gte(users.balance, cost)))
+        .returning({ balance: users.balance });
       if (debited.length === 0) {
-        throw new HttpError(400, 'Not enough tokens. Top up your wallet and try again.');
+        throw new HttpError(400, 'Not enough balance. Top up your wallet and try again.');
       }
       balance = debited[0].balance;
     } else {
       const [wallet] = await tx
-        .select({ balance: users.tokenBalance })
+        .select({ balance: users.balance })
         .from(users)
         .where(eq(users.id, buyerId))
         .limit(1);
@@ -347,8 +346,7 @@ const computeAnalytics = async (
 
 /**
  * Redeem a voucher code (auth). Marks the code REDEEMED and grants the taker
- * the tokens needed to unlock this assessment's premium report, recorded as a
- * VOUCHER_REDEEM transaction. Idempotency: a code can only be redeemed once.
+ * start-access to the assessment. Idempotency: a code can only be redeemed once.
  */
 export const redeem = async (userId: string, rawCode: string) => {
   const code = rawCode.trim().toUpperCase();
@@ -372,22 +370,11 @@ export const redeem = async (userId: string, rawCode: string) => {
   if (!batch) throw new HttpError(404, 'That voucher code is not valid');
 
   const [assessment] = await db
-    .select({
-      title: assessments.title,
-      cost: assessments.premiumTokenCost,
-      accessMode: assessments.accessMode,
-    })
+    .select({ title: assessments.title })
     .from(assessments)
     .where(eq(assessments.id, batch.assessmentId))
     .limit(1);
   if (!assessment) throw new HttpError(404, 'Assessment not found');
-
-  // A voucher always grants start-access to its assessment (this is what makes
-  // VOUCHER-mode assessments takeable). It additionally tops up the premium
-  // tokens only when the assessment actually has a premium tier (FREEMIUM) —
-  // preserving the original "company funds premium unlocks" use case.
-  const premiumUnlockable = policyFor(normalizeMode(assessment.accessMode)).premiumUnlockable;
-  const grant = premiumUnlockable ? assessment.cost : 0;
 
   return db.transaction(async (tx) => {
     // Claim the code atomically — the WHERE status='ACTIVE' guards against a
@@ -401,22 +388,13 @@ export const redeem = async (userId: string, rawCode: string) => {
       throw new HttpError(409, 'That voucher code has already been used');
     }
 
+    // A voucher grants start-access to its assessment — this is what makes
+    // VOUCHER-mode assessments takeable.
     await grantAccess(tx, userId, batch.assessmentId, 'VOUCHER');
-
-    if (grant > 0) {
-      await tx
-        .update(users)
-        .set({ tokenBalance: sql`${users.tokenBalance} + ${grant}` })
-        .where(eq(users.id, userId));
-      await tx
-        .insert(transactions)
-        .values({ userId, amount: grant, type: 'VOUCHER_REDEEM' });
-    }
 
     return {
       assessment_id: batch.assessmentId,
       assessment_title: assessment.title,
-      granted_tokens: grant,
     };
   });
 };

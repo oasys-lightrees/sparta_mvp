@@ -29,7 +29,7 @@ export const uploadApi = {
       });
     } catch {
       throw new Error(
-        'Network error — please check your connection and try again.',
+        'Network error. Please check your connection and try again.',
       );
     }
 

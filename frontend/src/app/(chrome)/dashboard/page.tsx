@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ClipboardList, Coins, FileText } from 'lucide-react';
+import { ClipboardList, Wallet, FileText } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
 import { attemptApi } from '@/services/attempt.api';
 import { assessmentApi } from '@/services/assessment.api';
-import { tokenApi } from '@/services/token.api';
+import { balanceApi } from '@/services/balance.api';
+import { formatIdr } from '@/lib/currency';
 import { voucherApi } from '@/services/voucher.api';
 import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import { AssessmentCard } from '@/components/assessment/AssessmentCard';
@@ -82,7 +83,7 @@ function DashboardHome() {
       try {
         const [mine, wallet] = await Promise.all([
           attemptApi.listMine(),
-          tokenApi.getBalance(),
+          balanceApi.getBalance(),
         ]);
         if (!active) return;
         setAttempts(mine);
@@ -125,18 +126,18 @@ function DashboardHome() {
     window.history.replaceState(null, '', window.location.pathname);
     (async () => {
       try {
-        const order = await tokenApi.getOrder(orderId);
+        const order = await balanceApi.getOrder(orderId);
         setBalance(order.balance);
         if (order.status === 'PAID') {
           setActionNotice(
-            `Payment received — ${order.token_amount} tokens added. Balance: ${order.balance}.`,
+            `Payment received. ${formatIdr(order.amount)} added. Balance: ${formatIdr(order.balance)}.`,
           );
         } else if (order.status === 'PENDING') {
           setActionNotice(
-            'Payment is being processed. Your tokens will appear once it settles.',
+            'Payment is being processed. Your balance will appear once it settles.',
           );
         } else {
-          setActionError(`Payment ${order.status.toLowerCase()}. No tokens were added.`);
+          setActionError(`Payment ${order.status.toLowerCase()}. No balance was added.`);
         }
       } catch {
         /* ignore — stale/foreign order id */
@@ -144,13 +145,16 @@ function DashboardHome() {
     })();
   }, []);
 
-  const purchaseTokens = async (amount: number) => {
+  const topUp = async (amount: number) => {
     setBusy('topup');
     setTopUpError('');
     setActionError('');
     setActionNotice('');
     try {
-      const result = await tokenApi.purchase(amount);
+      const result = await balanceApi.purchase(
+        amount,
+        `${window.location.origin}/dashboard`,
+      );
       if (result.mode === 'midtrans') {
         // Hand off to the Midtrans hosted payment page; the webhook credits the
         // wallet and we confirm on return (see the effect above).
@@ -160,9 +164,9 @@ function DashboardHome() {
       // Demo fallback (gateway not configured): credited immediately.
       setBalance(result.balance);
       setTopUpOpen(false);
-      setActionNotice(`Added ${amount} tokens — your balance is now ${result.balance}.`);
+      setActionNotice(`Added ${formatIdr(amount)}. Your balance is now ${formatIdr(result.balance)}.`);
     } catch (err) {
-      setTopUpError(err instanceof Error ? err.message : 'Purchase failed');
+      setTopUpError(err instanceof Error ? err.message : 'Top-up failed');
     } finally {
       setBusy(null);
     }
@@ -182,7 +186,7 @@ function DashboardHome() {
         </div>
         <h1 className="text-3xl font-bold tracking-tight">
           {t('dashboard.welcome')}
-          {user?.email ? `, ${user.email.split('@')[0]}` : ''}
+          {user ? `, ${user.name?.trim() || user.email.split('@')[0]}` : ''}
         </h1>
         <p className="text-muted-foreground">{t('dashboard.overview')}</p>
       </div>
@@ -192,15 +196,15 @@ function DashboardHome() {
         <Card className="border-primary/30 bg-accent/40">
           <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-accent-foreground">
-              {t('dashboard.tokenBalance')}
+              {t('dashboard.balance')}
             </CardTitle>
             <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
-              <Coins className="h-4 w-4" />
+              <Wallet className="h-4 w-4" />
             </span>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="tnum font-display text-3xl font-bold tracking-tight text-primary">
-              {balance === null ? '—' : `${balance} Tokens`}
+              {balance === null ? '—' : formatIdr(balance)}
             </p>
             <Button
               size="sm"
@@ -267,7 +271,9 @@ function DashboardHome() {
                       <TableCell className="font-medium">
                         {a.assessment_title}
                       </TableCell>
-                      <TableCell>{a.score}</TableCell>
+                      <TableCell>
+                        {a.result_profile ? a.result_profile.name : a.score}
+                      </TableCell>
                       <TableCell>
                         {new Date(a.created_at).toLocaleDateString()}
                       </TableCell>
@@ -390,7 +396,7 @@ function DashboardHome() {
       <TopUpDialog
         open={topUpOpen}
         onClose={() => setTopUpOpen(false)}
-        onConfirm={purchaseTokens}
+        onConfirm={topUp}
         submitting={busy === 'topup'}
         error={topUpError}
       />

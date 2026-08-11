@@ -143,7 +143,7 @@ function ResourceRow({ resource }: { resource: LearningResource }) {
  * grouped by kind (Videos → Downloads → Articles → Courses → Links) so the
  * taker gets an ordered path rather than a flat list. Server-side gating means
  * only currently-visible resources are passed — `lockedCount` is how many more
- * unlock with premium.
+ * are still locked (0 now that all resources are shown).
  */
 export function LearningResources({
   resources,
@@ -191,9 +191,7 @@ export function LearningResources({
       {lockedCount > 0 ? (
         <p className="rounded-md border border-dashed bg-accent/20 px-3 py-2 text-xs text-muted-foreground">
           {lockedHint ??
-            `Unlock the premium report to access ${lockedCount} more resource${
-              lockedCount === 1 ? '' : 's'
-            }.`}
+            `${lockedCount} more resource${lockedCount === 1 ? '' : 's'} will unlock with access.`}
         </p>
       ) : null}
     </div>

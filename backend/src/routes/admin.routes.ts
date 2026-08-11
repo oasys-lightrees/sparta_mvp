@@ -54,9 +54,9 @@ admin.patch(
   },
 );
 
-// PATCH /api/admin/users/:id/tokens — grant tokens to a user
+// PATCH /api/admin/users/:id/balance — grant balance (IDR) to a user
 admin.patch(
-  '/users/:id/tokens',
+  '/users/:id/balance',
   authMiddleware,
   requireRole('ADMIN'),
   async (c) => {
@@ -71,7 +71,7 @@ admin.patch(
     }
 
     try {
-      const updated = await adminService.grantTokens(id, body.amount);
+      const updated = await adminService.grantBalance(id, body.amount);
       return c.json(success(updated), 200);
     } catch (err) {
       return handleError(c, err);

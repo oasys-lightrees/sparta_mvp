@@ -264,7 +264,6 @@ export const getMentorAssessmentDetail = async (
     low_score_threshold: assessment.lowScoreThreshold,
     high_score_threshold: assessment.highScoreThreshold,
     price: assessment.price,
-    premium_token_cost: assessment.premiumTokenCost,
     free_report_template: assessment.freeReportTemplate,
     premium_report_description: assessment.premiumReportDescription,
     email_template: assessment.emailTemplate,
@@ -274,7 +273,7 @@ export const getMentorAssessmentDetail = async (
     study_video_url: assessment.studyVideoUrl,
     learning_resources: assessment.learningResources,
     access_mode: assessment.accessMode,
-    access_token_cost: assessment.accessTokenCost,
+    access_cost: assessment.accessCost,
     created_at: assessment.createdAt,
     updated_at: assessment.updatedAt,
     questions: questionRows.map((q) => ({

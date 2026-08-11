@@ -128,8 +128,9 @@ export const listMine = async (userId: string) => {
       attempt_id: attempts.id,
       assessment_id: assessments.id,
       assessment_title: assessments.title,
-      premium_token_cost: assessments.premiumTokenCost,
       score: attempts.totalScore,
+      // Category-engine result (personality assessments); null for score-based.
+      category_result: attempts.categoryResult,
       created_at: attempts.createdAt,
       report_id: reports.id,
       report_type: reports.reportType,
@@ -161,11 +162,23 @@ export const listMine = async (userId: string) => {
     premiumRows.map((p) => [p.attemptId, p.content]),
   );
 
-  return rows.map((r) => ({
-    ...r,
-    premium_unlocked: premiumByAttempt.has(r.attempt_id),
-    premium_content: premiumByAttempt.get(r.attempt_id) ?? null,
-  }));
+  return rows.map((r) => {
+    const { category_result, ...rest } = r;
+    // Personality assessments resolve to a result category, not a score. Surface
+    // the winning category so the dashboard can show it instead of a 0 score.
+    const result_profile = category_result
+      ? {
+          code: category_result.dominant ?? '',
+          name: category_result.dominantName ?? category_result.dominant ?? '',
+        }
+      : null;
+    return {
+      ...rest,
+      result_profile,
+      premium_unlocked: premiumByAttempt.has(r.attempt_id),
+      premium_content: premiumByAttempt.get(r.attempt_id) ?? null,
+    };
+  });
 };
 
 /**

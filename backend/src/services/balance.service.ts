@@ -3,15 +3,15 @@ import { db } from '../db/client';
 import { users } from '../db/schema';
 import { HttpError } from '../utils/http-error';
 
-// Real token purchases (Midtrans) and the demo top-up live in payment.service.
+// Real balance top-ups (Midtrans) and the demo top-up live in payment.service.
 export { topupDemo } from './payment.service';
 
 /**
- * Current token balance for a user.
+ * Current wallet balance (IDR, whole rupiah) for a user.
  */
 export const getBalance = async (userId: string) => {
   const [row] = await db
-    .select({ balance: users.tokenBalance })
+    .select({ balance: users.balance })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);

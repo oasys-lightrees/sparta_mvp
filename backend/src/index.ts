@@ -13,7 +13,7 @@ import mentorRoutes from './routes/mentor.routes';
 import productRoutes from './routes/product.routes';
 import questionRoutes from './routes/question.routes';
 import submissionRoutes from './routes/submission.routes';
-import tokenRoutes from './routes/token.routes';
+import balanceRoutes from './routes/balance.routes';
 import uploadRoutes from './routes/upload.routes';
 import voucherRoutes from './routes/voucher.routes';
 import { error, success } from './utils/response';
@@ -61,7 +61,7 @@ app.route('/api/admin', adminRoutes);
 app.route('/api/mentor', mentorRoutes);
 app.route('/api/attempts', attemptRoutes);
 app.route('/api/blogs', blogRoutes);
-app.route('/api/tokens', tokenRoutes);
+app.route('/api/balance', balanceRoutes);
 app.route('/api/vouchers', voucherRoutes);
 // Products — sellable 1:1 wrapper around an assessment (tiers/pricing).
 app.route('/api/products', productRoutes);
