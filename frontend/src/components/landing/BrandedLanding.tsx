@@ -247,6 +247,34 @@ export function BrandedLanding({
           </div>
         </section>
 
+        {/* ABOUT (optional) — description on the left, photo on the right */}
+        {landing.about.enabled ? (
+          <section className="lato-section lato-section--tint" id="about">
+            <div
+              className={`lato-wrap lato-about${
+                landing.about.imageUrl ? '' : ' lato-about--noimg'
+              }`}
+            >
+              <div className="lato-about__text">
+                <h2 className="lato-h" style={{ marginBottom: 14 }}>
+                  {landing.about.title}
+                </h2>
+                {landing.about.body ? (
+                  <p className="lato-sub" style={{ whiteSpace: 'pre-line' }}>
+                    {landing.about.body}
+                  </p>
+                ) : null}
+              </div>
+              {landing.about.imageUrl ? (
+                <div className="lato-about__media">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={landing.about.imageUrl} alt={landing.about.title} />
+                </div>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
+
         {/* PRODUCTS */}
         <section className="lato-section" id="products">
           <div className="lato-wrap lato-center">

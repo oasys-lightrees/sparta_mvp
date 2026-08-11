@@ -185,6 +185,17 @@ export const LandingSchema = z.object({
   process: z.array(StepSchema).default([]),
   testimonials: z.array(TestimonialSchema).default([]),
   faq: z.array(FaqSchema).default([]),
+  // Optional "About" section: title + description on the left, an image on the
+  // right. Off by default so existing assessments are unchanged; the expert
+  // turns it on and fills it from the landing-page editor.
+  about: z
+    .object({
+      enabled: z.boolean().default(false),
+      title: z.string().default('About'),
+      body: z.string().default(''),
+      imageUrl: z.string().url().nullable().default(null),
+    })
+    .default({ enabled: false, title: 'About', body: '', imageUrl: null }),
   finalCta: z
     .object({
       // Whether the closing call-to-action section renders on the landing page.
