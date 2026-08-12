@@ -24,6 +24,7 @@ const ICONS: Record<string, string> = {
   check: '<path d="M20 6L9 17l-5-5"/>',
   arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
   arrowLeft: '<path d="M19 12H5M11 6l-6 6 6 6"/>',
+  menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
 };
 function Icon({ name, size = 22 }: { name: string; size?: number }) {
   const path = ICONS[name] ?? ICONS.spark;
@@ -150,7 +151,7 @@ export function BrandedLanding({
             <BrandedAuthChip loginHref={loginHref} dashboardHref={dashboardHref} />
             <details className="lato-mnav">
               <summary aria-label="Menu">
-                <Icon name="arrow" size={18} />
+                <Icon name="menu" size={18} />
               </summary>
               <div className="lato-mnav__panel">
                 <a href="#top">Overview</a>
