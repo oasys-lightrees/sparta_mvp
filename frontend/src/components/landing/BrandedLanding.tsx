@@ -4,7 +4,6 @@ import type { AssessmentApp, Plan } from '@/types/assessment-app';
 import type { AccessMode, PricingTier, PublicProduct, VoucherPackage } from '@/types';
 import { formatIdr } from '@/lib/currency';
 import { BrandedAuthChip } from '@/components/branded/BrandedAuthChip';
-import { VoucherRedeemBox } from '@/components/branded/VoucherRedeemBox';
 import './lato-theme.css';
 
 /* Minimal inline icon set (line style). */
@@ -384,7 +383,9 @@ export function BrandedLanding({
               <p className="lato-sub" style={{ marginBottom: 24 }}>
                 Got a code from your company? Enter it to unlock this assessment.
               </p>
-              <VoucherRedeemBox redeemHref={redeemHref} />
+              <a href={redeemHref} className="lato-btn lato-btn--grad lato-btn--lg">
+                Redeem voucher
+              </a>
             </div>
           </section>
         ) : null}
@@ -420,24 +421,14 @@ export function BrandedLanding({
               <p className="lato-fabout">{app.seo.description}</p>
             </div>
             <div className="lato-fcol">
-              <h4>Product</h4>
               <a href="#products">Products</a>
               {landing.about.enabled ? <a href="#about">About</a> : null}
+              {contactHref ? (
+                <a href={contactHref} target="_blank" rel="noopener noreferrer">
+                  {landing.contact.title || 'Contact'}
+                </a>
+              ) : null}
             </div>
-            {contactHref ? (
-              <div className="lato-fcol">
-                <h4>
-                  <a href={contactHref} target="_blank" rel="noopener noreferrer">
-                    {landing.contact.title || 'Contact'}
-                  </a>
-                </h4>
-                {landing.contact.name ? (
-                  <a href={contactHref} target="_blank" rel="noopener noreferrer">
-                    {landing.contact.name}
-                  </a>
-                ) : null}
-              </div>
-            ) : null}
           </div>
           <div className="lato-fbar">
             <span>

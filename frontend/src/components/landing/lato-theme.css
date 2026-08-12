@@ -224,7 +224,7 @@
 
 /* footer */
 .lato-footer{border-top:1px solid var(--line);padding:56px 0 34px;margin-top:var(--sec)}
-.lato-fgrid{display:grid;grid-template-columns:1.6fr repeat(3,1fr);gap:32px}
+.lato-fgrid{display:grid;grid-template-columns:1fr auto;gap:32px;align-items:start}
 .lato-fabout{max-width:34ch;color:var(--muted);font-size:.9rem;margin-top:14px}
 .lato-fcol{display:flex;flex-direction:column;gap:11px}
 .lato-fcol h4{font:600 .72rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
@@ -265,6 +265,8 @@
 /* One consistent back/exit control for every branded sub-page. */
 .lato-back{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:.9rem;color:var(--ink-2);padding:.45em .7em;border-radius:9px;border:1px solid transparent;transition:background .15s ease,color .15s ease,border-color .15s ease;text-decoration:none;white-space:nowrap}
 .lato-back:hover{color:var(--b1);background:color-mix(in srgb,var(--b1) 8%,transparent);border-color:color-mix(in srgb,var(--b1) 22%,transparent)}
+/* Icon-only back button: a compact square, no label. */
+.lato-back--icon{gap:0;width:38px;height:38px;justify-content:center;padding:0;border-color:var(--line)}
 .lato-stage{max-width:1000px;margin:0 auto;padding:34px 24px 100px}
 
 /* ---- take flow ---- */
