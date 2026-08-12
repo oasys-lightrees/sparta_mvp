@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import type { MentorAssessmentListItem } from '@/types';
 
 type Props = {
@@ -27,14 +28,15 @@ export function AssessmentTable({
   onToggleStatus,
   onDelete,
 }: Props) {
+  const { t } = useLanguage();
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Title</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Attempts</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
+          <TableHead>{t('mentor.colTitle')}</TableHead>
+          <TableHead>{t('mentor.colStatus')}</TableHead>
+          <TableHead>{t('mentor.colAttempts')}</TableHead>
+          <TableHead className="text-right">{t('mentor.colActions')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -63,7 +65,9 @@ export function AssessmentTable({
               <TableCell>
                 <div className="flex justify-end gap-2">
                   <Button asChild variant="outline" size="sm">
-                    <Link href={`/mentor/assessments/${item.id}`}>Manage</Link>
+                    <Link href={`/mentor/assessments/${item.id}`}>
+                      {t('mentor.manage')}
+                    </Link>
                   </Button>
                   <Button
                     variant="outline"
@@ -71,7 +75,9 @@ export function AssessmentTable({
                     onClick={() => onToggleStatus(item)}
                     disabled={busy}
                   >
-                    {item.status === 'PUBLISHED' ? 'Unpublish' : 'Publish'}
+                    {item.status === 'PUBLISHED'
+                      ? t('mentor.unpublish')
+                      : t('mentor.publish')}
                   </Button>
                   <Button
                     variant="destructive"
@@ -79,7 +85,7 @@ export function AssessmentTable({
                     onClick={() => onDelete(item)}
                     disabled={busy}
                   >
-                    Delete
+                    {t('mentor.delete')}
                   </Button>
                 </div>
               </TableCell>

@@ -62,20 +62,19 @@ export function BrandedShell({
   right?: ReactNode;
   children: ReactNode;
 }) {
+  // Just the brand mark (logo/monogram); the name is intentionally omitted from
+  // the top bar since the back button already provides context there.
   const brandInner = (
-    <>
-      <span
-        className={`lato-brand__m${app.brand.logoUrl ? ' lato-brand__m--img' : ''}`}
-      >
-        {app.brand.logoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={app.brand.logoUrl} alt={app.brand.brandName} />
-        ) : (
-          app.brand.monogram
-        )}
-      </span>
-      <span className="lato-brand__n">{app.brand.brandName}</span>
-    </>
+    <span
+      className={`lato-brand__m${app.brand.logoUrl ? ' lato-brand__m--img' : ''}`}
+    >
+      {app.brand.logoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={app.brand.logoUrl} alt={app.brand.brandName} />
+      ) : (
+        app.brand.monogram
+      )}
+    </span>
   );
 
   return (
@@ -89,9 +88,13 @@ export function BrandedShell({
       <header className="lato-topbar">
         <div className="lato-topbar__in">
           {back ? (
-            <a className="lato-back" href={back.href}>
-              <LatoIcon name="arrowLeft" size={15} />
-              {back.label}
+            <a
+              className="lato-back lato-back--icon"
+              href={back.href}
+              aria-label={back.label}
+              title={back.label}
+            >
+              <LatoIcon name="arrowLeft" size={16} />
             </a>
           ) : null}
           {homeHref ? (

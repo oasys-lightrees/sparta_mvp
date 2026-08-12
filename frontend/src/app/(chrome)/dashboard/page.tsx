@@ -248,8 +248,8 @@ function DashboardHome() {
           <Loading />
         ) : attempts.length === 0 ? (
           <EmptyState
-            title="Complete an assessment to receive insights"
-            description="Take an assessment below and your personalized results and reports will show up here."
+            title={t('dashboard.emptyResultsTitle')}
+            description={t('dashboard.emptyResultsDesc')}
           />
         ) : (
           <Card>
@@ -296,10 +296,11 @@ function DashboardHome() {
       {/* Team vouchers (HR / company buyers) — buy packages + manage results */}
       <section className="space-y-4">
         <div className="space-y-1">
-          <h2 className="text-xl font-semibold tracking-tight">Team vouchers</h2>
+          <h2 className="text-xl font-semibold tracking-tight">
+            {t('dashboard.teamVouchers')}
+          </h2>
           <p className="text-sm text-muted-foreground">
-            Buy a package of voucher codes for your team, hand them out, and review
-            each person&apos;s result here.
+            {t('dashboard.teamVouchersDesc')}
           </p>
         </div>
 
@@ -307,13 +308,15 @@ function DashboardHome() {
         <Card>
           <CardContent className="flex flex-wrap items-end gap-3 p-4">
             <div className="flex-1 space-y-1.5" style={{ minWidth: 220 }}>
-              <span className="text-sm font-medium">Buy voucher codes for</span>
+              <span className="text-sm font-medium">
+                {t('dashboard.buyVoucherFor')}
+              </span>
               <select
                 className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 value={voucherFor}
                 onChange={(e) => setVoucherFor(e.target.value)}
               >
-                <option value="">Select an assessment…</option>
+                <option value="">{t('dashboard.selectAssessment')}</option>
                 {(explore ?? []).map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.title}
@@ -323,9 +326,11 @@ function DashboardHome() {
             </div>
             <Button asChild variant="bronze" disabled={!voucherFor}>
               {voucherFor ? (
-                <Link href={`/a/${voucherFor}/company`}>Buy voucher codes</Link>
+                <Link href={`/a/${voucherFor}/company`}>
+                  {t('dashboard.buyVoucherCodes')}
+                </Link>
               ) : (
-                <span>Buy voucher codes</span>
+                <span>{t('dashboard.buyVoucherCodes')}</span>
               )}
             </Button>
           </CardContent>
@@ -337,11 +342,13 @@ function DashboardHome() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Company</TableHead>
-                    <TableHead>Assessment</TableHead>
-                    <TableHead>Redeemed</TableHead>
-                    <TableHead>Purchased</TableHead>
-                    <TableHead className="text-right">Manage</TableHead>
+                    <TableHead>{t('dashboard.vCompany')}</TableHead>
+                    <TableHead>{t('dashboard.vAssessment')}</TableHead>
+                    <TableHead>{t('dashboard.vRedeemed')}</TableHead>
+                    <TableHead>{t('dashboard.vPurchased')}</TableHead>
+                    <TableHead className="text-right">
+                      {t('dashboard.vManage')}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -360,7 +367,7 @@ function DashboardHome() {
                       <TableCell className="text-right">
                         <Button asChild size="sm" variant="outline">
                           <Link href={`/a/${b.assessment_id}/company`}>
-                            View results
+                            {t('dashboard.viewResults')}
                           </Link>
                         </Button>
                       </TableCell>
@@ -383,7 +390,7 @@ function DashboardHome() {
         ) : explore === null ? (
           <Loading />
         ) : explore.length === 0 ? (
-          <EmptyState title="No assessments available yet" />
+          <EmptyState title={t('dashboard.noAssessments')} />
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {explore.map((a) => (

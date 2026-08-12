@@ -354,6 +354,7 @@ export const purchaseTier = async (
         assessmentId: a.id,
         amount: expertShare,
         type: 'ACCESS_PURCHASE',
+        tierLabel: tier.title || 'Paid tier',
       });
     }
     return { charged: cost, already_purchased: false, tier_id: tierId };

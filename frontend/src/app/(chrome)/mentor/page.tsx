@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { BarChart3, CheckCircle2, FileText, Users } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import { mentorApi } from '@/services/mentor.api';
 import { assessmentApi } from '@/services/assessment.api';
 import { AssessmentTable } from '@/components/mentor/AssessmentTable';
@@ -51,6 +52,7 @@ function StatCard({
 }
 
 function MentorHome() {
+  const { t } = useLanguage();
   const [items, setItems] = useState<MentorAssessmentListItem[] | null>(null);
   const [stats, setStats] = useState<MentorStats | null>(null);
   const [error, setError] = useState('');
@@ -127,15 +129,13 @@ function MentorHome() {
       <div className="mb-8 flex items-center justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight">
-            Expert Dashboard
+            {t('mentor.dashboard')}
           </h1>
-          <p className="text-muted-foreground">
-            Create and manage your assessments, questions and results.
-          </p>
+          <p className="text-muted-foreground">{t('mentor.subtitle')}</p>
         </div>
         {!showCreate ? (
           <Button variant="bronze" onClick={() => setShowCreate(true)}>
-            Create assessment
+            {t('mentor.createAssessment')}
           </Button>
         ) : null}
       </div>
@@ -143,22 +143,22 @@ function MentorHome() {
       {/* Overview analytics */}
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          label="Total Assessments"
+          label={t('mentor.statTotal')}
           value={stats === null ? '—' : stats.totalAssessments}
           icon={FileText}
         />
         <StatCard
-          label="Published Assessments"
+          label={t('mentor.statPublished')}
           value={stats === null ? '—' : stats.publishedAssessments}
           icon={CheckCircle2}
         />
         <StatCard
-          label="Total People Taken Tests"
+          label={t('mentor.statTaken')}
           value={stats === null ? '—' : stats.totalAttempts}
           icon={Users}
         />
         <StatCard
-          label="Average Score"
+          label={t('mentor.statAvgScore')}
           value={stats === null ? '—' : stats.averageScore}
           icon={BarChart3}
         />
@@ -167,11 +167,11 @@ function MentorHome() {
       {showCreate ? (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>New assessment</CardTitle>
+            <CardTitle>{t('mentor.newAssessment')}</CardTitle>
           </CardHeader>
           <CardContent>
             <AssessmentForm
-              submitLabel="Create"
+              submitLabel={t('mentor.create')}
               submitting={creating}
               error={createError}
               onSubmit={handleCreate}
@@ -188,12 +188,12 @@ function MentorHome() {
           <Loading />
         ) : items.length === 0 ? (
           <EmptyState
-            title="Create your first assessment"
-            description="Build an assessment, add your questions, and start collecting responses and revenue."
+            title={t('mentor.emptyTitle')}
+            description={t('mentor.emptyDesc')}
             action={
               !showCreate ? (
                 <Button variant="bronze" onClick={() => setShowCreate(true)}>
-                  Create assessment
+                  {t('mentor.createAssessment')}
                 </Button>
               ) : undefined
             }

@@ -1,4 +1,5 @@
 import { and, avg, count, desc, eq, inArray, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import { db } from '../db/client';
 import { assessments, attempts, transactions, users } from '../db/schema';
 import { HttpError } from '../utils/http-error';
@@ -85,14 +86,19 @@ export const getRevenue = async (mentorId: string) => {
     .from(transactions)
     .where(paidFilter);
 
+  const buyer = alias(users, 'buyer');
   const rows = await db
     .select({
       assessmentTitle: assessments.title,
+      tierLabel: transactions.tierLabel,
       amount: transactions.amount,
       date: transactions.createdAt,
+      buyerName: buyer.name,
+      buyerEmail: buyer.email,
     })
     .from(transactions)
     .leftJoin(assessments, eq(transactions.assessmentId, assessments.id))
+    .leftJoin(buyer, eq(transactions.userId, buyer.id))
     .where(paidFilter)
     .orderBy(desc(transactions.createdAt));
 

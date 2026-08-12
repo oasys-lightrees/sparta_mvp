@@ -471,6 +471,9 @@ export const transactions = pgTable('transactions', {
   }),
   amount: integer('amount').notNull(),
   type: transactionType('type').notNull(),
+  // Human label of what was bought (the product pricing tier's title, or a
+  // voucher package label). Null for legacy/untagged purchases.
+  tierLabel: varchar('tier_label', { length: 255 }),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 

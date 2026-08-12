@@ -1,0 +1,1 @@
+ALTER TABLE "transactions" ADD COLUMN "tier_label" varchar(255);

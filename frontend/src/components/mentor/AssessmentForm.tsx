@@ -12,6 +12,7 @@ import {
   type ResourceProfile,
 } from '@/components/mentor/LearningResourcesEditor';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import type { LearningResourcesDoc, ResultCategories } from '@/types';
 
 type AssessmentMode = 'SKILL' | 'PERSONALITY';
@@ -74,6 +75,7 @@ export function AssessmentForm({
   onSubmit,
   onCancel,
 }: Props) {
+  const { t } = useLanguage();
   const [title, setTitle] = useState(str(initial?.title));
   const [description, setDescription] = useState(str(initial?.description));
   const [imageUrl, setImageUrl] = useState(str(initial?.image_url));
@@ -147,14 +149,14 @@ export function AssessmentForm({
     e.preventDefault();
     setLocalError('');
     if (!title.trim()) {
-      setLocalError('Title is required');
+      setLocalError(t('af.errTitle'));
       return;
     }
     // Thresholds only apply to skill mode.
     const lowNum = isPersonality ? null : toNum(low);
     const highNum = isPersonality ? null : toNum(high);
     if (lowNum !== null && highNum !== null && lowNum > highNum) {
-      setLocalError('Low score threshold must be <= high score threshold');
+      setLocalError(t('af.errThreshold'));
       return;
     }
     // Access model (mode + cost) is derived from the product's pricing tiers in
@@ -202,20 +204,19 @@ export function AssessmentForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label>Assessment Type</Label>
+        <Label>{t('af.type')}</Label>
         <div className="grid gap-3 sm:grid-cols-2">
           {(
             [
               {
                 value: 'SKILL' as const,
-                title: 'Skill Assessment',
-                description:
-                  'Evaluate knowledge with correct answers and scoring.',
+                title: t('af.skillTitle'),
+                description: t('af.skillDesc'),
               },
               {
                 value: 'PERSONALITY' as const,
-                title: 'Personality Assessment',
-                description: 'Categorize users based on answer patterns.',
+                title: t('af.personalityTitle'),
+                description: t('af.personalityDesc'),
               },
             ]
           ).map((opt) => (
@@ -240,7 +241,7 @@ export function AssessmentForm({
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="title">Title</Label>
+        <Label htmlFor="title">{t('af.title')}</Label>
         <Input
           id="title"
           value={title}
@@ -249,7 +250,7 @@ export function AssessmentForm({
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description">{t('af.description')}</Label>
         <Textarea
           id="description"
           value={description}
@@ -257,11 +258,11 @@ export function AssessmentForm({
         />
       </div>
       <ImageSourceField
-        label="Cover photo"
+        label={t('af.coverPhoto')}
         value={imageUrl}
         onChange={setImageUrl}
         placeholder="https://example.com/image.jpg"
-        helpText="Optional cover shown on the assessment card. Use a 16:9 (widescreen) image, recommended 1280×720 (min 640×360). It's cropped to fill, so keep the subject centered. PNG, JPG, JPEG or WEBP · up to 5 MB."
+        helpText={t('af.coverHelp')}
       />
       {/* Access model (free / paid / voucher) and any price are set in the
           Product & pricing editor, so they are intentionally not edited here. */}
@@ -270,7 +271,7 @@ export function AssessmentForm({
       {!isPersonality ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="low">Low threshold</Label>
+            <Label htmlFor="low">{t('af.low')}</Label>
             <Input
               id="low"
               type="number"
@@ -279,7 +280,7 @@ export function AssessmentForm({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="high">High threshold</Label>
+            <Label htmlFor="high">{t('af.high')}</Label>
             <Input
               id="high"
               type="number"
@@ -292,24 +293,20 @@ export function AssessmentForm({
 
       <div className="space-y-2">
         <Label htmlFor="free_report_text">
-          {isPersonality ? 'Free result introduction' : 'Free report text'}
+          {isPersonality ? t('af.freeIntro') : t('af.freeText')}
         </Label>
         <Textarea
           id="free_report_text"
           value={freeText}
           onChange={(e) => setFreeText(e.target.value)}
-          placeholder={
-            isPersonality
-              ? 'Intro shown above the user’s result type'
-              : 'Intro shown above the score band (legacy fallback)'
-          }
+          placeholder={isPersonality ? t('af.freeIntroPh') : t('af.freeTextPh')}
         />
       </div>
 
       {/* Score-based free report template — skill mode only. */}
       {!isPersonality ? (
         <div className="space-y-2">
-          <Label htmlFor="free_report_template">Free score report template</Label>
+          <Label htmlFor="free_report_template">{t('af.freeTemplate')}</Label>
           <Textarea
             id="free_report_template"
             value={freeTemplate}
@@ -322,7 +319,7 @@ export function AssessmentForm({
         </div>
       ) : null}
       <div className="space-y-2">
-        <Label htmlFor="study_video_url">Opening video URL</Label>
+        <Label htmlFor="study_video_url">{t('af.videoUrl')}</Label>
         <Input
           id="study_video_url"
           type="url"
@@ -330,21 +327,14 @@ export function AssessmentForm({
           onChange={(e) => setStudyVideoUrl(e.target.value)}
           placeholder="https://youtube.com/watch?v=…"
         />
-        <p className="text-xs text-muted-foreground">
-          Optional opening video for this assessment. Supports YouTube, Vimeo, or
-          a direct video link.
-        </p>
+        <p className="text-xs text-muted-foreground">{t('af.videoHelp')}</p>
       </div>
 
       {isPersonality ? (
       <div className="space-y-3 rounded-md border p-4">
         <div className="space-y-1">
-          <Label>Personality Result Categories</Label>
-          <p className="text-xs text-muted-foreground">
-            Define result types with a short code (e.g. PB, PO), a name and
-            knowledge. Results are based on each answer&apos;s category mapping
-            (set per choice in the question editor) instead of a score.
-          </p>
+          <Label>{t('af.categoriesTitle')}</Label>
+          <p className="text-xs text-muted-foreground">{t('af.categoriesDesc')}</p>
         </div>
         {categories.map((c, i) => (
           <div key={i} className="space-y-2 rounded-md border p-3">
@@ -352,16 +342,16 @@ export function AssessmentForm({
               <Input
                 value={c.code}
                 onChange={(e) => setCategory(i, { code: e.target.value })}
-                placeholder="Code (e.g. PB)"
+                placeholder={t('af.codePh')}
                 className="w-32"
-                aria-label="Category code"
+                aria-label={t('af.codePh')}
               />
               <Input
                 value={c.name}
                 onChange={(e) => setCategory(i, { name: e.target.value })}
-                placeholder="Name (e.g. Power Builder)"
+                placeholder={t('af.namePh')}
                 className="flex-1"
-                aria-label="Category name"
+                aria-label={t('af.namePh')}
               />
               <Button
                 type="button"
@@ -369,18 +359,18 @@ export function AssessmentForm({
                 size="sm"
                 onClick={() => removeCategory(i)}
               >
-                Remove
+                {t('af.remove')}
               </Button>
             </div>
             <Textarea
               value={c.knowledge}
               onChange={(e) => setCategory(i, { knowledge: e.target.value })}
-              placeholder="Knowledge: what people with this result are like"
+              placeholder={t('af.knowledgePh')}
             />
           </div>
         ))}
         <Button type="button" variant="outline" size="sm" onClick={addCategory}>
-          + Add Category
+          {t('af.addCategory')}
         </Button>
       </div>
       ) : null}
@@ -395,7 +385,7 @@ export function AssessmentForm({
 
       <div className="flex gap-2">
         <Button type="submit" disabled={submitting}>
-          {submitting ? 'Saving…' : submitLabel}
+          {submitting ? t('af.saving') : submitLabel}
         </Button>
         {onCancel ? (
           <Button
@@ -404,7 +394,7 @@ export function AssessmentForm({
             onClick={onCancel}
             disabled={submitting}
           >
-            Cancel
+            {t('af.cancel')}
           </Button>
         ) : null}
       </div>

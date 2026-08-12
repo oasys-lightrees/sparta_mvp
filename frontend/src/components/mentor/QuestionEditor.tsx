@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
+import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import type { MentorQuestion, ResultCategories } from '@/types';
 
 type ChoiceDraft = {
@@ -42,6 +43,7 @@ function QuestionForm({
   onSubmit: (payload: QuestionPayload) => void;
   onCancel: () => void;
 }) {
+  const { t } = useLanguage();
   const [questionText, setQuestionText] = useState(
     initial?.question_text ?? '',
   );
@@ -78,20 +80,20 @@ function QuestionForm({
     e.preventDefault();
     setError('');
     if (!questionText.trim()) {
-      setError('Question text is required');
+      setError(t('q.errText'));
       return;
     }
     if (choices.length === 0) {
-      setError('At least one choice is required');
+      setError(t('q.errChoice'));
       return;
     }
     for (const c of choices) {
       if (!c.choice_text.trim()) {
-        setError('Every choice needs text');
+        setError(t('q.errChoiceText'));
         return;
       }
       if (!Number.isInteger(Number(c.score))) {
-        setError('Every choice needs an integer score');
+        setError(t('q.errScore'));
         return;
       }
     }
@@ -108,19 +110,19 @@ function QuestionForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-3 rounded-md border p-4">
       <div className="space-y-2">
-        <Label>Question text</Label>
+        <Label>{t('q.text')}</Label>
         <Textarea
           value={questionText}
           onChange={(e) => setQuestionText(e.target.value)}
         />
       </div>
       <div className="space-y-2">
-        <Label>Choices</Label>
+        <Label>{t('q.choices')}</Label>
         {choices.map((c, i) => (
           <div key={i} className="space-y-2 rounded-md border p-2">
             <div className="flex gap-2">
               <Input
-                placeholder={`Choice ${i + 1}`}
+                placeholder={`${t('q.choice')} ${i + 1}`}
                 value={c.choice_text}
                 onChange={(e) =>
                   updateChoice(i, { choice_text: e.target.value })
@@ -145,12 +147,12 @@ function QuestionForm({
                 onClick={() => removeChoice(i)}
                 disabled={choices.length <= 1}
               >
-                Remove
+                {t('q.remove')}
               </Button>
             </div>
             {hasCategories ? (
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-xs text-muted-foreground">Maps to:</span>
+                <span className="text-xs text-muted-foreground">{t('q.mapsTo')}</span>
                 {categoryCodes.map((code) => {
                   const active = c.categories.includes(code);
                   return (
@@ -171,13 +173,13 @@ function QuestionForm({
           </div>
         ))}
         <Button type="button" variant="outline" size="sm" onClick={addChoice}>
-          Add choice
+          {t('q.addChoice')}
         </Button>
       </div>
       <ErrorMessage message={error} />
       <div className="flex gap-2">
         <Button type="submit" size="sm" disabled={submitting}>
-          {submitting ? 'Saving…' : submitLabel}
+          {submitting ? t('q.saving') : submitLabel}
         </Button>
         <Button
           type="button"
@@ -186,7 +188,7 @@ function QuestionForm({
           onClick={onCancel}
           disabled={submitting}
         >
-          Cancel
+          {t('q.cancel')}
         </Button>
       </div>
     </form>
@@ -205,6 +207,7 @@ export function QuestionEditor({
   categories?: ResultCategories | null;
   onChanged: () => void | Promise<void>;
 }) {
+  const { t } = useLanguage();
   const categoryCodes = categories ? Object.keys(categories) : [];
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -229,11 +232,13 @@ export function QuestionEditor({
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
-        <CardTitle>Questions ({questions.length})</CardTitle>
+        <CardTitle>
+          {t('q.count')} ({questions.length})
+        </CardTitle>
         <div className="flex gap-2">
           {!adding ? (
             <Button size="sm" onClick={() => setAdding(true)}>
-              Add question
+              {t('q.add')}
             </Button>
           ) : null}
         </div>
@@ -243,7 +248,7 @@ export function QuestionEditor({
 
         {adding ? (
           <QuestionForm
-            submitLabel="Add question"
+            submitLabel={t('q.add')}
             submitting={busy}
             categoryCodes={categoryCodes}
             onCancel={() => setAdding(false)}
@@ -254,14 +259,14 @@ export function QuestionEditor({
         ) : null}
 
         {questions.length === 0 && !adding ? (
-          <p className="text-sm text-muted-foreground">No questions yet.</p>
+          <p className="text-sm text-muted-foreground">{t('q.none')}</p>
         ) : null}
 
         {questions.map((q) =>
           editingId === q.id ? (
             <QuestionForm
               key={q.id}
-              submitLabel="Save question"
+              submitLabel={t('q.save')}
               submitting={busy}
               categoryCodes={categoryCodes}
               initial={{
@@ -288,7 +293,7 @@ export function QuestionEditor({
                     onClick={() => setEditingId(q.id)}
                     disabled={busy}
                   >
-                    Edit
+                    {t('q.edit')}
                   </Button>
                   <Button
                     variant="destructive"
@@ -298,7 +303,7 @@ export function QuestionEditor({
                     }
                     disabled={busy}
                   >
-                    Delete
+                    {t('q.delete')}
                   </Button>
                 </div>
               </div>
@@ -314,7 +319,9 @@ export function QuestionEditor({
                         <Badge key={code}>{code}</Badge>
                       ))}
                       {categoryCodes.length === 0 ? (
-                        <Badge variant="secondary">score {c.score}</Badge>
+                        <Badge variant="secondary">
+                          {t('q.scoreBadge')} {c.score}
+                        </Badge>
                       ) : null}
                     </span>
                   </li>

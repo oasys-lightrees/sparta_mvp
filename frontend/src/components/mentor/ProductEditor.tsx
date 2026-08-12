@@ -18,6 +18,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { ImageSourceField } from '@/components/mentor/ImageSourceField';
+import { useLanguage } from '@/lib/i18n/LanguageProvider';
+import type { TranslationKey } from '@/lib/i18n';
 import type {
   MentorProduct,
   PricingTier,
@@ -27,10 +29,10 @@ import type {
   VoucherPackage,
 } from '@/types';
 
-const KIND_OPTIONS: { value: ProductTierKind; label: string }[] = [
-  { value: 'FREE', label: 'Free' },
-  { value: 'PAID', label: 'Paid' },
-  { value: 'VOUCHER', label: 'Voucher (redeem a code)' },
+const KIND_OPTIONS: { value: ProductTierKind; labelKey: TranslationKey }[] = [
+  { value: 'FREE', labelKey: 'pe.kindFree' },
+  { value: 'PAID', labelKey: 'pe.kindPaid' },
+  { value: 'VOUCHER', labelKey: 'pe.kindVoucher' },
 ];
 
 const selectClass =
@@ -134,6 +136,7 @@ export function ProductEditor({
   assessmentId: string;
   assessmentTitle: string;
 }) {
+  const { t } = useLanguage();
   const [product, setProduct] = useState<MentorProduct | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [form, setForm] = useState<Form | null>(null);
@@ -153,7 +156,8 @@ export function ProductEditor({
         setLoaded(true);
       })
       .catch((e) => {
-        if (active) setLoadError(e instanceof Error ? e.message : 'Failed to load product');
+        if (active)
+          setLoadError(e instanceof Error ? e.message : 'Failed to load product');
       });
     return () => {
       active = false;
@@ -274,12 +278,10 @@ export function ProductEditor({
       setForm(fromProduct(saved));
       setEditing(false);
       setNotice(
-        saved.status === 'PUBLISHED'
-          ? 'Product saved and published. Its tiers are live on the landing page.'
-          : 'Product saved as a draft.',
+        saved.status === 'PUBLISHED' ? t('pe.savedPublished') : t('pe.savedDraft'),
       );
     } catch (e) {
-      setSaveError(e instanceof Error ? e.message : 'Failed to save');
+      setSaveError(e instanceof Error ? e.message : t('pe.errSave'));
     } finally {
       setSaving(false);
     }
@@ -299,9 +301,9 @@ export function ProductEditor({
         tiers: normalizeTiers(product.tiers),
         voucherPackages: normalizePackages(product.voucher_packages),
       });
-      setNotice(next === 'PUBLISHED' ? 'Product published.' : 'Product unpublished.');
+      setNotice(next === 'PUBLISHED' ? t('pe.published') : t('pe.unpublished'));
     } catch (e) {
-      setSaveError(e instanceof Error ? e.message : 'Failed to update');
+      setSaveError(e instanceof Error ? e.message : t('pe.errUpdate'));
     } finally {
       setSaving(false);
     }
@@ -311,21 +313,19 @@ export function ProductEditor({
     <Card>
       <CardHeader className="flex-row items-start justify-between space-y-0">
         <div className="space-y-1">
-          <CardTitle>Product &amp; pricing</CardTitle>
-          <CardDescription>
-            Package this assessment into pricing tiers, each a card with its own
-            title, price (in Rupiah), button and image, and a pricing type (free,
-            paid, or voucher).
-          </CardDescription>
+          <CardTitle>{t('pe.title')}</CardTitle>
+          <CardDescription>{t('pe.desc')}</CardDescription>
         </div>
         <div className="flex shrink-0 gap-2">
           {loaded && product && !editing ? (
             <>
               <Button variant="outline" size="sm" onClick={togglePublish} disabled={saving}>
-                {product.status === 'PUBLISHED' ? 'Unpublish' : 'Publish'}
+                {product.status === 'PUBLISHED'
+                  ? t('mentor.unpublish')
+                  : t('mentor.publish')}
               </Button>
               <Button size="sm" onClick={startEdit} disabled={saving}>
-                Customize
+                {t('pe.customize')}
               </Button>
             </>
           ) : null}
@@ -343,12 +343,9 @@ export function ProductEditor({
 
         {loaded && !product && !editing ? (
           <div className="flex items-center justify-between gap-4 rounded-md border border-dashed bg-accent/20 px-4 py-3">
-            <p className="text-sm text-muted-foreground">
-              No product yet. Set one up to show pricing tiers on this assessment&apos;s
-              landing page.
-            </p>
+            <p className="text-sm text-muted-foreground">{t('pe.noProduct')}</p>
             <Button size="sm" onClick={startEdit}>
-              Set up product
+              {t('pe.setup')}
             </Button>
           </div>
         ) : null}
@@ -363,9 +360,9 @@ export function ProductEditor({
             </div>
             <p className="text-muted-foreground">
               {normalizeTiers(product.tiers)
-                .filter((t) => t.enabled)
-                .map((t) => t.title || t.kind)
-                .join(' · ') || 'No tiers enabled'}
+                .filter((tier) => tier.enabled)
+                .map((tier) => tier.title || tier.kind)
+                .join(' · ') || t('pe.noTiersEnabled')}
             </p>
           </div>
         ) : null}
@@ -374,7 +371,7 @@ export function ProductEditor({
           <div className="space-y-5">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label>Product name</Label>
+                <Label>{t('pe.name')}</Label>
                 <Input
                   value={form.name}
                   onChange={(e) => setForm((f) => (f ? { ...f, name: e.target.value } : f))}
@@ -382,7 +379,7 @@ export function ProductEditor({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Status</Label>
+                <Label>{t('pe.status')}</Label>
                 <select
                   className={selectClass}
                   value={form.status}
@@ -390,19 +387,19 @@ export function ProductEditor({
                     setForm((f) => (f ? { ...f, status: e.target.value as ProductStatus } : f))
                   }
                 >
-                  <option value="DRAFT">Draft (hidden)</option>
-                  <option value="PUBLISHED">Published (live on landing)</option>
+                  <option value="DRAFT">{t('pe.statusDraft')}</option>
+                  <option value="PUBLISHED">{t('pe.statusPublished')}</option>
                 </select>
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Description (optional)</Label>
+              <Label>{t('pe.descOptional')}</Label>
               <Textarea
                 value={form.description}
                 onChange={(e) =>
                   setForm((f) => (f ? { ...f, description: e.target.value } : f))
                 }
-                placeholder="Short summary shown above the tiers."
+                placeholder={t('pe.descPh')}
               />
             </div>
 
@@ -410,7 +407,7 @@ export function ProductEditor({
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Pricing tiers
+                  {t('pe.tiers')}
                 </h4>
                 <Button
                   type="button"
@@ -420,15 +417,11 @@ export function ProductEditor({
                   disabled={form.tiers.length >= 6}
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  Add tier
+                  {t('pe.addTier')}
                 </Button>
               </div>
               <p className="rounded-md border border-dashed bg-accent/20 px-3 py-2 text-xs text-muted-foreground">
-                Prices are in Rupiah and charged for real. Each{' '}
-                <strong>Paid</strong> tier is bought on its own at its own price,
-                unlocking that tier&apos;s bonus content for the buyer. A{' '}
-                <strong>Voucher</strong> tier makes the assessment redeemable with
-                a code, and a <strong>Free</strong> tier keeps it open to everyone.
+                {t('pe.tierHelp')}
               </p>
 
               {form.tiers.map((tier, i) => (
@@ -441,7 +434,7 @@ export function ProductEditor({
                           checked={tier.enabled}
                           onChange={(e) => setTier(i, { enabled: e.target.checked })}
                         />
-                        Enabled
+                        {t('pe.enabled')}
                       </label>
                       <label className="flex items-center gap-1.5">
                         <input
@@ -449,7 +442,7 @@ export function ProductEditor({
                           checked={tier.highlight}
                           onChange={(e) => setTier(i, { highlight: e.target.checked })}
                         />
-                        Highlight
+                        {t('pe.highlight')}
                       </label>
                     </div>
                     <Button
@@ -457,7 +450,7 @@ export function ProductEditor({
                       variant="ghost"
                       size="sm"
                       onClick={() => removeTier(i)}
-                      aria-label="Remove tier"
+                      aria-label={t('pe.removeTier')}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -465,15 +458,15 @@ export function ProductEditor({
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-1.5">
-                      <Label>Title</Label>
+                      <Label>{t('pe.tierTitle')}</Label>
                       <Input
                         value={tier.title}
                         onChange={(e) => setTier(i, { title: e.target.value })}
-                        placeholder="e.g. Full access"
+                        placeholder={t('pe.tierTitlePh')}
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label>Pricing type</Label>
+                      <Label>{t('pe.pricingType')}</Label>
                       <select
                         className={selectClass}
                         value={tier.kind}
@@ -481,7 +474,7 @@ export function ProductEditor({
                       >
                         {KIND_OPTIONS.map((o) => (
                           <option key={o.value} value={o.value}>
-                            {o.label}
+                            {t(o.labelKey)}
                           </option>
                         ))}
                       </select>
@@ -490,15 +483,15 @@ export function ProductEditor({
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-1.5">
-                      <Label>Price label</Label>
+                      <Label>{t('pe.priceLabel')}</Label>
                       <Input
                         value={tier.priceLabel}
                         onChange={(e) => setTier(i, { priceLabel: e.target.value })}
-                        placeholder="e.g. Rp 29.000 or Free"
+                        placeholder={t('pe.priceLabelPh')}
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label>Price in Rp (0 = hide)</Label>
+                      <Label>{t('pe.priceRp')}</Label>
                       <Input
                         type="number"
                         min={0}
@@ -512,28 +505,28 @@ export function ProductEditor({
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label>Description</Label>
+                    <Label>{t('pe.tierDesc')}</Label>
                     <Input
                       value={tier.description}
                       onChange={(e) => setTier(i, { description: e.target.value })}
-                      placeholder="One line describing this tier."
+                      placeholder={t('pe.tierDescPh')}
                     />
                   </div>
 
                   {/* Image shown between the title and the button on the card. */}
                   <ImageSourceField
-                    label="Tier image / logo (optional)"
+                    label={t('pe.tierImage')}
                     value={tier.imageUrl ?? ''}
                     onChange={(v) => setTier(i, { imageUrl: v.trim() === '' ? null : v.trim() })}
-                    helpText="Shown between the title and the button. PNG, SVG, JPG, JPEG or WEBP · up to 5 MB."
+                    helpText={t('pe.tierImageHelp')}
                   />
 
                   <div className="space-y-1.5">
-                    <Label>Button label</Label>
+                    <Label>{t('pe.buttonLabel')}</Label>
                     <Input
                       value={tier.ctaLabel}
                       onChange={(e) => setTier(i, { ctaLabel: e.target.value })}
-                      placeholder="e.g. Get started"
+                      placeholder={t('pe.buttonLabelPh')}
                     />
                   </div>
 
@@ -543,12 +536,10 @@ export function ProductEditor({
                     <div className="flex items-center justify-between gap-2">
                       <div>
                         <h5 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          Bonus content
+                          {t('pe.bonus')}
                         </h5>
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                          Videos and text unlocked for buyers of this tier, shown
-                          on their result page after they finish. Videos accept a
-                          YouTube, Vimeo or direct link.
+                          {t('pe.bonusHelp')}
                         </p>
                       </div>
                       <div className="flex shrink-0 gap-2">
@@ -560,7 +551,7 @@ export function ProductEditor({
                           disabled={tierContent(tier).length >= 20}
                         >
                           <Plus className="h-3.5 w-3.5" />
-                          Text
+                          {t('pe.text')}
                         </Button>
                         <Button
                           type="button"
@@ -570,7 +561,7 @@ export function ProductEditor({
                           disabled={tierContent(tier).length >= 20}
                         >
                           <Plus className="h-3.5 w-3.5" />
-                          Video
+                          {t('pe.video')}
                         </Button>
                       </div>
                     </div>
@@ -579,7 +570,7 @@ export function ProductEditor({
                       <div key={b.id} className="space-y-2 rounded-md border bg-background p-3">
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                            {b.type === 'video' ? 'Video' : 'Text'}
+                            {b.type === 'video' ? t('pe.video') : t('pe.text')}
                           </span>
                           <div className="flex items-center gap-1">
                             <Button
@@ -589,7 +580,7 @@ export function ProductEditor({
                               className="px-2"
                               onClick={() => moveTierContent(i, bi, -1)}
                               disabled={bi === 0}
-                              aria-label="Move up"
+                              aria-label={t('pe.moveUp')}
                             >
                               ↑
                             </Button>
@@ -600,7 +591,7 @@ export function ProductEditor({
                               className="px-2"
                               onClick={() => moveTierContent(i, bi, 1)}
                               disabled={bi === tierContent(tier).length - 1}
-                              aria-label="Move down"
+                              aria-label={t('pe.moveDown')}
                             >
                               ↓
                             </Button>
@@ -609,7 +600,7 @@ export function ProductEditor({
                               variant="ghost"
                               size="sm"
                               onClick={() => removeTierContent(i, bi)}
-                              aria-label="Remove block"
+                              aria-label={t('pe.removeBlock')}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
@@ -626,7 +617,7 @@ export function ProductEditor({
                           <Textarea
                             value={b.value}
                             onChange={(e) => setTierContent(i, bi, { value: e.target.value })}
-                            placeholder="Write a paragraph for buyers of this tier…"
+                            placeholder={t('pe.textPh')}
                           />
                         )}
                       </div>
@@ -637,7 +628,7 @@ export function ProductEditor({
 
               {form.tiers.length === 0 ? (
                 <p className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">
-                  No tiers. Add at least one to show pricing on the landing page.
+                  {t('pe.noTiers')}
                 </p>
               ) : null}
             </div>
@@ -646,7 +637,7 @@ export function ProductEditor({
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Company voucher packages
+                  {t('pe.packages')}
                 </h4>
                 <Button
                   type="button"
@@ -656,28 +647,25 @@ export function ProductEditor({
                   disabled={form.voucherPackages.length >= 10}
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  Add package
+                  {t('pe.addPackage')}
                 </Button>
               </div>
               <p className="rounded-md border border-dashed bg-accent/20 px-3 py-2 text-xs text-muted-foreground">
-                Batch/seat packages a company buys from their balance to get voucher
-                codes. Price each package in Rupiah, set it cheaper per seat than the
-                individual cost. Buyers purchase these from their dashboard&apos;s
-                Team-vouchers section.
+                {t('pe.packagesHelp')}
               </p>
 
               {form.voucherPackages.map((pkg, i) => (
                 <div key={pkg.id} className="grid gap-3 rounded-md border p-3 sm:grid-cols-[1fr_auto_auto_auto]">
                   <div className="space-y-1.5">
-                    <Label>Package name</Label>
+                    <Label>{t('pe.packageName')}</Label>
                     <Input
                       value={pkg.label}
                       onChange={(e) => setPackage(i, { label: e.target.value })}
-                      placeholder="e.g. Team 10-pack"
+                      placeholder={t('pe.packageNamePh')}
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Seats</Label>
+                    <Label>{t('pe.seats')}</Label>
                     <Input
                       type="number"
                       min={1}
@@ -690,7 +678,7 @@ export function ProductEditor({
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Price (Rp)</Label>
+                    <Label>{t('pe.packagePrice')}</Label>
                     <Input
                       type="number"
                       min={0}
@@ -708,24 +696,24 @@ export function ProductEditor({
                       variant="ghost"
                       size="sm"
                       onClick={() => removePackage(i)}
-                      aria-label="Remove package"
+                      aria-label={t('pe.removePackage')}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                   {pkg.seats > 0 && pkg.amount > 0 ? (
                     <p className="text-xs text-muted-foreground sm:col-span-4">
-                      {formatIdr(Math.round(pkg.amount / pkg.seats))} per seat
+                      {formatIdr(Math.round(pkg.amount / pkg.seats))} {t('pe.perSeat')}
                     </p>
                   ) : null}
                   <div className="sm:col-span-4">
                     <ImageSourceField
-                      label="Package image / logo (optional)"
+                      label={t('pe.packageImage')}
                       value={pkg.imageUrl ?? ''}
                       onChange={(v) =>
                         setPackage(i, { imageUrl: v.trim() === '' ? null : v.trim() })
                       }
-                      helpText="Shown on the package card on the landing page. PNG, SVG, JPG, JPEG or WEBP · up to 5 MB."
+                      helpText={t('pe.packageImageHelp')}
                     />
                   </div>
                 </div>
@@ -733,7 +721,7 @@ export function ProductEditor({
 
               {form.voucherPackages.length === 0 ? (
                 <p className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">
-                  No packages. Add one to let companies buy voucher codes in bulk.
+                  {t('pe.noPackages')}
                 </p>
               ) : null}
             </div>
@@ -742,7 +730,7 @@ export function ProductEditor({
 
             <div className="flex flex-wrap gap-2">
               <Button onClick={save} disabled={saving}>
-                {saving ? 'Saving…' : 'Save product'}
+                {saving ? t('pe.saving') : t('pe.save')}
               </Button>
               <Button
                 variant="outline"
@@ -752,7 +740,7 @@ export function ProductEditor({
                 }}
                 disabled={saving}
               >
-                Cancel
+                {t('pe.cancel')}
               </Button>
             </div>
           </div>

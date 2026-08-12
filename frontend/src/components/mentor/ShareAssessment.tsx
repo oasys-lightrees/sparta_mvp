@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Check, Copy, Share2 } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -18,6 +19,7 @@ export function ShareAssessment({
   assessmentId: string;
   isPublished: boolean;
 }) {
+  const { t } = useLanguage();
   const [url, setUrl] = useState('');
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState('');
@@ -35,7 +37,7 @@ export function ShareAssessment({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setError('Could not copy automatically. Select and copy the link above.');
+      setError(t('share.copyError'));
     }
   };
 
@@ -44,12 +46,10 @@ export function ShareAssessment({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Share2 className="h-5 w-5 text-primary" />
-          Share Assessment
+          {t('share.title')}
         </CardTitle>
         <CardDescription>
-          {isPublished
-            ? 'This links to your assessment’s landing page. Anyone can open it and take the assessment, no sign-up required.'
-            : 'Publish this assessment to make its landing page live at this link.'}
+          {isPublished ? t('share.descPublished') : t('share.descDraft')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
@@ -65,12 +65,12 @@ export function ShareAssessment({
             {copied ? (
               <>
                 <Check className="h-4 w-4" />
-                Copied
+                {t('share.copied')}
               </>
             ) : (
               <>
                 <Copy className="h-4 w-4" />
-                Copy Link
+                {t('share.copyLink')}
               </>
             )}
           </Button>

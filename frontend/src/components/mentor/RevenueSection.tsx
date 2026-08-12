@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Wallet, Lock } from 'lucide-react';
 import { mentorApi } from '@/services/mentor.api';
 import { formatIdr } from '@/lib/currency';
+import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import {
   Card,
   CardContent,
@@ -50,6 +51,7 @@ function StatCard({
 }
 
 export function RevenueSection() {
+  const { t } = useLanguage();
   const [data, setData] = useState<MentorRevenue | null>(null);
   const [error, setError] = useState('');
 
@@ -71,7 +73,7 @@ export function RevenueSection() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-xl font-semibold tracking-tight">Revenue</h2>
+      <h2 className="text-xl font-semibold tracking-tight">{t('revenue.title')}</h2>
       {error ? (
         <ErrorMessage message={error} />
       ) : data === null ? (
@@ -80,20 +82,20 @@ export function RevenueSection() {
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:max-w-xl">
             <StatCard
-              label="Total Revenue"
+              label={t('revenue.total')}
               value={formatIdr(data.totalRevenue)}
               icon={Wallet}
             />
             <StatCard
-              label="Paid Unlocks"
+              label={t('revenue.bought')}
               value={data.paidUnlocks}
               icon={Lock}
             />
           </div>
           {data.transactions.length === 0 ? (
             <EmptyState
-              title="Paid unlocks will appear here"
-              description="When a user unlocks paid access to your assessment, the revenue shows up in this list."
+              title={t('revenue.emptyTitle')}
+              description={t('revenue.emptyDesc')}
             />
           ) : (
             <Card>
@@ -101,9 +103,11 @@ export function RevenueSection() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Assessment</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Date</TableHead>
+                      <TableHead>{t('revenue.colAssessment')}</TableHead>
+                      <TableHead>{t('revenue.colTier')}</TableHead>
+                      <TableHead>{t('revenue.colAmount')}</TableHead>
+                      <TableHead>{t('revenue.colDate')}</TableHead>
+                      <TableHead>{t('revenue.colBuyer')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -112,9 +116,22 @@ export function RevenueSection() {
                         <TableCell className="font-medium">
                           {t.assessmentTitle ?? '—'}
                         </TableCell>
+                        <TableCell>{t.tierLabel ?? '—'}</TableCell>
                         <TableCell>{formatIdr(t.amount)}</TableCell>
                         <TableCell>
                           {new Date(t.date).toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          {t.buyerName?.trim() ? (
+                            <div>
+                              <div>{t.buyerName}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {t.buyerEmail ?? ''}
+                              </div>
+                            </div>
+                          ) : (
+                            t.buyerEmail ?? '—'
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}

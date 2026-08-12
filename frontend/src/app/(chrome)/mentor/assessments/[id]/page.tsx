@@ -13,6 +13,8 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { useLanguage } from '@/lib/i18n/LanguageProvider';
+import type { TranslationKey } from '@/lib/i18n';
 import { mentorApi } from '@/services/mentor.api';
 import { assessmentApi } from '@/services/assessment.api';
 import {
@@ -46,13 +48,13 @@ type SectionId =
   | 'share'
   | 'results';
 
-const SECTIONS: { id: SectionId; label: string; icon: LucideIcon }[] = [
-  { id: 'details', label: 'Details', icon: FileText },
-  { id: 'questions', label: 'Questions', icon: ListChecks },
-  { id: 'pricing', label: 'Product & pricing', icon: Tag },
-  { id: 'landing', label: 'Landing page', icon: LayoutTemplate },
-  { id: 'share', label: 'Share', icon: Share2 },
-  { id: 'results', label: 'Results', icon: BarChart3 },
+const SECTIONS: { id: SectionId; labelKey: TranslationKey; icon: LucideIcon }[] = [
+  { id: 'details', labelKey: 'manage.details', icon: FileText },
+  { id: 'questions', labelKey: 'manage.questions', icon: ListChecks },
+  { id: 'pricing', labelKey: 'manage.pricing', icon: Tag },
+  { id: 'landing', labelKey: 'manage.landing', icon: LayoutTemplate },
+  { id: 'share', labelKey: 'manage.share', icon: Share2 },
+  { id: 'results', labelKey: 'manage.results', icon: BarChart3 },
 ];
 const SECTION_IDS = SECTIONS.map((s) => s.id) as string[];
 
@@ -67,6 +69,7 @@ function Info({ label, value }: { label: string; value: ReactNode }) {
 
 function DetailView({ id }: { id: string }) {
   const [detail, setDetail] = useState<MentorAssessmentDetail | null>(null);
+  const { t } = useLanguage();
   const [results, setResults] = useState<MentorResult[] | null>(null);
   const [error, setError] = useState('');
   const [editing, setEditing] = useState(false);
@@ -166,7 +169,7 @@ function DetailView({ id }: { id: string }) {
         <ErrorMessage message={error} />
         <div className="mt-4">
           <Button asChild variant="outline">
-            <Link href="/mentor">Back to dashboard</Link>
+            <Link href="/mentor">{t('manage.back')}</Link>
           </Button>
         </div>
       </div>
@@ -198,7 +201,7 @@ function DetailView({ id }: { id: string }) {
             href="/mentor"
             className="text-sm text-muted-foreground hover:text-foreground"
           >
-            ← Back to dashboard
+            ← {t('manage.back')}
           </Link>
           <h1 className="mt-1 truncate text-2xl font-bold">{detail.title}</h1>
         </div>
@@ -214,7 +217,9 @@ function DetailView({ id }: { id: string }) {
             onClick={toggleStatus}
             disabled={statusBusy}
           >
-            {detail.status === 'PUBLISHED' ? 'Unpublish' : 'Publish'}
+            {detail.status === 'PUBLISHED'
+              ? t('mentor.unpublish')
+              : t('mentor.publish')}
           </Button>
         </div>
       </div>
@@ -252,7 +257,7 @@ function DetailView({ id }: { id: string }) {
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
-                  <span>{s.label}</span>
+                  <span>{t(s.labelKey)}</span>
                   {count !== undefined ? (
                     <span
                       className={cn(
@@ -276,17 +281,17 @@ function DetailView({ id }: { id: string }) {
           {section === 'details' ? (
             <Card>
               <CardHeader className="flex-row items-center justify-between space-y-0">
-                <CardTitle>Assessment details</CardTitle>
+                <CardTitle>{t('manage.detailsTitle')}</CardTitle>
                 {!editing ? (
                   <Button size="sm" onClick={() => setEditing(true)}>
-                    Edit
+                    {t('manage.edit')}
                   </Button>
                 ) : null}
               </CardHeader>
               <CardContent>
                 {editing ? (
                   <AssessmentForm
-                    submitLabel="Save changes"
+                    submitLabel={t('manage.saveChanges')}
                     submitting={saving}
                     error={saveError}
                     initial={{
@@ -312,26 +317,29 @@ function DetailView({ id }: { id: string }) {
                   />
                 ) : (
                   <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-                    <Info label="Description" value={detail.description ?? '—'} />
+                    <Info
+                      label={t('manage.description')}
+                      value={detail.description ?? '—'}
+                    />
                     {/* Score thresholds are skill-only; personality uses categories. */}
                     {isPersonality ? null : (
                       <>
                         <Info
-                          label="Low threshold"
+                          label={t('manage.lowThreshold')}
                           value={detail.low_score_threshold ?? '—'}
                         />
                         <Info
-                          label="High threshold"
+                          label={t('manage.highThreshold')}
                           value={detail.high_score_threshold ?? '—'}
                         />
                       </>
                     )}
                     <Info
-                      label="Free report text"
+                      label={t('manage.freeReportText')}
                       value={detail.free_report_text ?? '—'}
                     />
                     <Info
-                      label="Opening video"
+                      label={t('manage.openingVideo')}
                       value={
                         detail.study_video_url ? (
                           <a

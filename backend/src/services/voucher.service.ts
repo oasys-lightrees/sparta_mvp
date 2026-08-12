@@ -127,6 +127,7 @@ export const createBatch = async (buyerId: string, input: CreateBatchInput) => {
         assessmentId: input.assessmentId,
         amount: expertShare,
         type: 'VOUCHER_PURCHASE',
+        tierLabel: `${pkg.label || `${seats} seats`} (voucher package)`,
       });
     }
 
