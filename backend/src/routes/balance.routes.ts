@@ -72,15 +72,36 @@ balance.get('/orders/:orderId', authMiddleware, async (c) => {
 // Public by necessity; the SHA-512 signature is verified in the service. Credits
 // the wallet exactly once on the first PAID transition.
 balance.post('/midtrans/notification', async (c) => {
-  const body = await c.req.json().catch(() => null);
+  // Read the body robustly: Midtrans always sends JSON, but parse from the raw
+  // text so an unexpected/missing Content-Type header can't drop the payload.
+  let body: unknown = await c.req.json().catch(() => null);
   if (!body) {
+    const raw = await c.req.text().catch(() => '');
+    try {
+      body = raw ? JSON.parse(raw) : null;
+    } catch {
+      body = null;
+    }
+  }
+  if (!body || typeof body !== 'object') {
+    console.warn('[midtrans] notification: empty/invalid body');
     return c.json(error('Invalid notification body'), 400);
   }
 
   try {
-    const result = await paymentService.handleNotification(body);
+    const result = await paymentService.handleNotification(
+      body as paymentService.MidtransNotification,
+    );
+    console.info(
+      `[midtrans] notification order=${result.order_id} -> ${result.status}`,
+    );
     return c.json(success(result), 200);
   } catch (err) {
+    if (err instanceof HttpError) {
+      console.warn(
+        `[midtrans] notification rejected (${err.status}): ${err.message}`,
+      );
+    }
     return handleError(c, err);
   }
 });
