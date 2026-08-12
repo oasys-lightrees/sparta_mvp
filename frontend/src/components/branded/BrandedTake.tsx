@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { assessmentApi } from '@/services/assessment.api';
 import { productApi } from '@/services/product.api';
 import { formatIdr } from '@/lib/currency';
+import { isDirectVideo, toEmbedUrl } from '@/lib/video';
 import { useAuth } from '@/hooks/useAuth';
 import type { AssessmentApp } from '@/types/assessment-app';
 import type { AccessState, AssessmentDetail, PricingTier, PublicProduct } from '@/types';
@@ -124,6 +125,44 @@ function AccessGate({
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+/** The expert's opening video, embedded on the intro (before answering). */
+function OpeningVideo({ url }: { url: string }) {
+  const embed = toEmbedUrl(url);
+  return (
+    <div className="lato-card" style={{ marginTop: 20, textAlign: 'left' }}>
+      <span className="lato-eyebrow">
+        <LatoIcon name="play" size={14} /> Watch this first
+      </span>
+      {embed ? (
+        <div className="lato-video" style={{ marginTop: 14 }}>
+          <iframe
+            src={embed}
+            title="Opening video"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      ) : isDirectVideo(url) ? (
+        <video
+          controls
+          src={url}
+          style={{ width: '100%', borderRadius: 10, marginTop: 14, background: '#000' }}
+        />
+      ) : (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="lato-btn lato-btn--ghost"
+          style={{ marginTop: 14 }}
+        >
+          <LatoIcon name="play" size={15} /> Open video
+        </a>
+      )}
     </div>
   );
 }
@@ -317,6 +356,12 @@ export function BrandedTake({
             </span>
             <span>{app.assessment.meta.audience}</span>
           </div>
+
+          {/* Opening video — shown on the intro, before answering. */}
+          {detail.studyVideoUrl ? (
+            <OpeningVideo url={detail.studyVideoUrl} />
+          ) : null}
+
           {!user && !gated ? (
             <label className="lato-field">
               Email for your results (optional)

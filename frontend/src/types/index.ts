@@ -53,6 +53,8 @@ export type AssessmentSummary = {
   price: number;
   accessMode?: AccessMode | null;
   accessCost?: number;
+  // Opening video shown on the intro screen before answering.
+  studyVideoUrl?: string | null;
 };
 
 // --- Learning resources ---

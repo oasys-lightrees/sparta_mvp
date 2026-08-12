@@ -259,7 +259,6 @@ export function BrandedReport({
   // Personality/diagnostic assessments don't produce a numeric score — they
   // resolve to a result category. Hide the score ring and show the category.
   const isPersonality = Boolean(report.result_profile);
-  const embed = report.study_video_url ? embedUrl(report.study_video_url) : null;
 
   return (
     <BrandedShell app={app} homeHref={home} back={dashboardBack}>
@@ -292,34 +291,7 @@ export function BrandedReport({
           </div>
         </div>
 
-        {/* Opening video (shown when the mentor provided one) */}
-        {report.study_video_url ? (
-          <div className="lato-card" style={{ marginTop: 20 }}>
-            <span className="lato-eyebrow">
-              <LatoIcon name="play" size={14} /> Opening video
-            </span>
-            {embed ? (
-              <div className="lato-video" style={{ marginTop: 14 }}>
-                <iframe
-                  src={embed}
-                  title="Opening video"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
-            ) : (
-              <a
-                href={report.study_video_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="lato-btn lato-btn--ghost"
-                style={{ marginTop: 16 }}
-              >
-                <LatoIcon name="play" size={15} /> Open video
-              </a>
-            )}
-          </div>
-        ) : null}
+        {/* The opening video now plays on the intro, before the assessment. */}
 
         <BrandedResources
           resources={report.learning_resources}

@@ -6,6 +6,7 @@ import { assessmentApi } from '@/services/assessment.api';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import { setPendingAttempt } from '@/lib/storage';
+import { isDirectVideo, toEmbedUrl } from '@/lib/video';
 import { QuestionStep } from '@/components/assessment/QuestionStep';
 import { AccessGate } from '@/components/assessment/AccessGate';
 import { Loading } from '@/components/common/Loading';
@@ -17,6 +18,37 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import type { AccessState, AssessmentDetail } from '@/types';
+
+/** The expert's opening video, shown before the first question. */
+function OpeningVideo({ url }: { url: string }) {
+  const embed = toEmbedUrl(url);
+  if (embed) {
+    return (
+      <div className="aspect-video w-full overflow-hidden rounded-lg border">
+        <iframe
+          src={embed}
+          title="Opening video"
+          className="h-full w-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+    );
+  }
+  if (isDirectVideo(url)) {
+    return <video controls src={url} className="w-full rounded-lg border bg-black" />;
+  }
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-sm text-primary hover:underline"
+    >
+      Watch the opening video
+    </a>
+  );
+}
 
 export default function TakeAssessmentPage() {
   const { id } = useParams<{ id: string }>();
@@ -159,6 +191,12 @@ export default function TakeAssessmentPage() {
       ) : (
         <div className="mb-6" />
       )}
+      {/* Opening video — shown before the first question. */}
+      {index === 0 && assessment.studyVideoUrl ? (
+        <div className="mb-6">
+          <OpeningVideo url={assessment.studyVideoUrl} />
+        </div>
+      ) : null}
       <QuestionStep
         question={current}
         index={index}
