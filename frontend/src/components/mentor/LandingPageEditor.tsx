@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { assessmentAppApi, type AppConfigPatch } from '@/services/assessment-app.api';
+import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import { ImageSourceField } from '@/components/mentor/ImageSourceField';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -233,6 +234,7 @@ export function LandingPageEditor({
   assessmentId: string;
   isPublished: boolean;
 }) {
+  const { t } = useLanguage();
   const [config, setConfig] = useState<AssessmentApp | null>(null);
   const [form, setForm] = useState<Form | null>(null);
   const [editing, setEditing] = useState(false);
@@ -295,7 +297,7 @@ export function LandingPageEditor({
       setConfig(updated);
       setForm(fromConfig(updated));
       setEditing(false);
-      setNotice('Landing page saved.');
+      setNotice(t('le.savedNotice'));
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : 'Failed to save');
     } finally {
@@ -315,7 +317,7 @@ export function LandingPageEditor({
       setConfig(fresh);
       setForm(fromConfig(fresh));
       setEditing(false);
-      setNotice('Landing page reset to default.');
+      setNotice(t('le.resetNotice'));
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : 'Failed to reset');
     } finally {
@@ -327,9 +329,8 @@ export function LandingPageEditor({
     <Card>
       <CardHeader className="flex-row items-start justify-between space-y-0">
         <div className="space-y-1">
-          <CardTitle>Landing page</CardTitle>
+          <CardTitle>{t('le.title')}</CardTitle>
           <CardDescription>
-            Your assessment&apos;s own branded page at{' '}
             <code className="text-xs">/a/{assessmentId.slice(0, 8)}…</code>
           </CardDescription>
         </div>
@@ -338,13 +339,13 @@ export function LandingPageEditor({
             <Button asChild variant="outline" size="sm">
               <a href={`/a/${assessmentId}`} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-3.5 w-3.5" />
-                View
+                {t('le.view')}
               </a>
             </Button>
           ) : null}
           {config && !editing ? (
             <Button size="sm" onClick={() => setEditing(true)}>
-              Customize
+              {t('le.customize')}
             </Button>
           ) : null}
         </div>
@@ -358,8 +359,7 @@ export function LandingPageEditor({
         ) : null}
         {!isPublished ? (
           <p className="rounded-md border border-dashed bg-accent/20 px-3 py-2 text-xs text-muted-foreground">
-            Publish this assessment to make its landing page live at{' '}
-            <code>/a/{assessmentId.slice(0, 8)}…</code>
+            {t('le.publishHint')} <code>/a/{assessmentId.slice(0, 8)}…</code>
           </p>
         ) : null}
 
@@ -391,57 +391,57 @@ export function LandingPageEditor({
             {/* Brand */}
             <div className="space-y-3">
               <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Brand
+                {t('le.brand')}
               </h4>
               <div className="grid gap-3 sm:grid-cols-2">
-                <TextField label="Brand name" value={form.brandName} onChange={(v) => set({ brandName: v })} />
+                <TextField label={t('le.brandName')} value={form.brandName} onChange={(v) => set({ brandName: v })} />
                 <TextField
-                  label="Monogram (1–2 letters)"
+                  label={t('le.monogram')}
                   value={form.monogram}
                   onChange={(v) => set({ monogram: v.slice(0, 2) })}
                 />
               </div>
               <ImageSourceField
-                label="Landing page logo"
+                label={t('le.logo')}
                 value={form.logoUrl}
                 onChange={(v) => set({ logoUrl: v })}
                 placeholder="https://example.com/logo.svg"
               />
               <ImageSourceField
-                label="Favicon (browser tab icon)"
+                label={t('le.favicon')}
                 value={form.faviconUrl}
                 onChange={(v) => set({ faviconUrl: v })}
                 placeholder="https://example.com/favicon.png"
-                helpText="Shown in the browser tab for your landing page. A square PNG, SVG or ICO-style image works best. PNG, SVG, JPG, JPEG or WEBP · up to 5 MB."
+                helpText={t('le.faviconHelp')}
               />
               <div className="grid gap-3 sm:grid-cols-3">
-                <ColorField label="Primary" value={form.primary} onChange={(v) => set({ primary: v })} />
-                <ColorField label="Secondary" value={form.secondary} onChange={(v) => set({ secondary: v })} />
-                <ColorField label="Accent" value={form.accent} onChange={(v) => set({ accent: v })} />
+                <ColorField label={t('le.primary')} value={form.primary} onChange={(v) => set({ primary: v })} />
+                <ColorField label={t('le.secondary')} value={form.secondary} onChange={(v) => set({ secondary: v })} />
+                <ColorField label={t('le.accent')} value={form.accent} onChange={(v) => set({ accent: v })} />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label>Color scheme</Label>
+                  <Label>{t('le.scheme')}</Label>
                   <select
                     className={selectClass}
                     value={form.mode}
                     onChange={(e) => set({ mode: e.target.value as Form['mode'] })}
                   >
-                    <option value="auto">Auto (follow device)</option>
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
+                    <option value="auto">{t('le.schemeAuto')}</option>
+                    <option value="light">{t('le.schemeLight')}</option>
+                    <option value="dark">{t('le.schemeDark')}</option>
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Corners</Label>
+                  <Label>{t('le.corners')}</Label>
                   <select
                     className={selectClass}
                     value={form.radius}
                     onChange={(e) => set({ radius: e.target.value as Form['radius'] })}
                   >
-                    <option value="sharp">Sharp</option>
-                    <option value="soft">Soft</option>
-                    <option value="round">Round</option>
+                    <option value="sharp">{t('le.cornersSharp')}</option>
+                    <option value="soft">{t('le.cornersSoft')}</option>
+                    <option value="round">{t('le.cornersRound')}</option>
                   </select>
                 </div>
               </div>
@@ -450,27 +450,27 @@ export function LandingPageEditor({
             {/* Hero */}
             <div className="space-y-3">
               <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Hero
+                {t('le.hero')}
               </h4>
-              <TextField label="Eyebrow" value={form.heroEyebrow} onChange={(v) => set({ heroEyebrow: v })} />
-              <TextField label="Headline" value={form.heroTitle} onChange={(v) => set({ heroTitle: v })} />
-              <TextField label="Subtitle" value={form.heroSubtitle} onChange={(v) => set({ heroSubtitle: v })} textarea />
+              <TextField label={t('le.eyebrow')} value={form.heroEyebrow} onChange={(v) => set({ heroEyebrow: v })} />
+              <TextField label={t('le.headline')} value={form.heroTitle} onChange={(v) => set({ heroTitle: v })} />
+              <TextField label={t('le.subtitle')} value={form.heroSubtitle} onChange={(v) => set({ heroSubtitle: v })} textarea />
               <TextField
-                label="Description"
+                label={t('le.description')}
                 value={form.heroDescription}
                 onChange={(v) => set({ heroDescription: v })}
                 textarea
               />
               <ImageSourceField
-                label="Landing page / hero photo (optional)"
+                label={t('le.heroPhoto')}
                 value={form.heroImageUrl}
                 onChange={(v) => set({ heroImageUrl: v })}
-                placeholder="https://example.com/hero.jpg (replaces the default preview)"
-                helpText="Shown as the hero image, replacing the default preview. PNG, SVG, JPG, JPEG or WEBP · up to 5 MB."
+                placeholder="https://example.com/hero.jpg"
+                helpText={t('le.heroPhotoHelp')}
               />
               <div className="grid gap-3 sm:grid-cols-2">
-                <TextField label="Primary button" value={form.ctaPrimary} onChange={(v) => set({ ctaPrimary: v })} />
-                <TextField label="Secondary button" value={form.ctaSecondary} onChange={(v) => set({ ctaSecondary: v })} />
+                <TextField label={t('le.primaryBtn')} value={form.ctaPrimary} onChange={(v) => set({ ctaPrimary: v })} />
+                <TextField label={t('le.secondaryBtn')} value={form.ctaSecondary} onChange={(v) => set({ ctaSecondary: v })} />
               </div>
             </div>
 
@@ -478,7 +478,7 @@ export function LandingPageEditor({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  About section
+                  {t('le.aboutSection')}
                 </h4>
                 <label className="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
                   <input
@@ -486,40 +486,35 @@ export function LandingPageEditor({
                     checked={form.aboutEnabled}
                     onChange={(e) => set({ aboutEnabled: e.target.checked })}
                   />
-                  Show About section
+                  {t('le.showAbout')}
                 </label>
               </div>
               {form.aboutEnabled ? (
                 <>
-                  <p className="text-xs text-muted-foreground">
-                    A section with your title and description on the left and a
-                    photo on the right.
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t('le.aboutHelp')}</p>
                   <TextField
-                    label="Title"
+                    label={t('le.titleField')}
                     value={form.aboutTitle}
                     onChange={(v) => set({ aboutTitle: v })}
-                    placeholder="e.g. About this assessment"
+                    placeholder={t('le.aboutTitlePh')}
                   />
                   <TextField
-                    label="Description"
+                    label={t('le.description')}
                     value={form.aboutBody}
                     onChange={(v) => set({ aboutBody: v })}
-                    placeholder="Tell visitors who you are and what they'll get. Line breaks are kept."
+                    placeholder={t('le.aboutBodyPh')}
                     textarea
                   />
                   <ImageSourceField
-                    label="About photo"
+                    label={t('le.aboutPhoto')}
                     value={form.aboutImageUrl}
                     onChange={(v) => set({ aboutImageUrl: v })}
                     placeholder="https://example.com/about.jpg"
-                    helpText="Shown on the right of the About section. A 4:3 (landscape) image works best. PNG, SVG, JPG, JPEG or WEBP · up to 5 MB."
+                    helpText={t('le.aboutPhotoHelp')}
                   />
                 </>
               ) : (
-                <p className="text-xs text-muted-foreground">
-                  The About section is hidden on your landing page.
-                </p>
+                <p className="text-xs text-muted-foreground">{t('le.aboutHidden')}</p>
               )}
             </div>
 
@@ -527,7 +522,7 @@ export function LandingPageEditor({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Benefits section
+                  {t('le.benefitsSection')}
                 </h4>
                 <label className="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
                   <input
@@ -535,26 +530,23 @@ export function LandingPageEditor({
                     checked={form.benefitsEnabled}
                     onChange={(e) => set({ benefitsEnabled: e.target.checked })}
                   />
-                  Show Benefits section
+                  {t('le.showBenefits')}
                 </label>
               </div>
               {form.benefitsEnabled ? (
                 <>
-                  <p className="text-xs text-muted-foreground">
-                    A titled grid of cards, each with an image, a heading and a
-                    short description (e.g. &ldquo;4 Ways You Can Benefit…&rdquo;).
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t('le.benefitsHelp')}</p>
                   <TextField
-                    label="Section title"
+                    label={t('le.sectionTitle')}
                     value={form.benefitsTitle}
                     onChange={(v) => set({ benefitsTitle: v })}
-                    placeholder="e.g. 4 Ways You Can Benefit from this assessment"
+                    placeholder={t('le.benefitsTitlePh')}
                   />
                   {form.benefitsItems.map((it, i) => (
                     <div key={i} className="space-y-3 rounded-md border p-3">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-medium text-muted-foreground">
-                          Card {i + 1}
+                          {t('le.card')} {i + 1}
                         </span>
                         <Button
                           type="button"
@@ -562,41 +554,39 @@ export function LandingPageEditor({
                           size="sm"
                           onClick={() => removeBenefit(i)}
                         >
-                          Remove
+                          {t('le.remove')}
                         </Button>
                       </div>
                       <TextField
-                        label="Heading"
+                        label={t('le.heading')}
                         value={it.title}
                         onChange={(v) => setBenefit(i, { title: v })}
-                        placeholder="e.g. Identifying"
+                        placeholder={t('le.benefitHeadingPh')}
                       />
                       <TextField
-                        label="Description"
+                        label={t('le.description')}
                         value={it.body}
                         onChange={(v) => setBenefit(i, { body: v })}
-                        placeholder="What this benefit gives the reader."
+                        placeholder={t('le.benefitDescPh')}
                         textarea
                       />
                       <ImageSourceField
-                        label="Icon / image"
+                        label={t('le.iconImage')}
                         value={it.imageUrl}
                         onChange={(v) => setBenefit(i, { imageUrl: v })}
                         placeholder="https://example.com/icon.png"
-                        helpText="Shown at the top of the card. A square icon/illustration works best. PNG, SVG, JPG, JPEG or WEBP · up to 5 MB."
+                        helpText={t('le.iconImageHelp')}
                       />
                     </div>
                   ))}
                   {form.benefitsItems.length < 8 ? (
                     <Button type="button" variant="outline" size="sm" onClick={addBenefit}>
-                      + Add card
+                      {t('le.addCard')}
                     </Button>
                   ) : null}
                 </>
               ) : (
-                <p className="text-xs text-muted-foreground">
-                  The Benefits section is hidden on your landing page.
-                </p>
+                <p className="text-xs text-muted-foreground">{t('le.benefitsHidden')}</p>
               )}
             </div>
 
@@ -604,7 +594,7 @@ export function LandingPageEditor({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Contact section
+                  {t('le.contactSection')}
                 </h4>
                 <label className="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
                   <input
@@ -612,39 +602,33 @@ export function LandingPageEditor({
                     checked={form.contactEnabled}
                     onChange={(e) => set({ contactEnabled: e.target.checked })}
                   />
-                  Show Contact section
+                  {t('le.showContact')}
                 </label>
               </div>
               {form.contactEnabled ? (
                 <>
-                  <p className="text-xs text-muted-foreground">
-                    A clickable title in the footer that opens a WhatsApp chat.
-                    When the About section is on, it also gets a button linking
-                    here.
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t('le.contactHelp')}</p>
                   <TextField
-                    label="Title"
+                    label={t('le.titleField')}
                     value={form.contactTitle}
                     onChange={(v) => set({ contactTitle: v })}
-                    placeholder="e.g. Contact us"
+                    placeholder={t('le.contactTitlePh')}
                   />
                   <TextField
-                    label="Contact name"
+                    label={t('le.contactName')}
                     value={form.contactName}
                     onChange={(v) => set({ contactName: v })}
-                    placeholder="e.g. James Gwee"
+                    placeholder={t('le.contactNamePh')}
                   />
                   <TextField
-                    label="WhatsApp number"
+                    label={t('le.whatsapp')}
                     value={form.contactWhatsapp}
                     onChange={(v) => set({ contactWhatsapp: v })}
-                    placeholder="e.g. 628123456789 (include country code)"
+                    placeholder={t('le.whatsappPh')}
                   />
                 </>
               ) : (
-                <p className="text-xs text-muted-foreground">
-                  The Contact section is hidden on your landing page.
-                </p>
+                <p className="text-xs text-muted-foreground">{t('le.contactHidden')}</p>
               )}
             </div>
 
@@ -652,7 +636,7 @@ export function LandingPageEditor({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Closing call to action
+                  {t('le.closing')}
                 </h4>
                 <label className="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
                   <input
@@ -660,30 +644,28 @@ export function LandingPageEditor({
                     checked={form.finalEnabled}
                     onChange={(e) => set({ finalEnabled: e.target.checked })}
                   />
-                  Show closing section
+                  {t('le.showClosing')}
                 </label>
               </div>
               {form.finalEnabled ? (
                 <>
-                  <TextField label="Title" value={form.finalTitle} onChange={(v) => set({ finalTitle: v })} />
-                  <TextField label="Subtitle" value={form.finalSubtitle} onChange={(v) => set({ finalSubtitle: v })} textarea />
-                  <TextField label="Button" value={form.finalButton} onChange={(v) => set({ finalButton: v })} />
+                  <TextField label={t('le.titleField')} value={form.finalTitle} onChange={(v) => set({ finalTitle: v })} />
+                  <TextField label={t('le.subtitle')} value={form.finalSubtitle} onChange={(v) => set({ finalSubtitle: v })} textarea />
+                  <TextField label={t('le.button')} value={form.finalButton} onChange={(v) => set({ finalButton: v })} />
                 </>
               ) : (
-                <p className="text-xs text-muted-foreground">
-                  The closing call-to-action section is hidden on your landing page.
-                </p>
+                <p className="text-xs text-muted-foreground">{t('le.closingHidden')}</p>
               )}
             </div>
 
             {/* SEO */}
             <div className="space-y-3">
               <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Search &amp; social (SEO)
+                {t('le.seo')}
               </h4>
-              <TextField label="Page title" value={form.seoTitle} onChange={(v) => set({ seoTitle: v })} />
+              <TextField label={t('le.pageTitle')} value={form.seoTitle} onChange={(v) => set({ seoTitle: v })} />
               <TextField
-                label="Meta description"
+                label={t('le.metaDesc')}
                 value={form.seoDescription}
                 onChange={(v) => set({ seoDescription: v })}
                 textarea
@@ -694,7 +676,7 @@ export function LandingPageEditor({
 
             <div className="flex flex-wrap gap-2">
               <Button onClick={save} disabled={saving}>
-                {saving ? 'Saving…' : 'Save landing page'}
+                {saving ? t('le.saving') : t('le.save')}
               </Button>
               <Button
                 variant="outline"
@@ -705,10 +687,10 @@ export function LandingPageEditor({
                 }}
                 disabled={saving}
               >
-                Cancel
+                {t('le.cancel')}
               </Button>
               <Button variant="outline" className="ml-auto" onClick={reset} disabled={saving}>
-                Reset to default
+                {t('le.reset')}
               </Button>
             </div>
           </div>
