@@ -63,6 +63,23 @@ export const id: Record<TranslationKey, string> = {
   'dashboard.colReport': 'Cetak Biru',
   'dashboard.viewReport': 'Lihat Cetak Biru',
   'dashboard.unlocked': '✓ Terbuka',
+  // User dashboard — results empty state + team vouchers
+  'dashboard.emptyResultsTitle': 'Selesaikan asesmen untuk mendapatkan wawasan',
+  'dashboard.emptyResultsDesc':
+    'Ikuti asesmen di bawah dan hasil serta laporan personal Anda akan muncul di sini.',
+  'dashboard.teamVouchers': 'Voucher tim',
+  'dashboard.teamVouchersDesc':
+    'Beli paket kode voucher untuk tim Anda, bagikan, dan tinjau hasil setiap orang di sini.',
+  'dashboard.buyVoucherFor': 'Beli kode voucher untuk',
+  'dashboard.selectAssessment': 'Pilih asesmen…',
+  'dashboard.buyVoucherCodes': 'Beli kode voucher',
+  'dashboard.vCompany': 'Perusahaan',
+  'dashboard.vAssessment': 'Asesmen',
+  'dashboard.vRedeemed': 'Ditukarkan',
+  'dashboard.vPurchased': 'Dibeli',
+  'dashboard.vManage': 'Kelola',
+  'dashboard.viewResults': 'Lihat hasil',
+  'dashboard.noAssessments': 'Belum ada asesmen tersedia',
 
   // Report page (cetak biru pertumbuhan Anda)
   'report.preparing': 'Menyiapkan cetak biru Anda…',
@@ -137,4 +154,21 @@ export const id: Record<TranslationKey, string> = {
   'revenue.colAmount': 'Jumlah',
   'revenue.colDate': 'Tanggal',
   'revenue.colBuyer': 'Dibeli oleh',
+
+  // Manage assessment page
+  'manage.back': 'Kembali ke dasbor',
+  'manage.details': 'Detail',
+  'manage.questions': 'Pertanyaan',
+  'manage.pricing': 'Produk & harga',
+  'manage.landing': 'Halaman arahan',
+  'manage.share': 'Bagikan',
+  'manage.results': 'Hasil',
+  'manage.detailsTitle': 'Detail asesmen',
+  'manage.edit': 'Ubah',
+  'manage.saveChanges': 'Simpan perubahan',
+  'manage.description': 'Deskripsi',
+  'manage.lowThreshold': 'Ambang bawah',
+  'manage.highThreshold': 'Ambang atas',
+  'manage.freeReportText': 'Teks laporan gratis',
+  'manage.openingVideo': 'Video pembuka',
 };

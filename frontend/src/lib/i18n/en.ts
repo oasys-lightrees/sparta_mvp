@@ -62,6 +62,23 @@ export const en = {
   'dashboard.colReport': 'Blueprint',
   'dashboard.viewReport': 'View Blueprint',
   'dashboard.unlocked': '✓ Unlocked',
+  // User dashboard — results empty state + team vouchers
+  'dashboard.emptyResultsTitle': 'Complete an assessment to receive insights',
+  'dashboard.emptyResultsDesc':
+    'Take an assessment below and your personalized results and reports will show up here.',
+  'dashboard.teamVouchers': 'Team vouchers',
+  'dashboard.teamVouchersDesc':
+    "Buy a package of voucher codes for your team, hand them out, and review each person's result here.",
+  'dashboard.buyVoucherFor': 'Buy voucher codes for',
+  'dashboard.selectAssessment': 'Select an assessment…',
+  'dashboard.buyVoucherCodes': 'Buy voucher codes',
+  'dashboard.vCompany': 'Company',
+  'dashboard.vAssessment': 'Assessment',
+  'dashboard.vRedeemed': 'Redeemed',
+  'dashboard.vPurchased': 'Purchased',
+  'dashboard.vManage': 'Manage',
+  'dashboard.viewResults': 'View results',
+  'dashboard.noAssessments': 'No assessments available yet',
 
   // Report page (your growth blueprint)
   'report.preparing': 'Preparing your blueprint…',
@@ -136,4 +153,21 @@ export const en = {
   'revenue.colAmount': 'Amount',
   'revenue.colDate': 'Date',
   'revenue.colBuyer': 'Bought by',
+
+  // Manage assessment page
+  'manage.back': 'Back to dashboard',
+  'manage.details': 'Details',
+  'manage.questions': 'Questions',
+  'manage.pricing': 'Product & pricing',
+  'manage.landing': 'Landing page',
+  'manage.share': 'Share',
+  'manage.results': 'Results',
+  'manage.detailsTitle': 'Assessment details',
+  'manage.edit': 'Edit',
+  'manage.saveChanges': 'Save changes',
+  'manage.description': 'Description',
+  'manage.lowThreshold': 'Low threshold',
+  'manage.highThreshold': 'High threshold',
+  'manage.freeReportText': 'Free report text',
+  'manage.openingVideo': 'Opening video',
 };
