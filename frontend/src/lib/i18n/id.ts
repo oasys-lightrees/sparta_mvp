@@ -210,4 +210,38 @@ export const id: Record<TranslationKey, string> = {
   'q.errChoiceText': 'Setiap pilihan memerlukan teks',
   'q.errScore': 'Setiap pilihan memerlukan skor bilangan bulat',
   'q.scoreBadge': 'skor',
+
+  // Assessment form
+  'af.type': 'Jenis Asesmen',
+  'af.skillTitle': 'Asesmen Keterampilan',
+  'af.skillDesc': 'Menilai pengetahuan dengan jawaban benar dan penilaian.',
+  'af.personalityTitle': 'Asesmen Kepribadian',
+  'af.personalityDesc': 'Mengelompokkan pengguna berdasarkan pola jawaban.',
+  'af.title': 'Judul',
+  'af.description': 'Deskripsi',
+  'af.coverPhoto': 'Foto sampul',
+  'af.coverHelp':
+    'Sampul opsional yang ditampilkan pada kartu asesmen. Gunakan gambar 16:9 (lebar), disarankan 1280×720 (min 640×360). Dipotong untuk memenuhi, jadi jaga subjek tetap di tengah. PNG, JPG, JPEG atau WEBP · hingga 5 MB.',
+  'af.low': 'Ambang bawah',
+  'af.high': 'Ambang atas',
+  'af.freeIntro': 'Pengantar hasil gratis',
+  'af.freeText': 'Teks laporan gratis',
+  'af.freeIntroPh': 'Pengantar yang ditampilkan di atas jenis hasil pengguna',
+  'af.freeTextPh': 'Pengantar yang ditampilkan di atas rentang skor (cadangan lama)',
+  'af.freeTemplate': 'Templat laporan skor gratis',
+  'af.videoUrl': 'URL video pembuka',
+  'af.videoHelp':
+    'Video pembuka opsional untuk asesmen ini. Mendukung YouTube, Vimeo, atau tautan video langsung.',
+  'af.categoriesTitle': 'Kategori Hasil Kepribadian',
+  'af.categoriesDesc':
+    'Tentukan jenis hasil dengan kode singkat (mis. PB, PO), nama, dan pengetahuan. Hasil didasarkan pada pemetaan kategori setiap jawaban (diatur per pilihan di editor pertanyaan), bukan skor.',
+  'af.codePh': 'Kode (mis. PB)',
+  'af.namePh': 'Nama (mis. Power Builder)',
+  'af.knowledgePh': 'Pengetahuan: seperti apa orang dengan hasil ini',
+  'af.remove': 'Hapus',
+  'af.addCategory': '+ Tambah Kategori',
+  'af.saving': 'Menyimpan…',
+  'af.cancel': 'Batal',
+  'af.errTitle': 'Judul wajib diisi',
+  'af.errThreshold': 'Ambang skor bawah harus <= ambang skor atas',
 };

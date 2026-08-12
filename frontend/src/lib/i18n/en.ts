@@ -209,4 +209,38 @@ export const en = {
   'q.errChoiceText': 'Every choice needs text',
   'q.errScore': 'Every choice needs an integer score',
   'q.scoreBadge': 'score',
+
+  // Assessment form
+  'af.type': 'Assessment Type',
+  'af.skillTitle': 'Skill Assessment',
+  'af.skillDesc': 'Evaluate knowledge with correct answers and scoring.',
+  'af.personalityTitle': 'Personality Assessment',
+  'af.personalityDesc': 'Categorize users based on answer patterns.',
+  'af.title': 'Title',
+  'af.description': 'Description',
+  'af.coverPhoto': 'Cover photo',
+  'af.coverHelp':
+    "Optional cover shown on the assessment card. Use a 16:9 (widescreen) image, recommended 1280×720 (min 640×360). It's cropped to fill, so keep the subject centered. PNG, JPG, JPEG or WEBP · up to 5 MB.",
+  'af.low': 'Low threshold',
+  'af.high': 'High threshold',
+  'af.freeIntro': 'Free result introduction',
+  'af.freeText': 'Free report text',
+  'af.freeIntroPh': 'Intro shown above the user’s result type',
+  'af.freeTextPh': 'Intro shown above the score band (legacy fallback)',
+  'af.freeTemplate': 'Free score report template',
+  'af.videoUrl': 'Opening video URL',
+  'af.videoHelp':
+    'Optional opening video for this assessment. Supports YouTube, Vimeo, or a direct video link.',
+  'af.categoriesTitle': 'Personality Result Categories',
+  'af.categoriesDesc':
+    "Define result types with a short code (e.g. PB, PO), a name and knowledge. Results are based on each answer's category mapping (set per choice in the question editor) instead of a score.",
+  'af.codePh': 'Code (e.g. PB)',
+  'af.namePh': 'Name (e.g. Power Builder)',
+  'af.knowledgePh': 'Knowledge: what people with this result are like',
+  'af.remove': 'Remove',
+  'af.addCategory': '+ Add Category',
+  'af.saving': 'Saving…',
+  'af.cancel': 'Cancel',
+  'af.errTitle': 'Title is required',
+  'af.errThreshold': 'Low score threshold must be <= high score threshold',
 };
