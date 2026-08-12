@@ -91,6 +91,7 @@ const makePackage = (over: Partial<VoucherPackage> = {}): VoucherPackage => ({
   label: '',
   seats: 10,
   amount: 0,
+  imageUrl: null,
   ...over,
 });
 
@@ -717,6 +718,16 @@ export function ProductEditor({
                       {formatIdr(Math.round(pkg.amount / pkg.seats))} per seat
                     </p>
                   ) : null}
+                  <div className="sm:col-span-4">
+                    <ImageSourceField
+                      label="Package image / logo (optional)"
+                      value={pkg.imageUrl ?? ''}
+                      onChange={(v) =>
+                        setPackage(i, { imageUrl: v.trim() === '' ? null : v.trim() })
+                      }
+                      helpText="Shown on the package card on the landing page. PNG, SVG, JPG, JPEG or WEBP · up to 5 MB."
+                    />
+                  </div>
                 </div>
               ))}
 

@@ -562,6 +562,21 @@ function VoucherPackageCards({
         {packages.map((pkg) => (
           <div key={pkg.id} className="lato-plan">
             <div className="lato-plan__name">{pkg.label || `${pkg.seats} seats`}</div>
+            {pkg.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={pkg.imageUrl}
+                alt=""
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  maxHeight: 140,
+                  objectFit: 'contain',
+                  borderRadius: 12,
+                  margin: '14px 0',
+                }}
+              />
+            ) : null}
             <div className="lato-plan__tag">{pkg.seats} voucher codes</div>
             <div className="lato-plan__price" style={{ fontWeight: 800 }}>
               <b>{formatIdr(pkg.amount)}</b>

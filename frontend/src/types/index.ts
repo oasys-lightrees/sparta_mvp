@@ -264,6 +264,8 @@ export type VoucherPackage = {
   label: string;
   seats: number;
   amount: number;
+  // Optional image/logo shown on the package card on the landing page.
+  imageUrl: string | null;
 };
 // An ordered content block shown in the product section on the landing page:
 // either a video (a YouTube/Vimeo/hosted URL) or a text paragraph.
