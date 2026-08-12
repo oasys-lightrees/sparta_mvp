@@ -31,6 +31,11 @@ export type AppConfigPatch = {
       body?: string;
       imageUrl?: string | null;
     };
+    benefits?: {
+      enabled?: boolean;
+      title?: string;
+      items?: { title: string; body: string; imageUrl: string | null }[];
+    };
     contact?: {
       enabled?: boolean;
       title?: string;

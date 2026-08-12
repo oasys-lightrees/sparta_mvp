@@ -104,7 +104,10 @@ export function TopUpDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="topup-title"
-        className="w-full max-w-md rounded-lg border bg-background p-6 shadow-lg"
+        // Set an explicit text color: this dialog can render inside the branded
+        // app whose root forces a near-white inherited color, which would be
+        // invisible on this light panel.
+        className="w-full max-w-md rounded-lg border bg-background p-6 text-foreground shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-start justify-between">
