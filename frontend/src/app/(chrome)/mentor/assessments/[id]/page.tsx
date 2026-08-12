@@ -203,14 +203,20 @@ function DetailView({ id }: { id: string }) {
           ) : (
             <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
               <Info label="Description" value={detail.description ?? '—'} />
-              <Info
-                label="Low threshold"
-                value={detail.low_score_threshold ?? '—'}
-              />
-              <Info
-                label="High threshold"
-                value={detail.high_score_threshold ?? '—'}
-              />
+              {/* Score thresholds are skill-only; personality uses categories. */}
+              {detail.result_categories &&
+              Object.keys(detail.result_categories).length > 0 ? null : (
+                <>
+                  <Info
+                    label="Low threshold"
+                    value={detail.low_score_threshold ?? '—'}
+                  />
+                  <Info
+                    label="High threshold"
+                    value={detail.high_score_threshold ?? '—'}
+                  />
+                </>
+              )}
               <Info
                 label="Free report text"
                 value={detail.free_report_text ?? '—'}

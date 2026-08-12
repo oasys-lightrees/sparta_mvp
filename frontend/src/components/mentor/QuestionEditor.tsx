@@ -127,13 +127,17 @@ function QuestionForm({
                 }
                 className="flex-1"
               />
-              <Input
-                type="number"
-                value={c.score}
-                onChange={(e) => updateChoice(i, { score: e.target.value })}
-                className="w-20"
-                aria-label="Score"
-              />
+              {/* Score applies to skill assessments only; personality results
+                  come from the category mapping below. */}
+              {!hasCategories ? (
+                <Input
+                  type="number"
+                  value={c.score}
+                  onChange={(e) => updateChoice(i, { score: e.target.value })}
+                  className="w-20"
+                  aria-label="Score"
+                />
+              ) : null}
               <Button
                 type="button"
                 variant="outline"
@@ -309,7 +313,9 @@ export function QuestionEditor({
                       {c.categories?.map((code) => (
                         <Badge key={code}>{code}</Badge>
                       ))}
-                      <Badge variant="secondary">score {c.score}</Badge>
+                      {categoryCodes.length === 0 ? (
+                        <Badge variant="secondary">score {c.score}</Badge>
+                      ) : null}
                     </span>
                   </li>
                 ))}
