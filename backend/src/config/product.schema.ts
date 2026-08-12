@@ -77,6 +77,8 @@ const VoucherPackageSchema = z.object({
   label: z.string().default(''),
   seats: z.number().int().positive().max(1000),
   amount: z.number().int().nonnegative().max(1_000_000_000),
+  // Optional image/logo shown on the package card on the landing page.
+  imageUrl: z.string().url().nullable().default(null),
 });
 
 export const VoucherPackagesSchema = z.array(VoucherPackageSchema).max(10).default([]);

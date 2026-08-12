@@ -3,6 +3,15 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import {
+  BarChart3,
+  FileText,
+  LayoutTemplate,
+  ListChecks,
+  Share2,
+  Tag,
+  type LucideIcon,
+} from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { mentorApi } from '@/services/mentor.api';
 import { assessmentApi } from '@/services/assessment.api';
@@ -25,7 +34,27 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import type { MentorAssessmentDetail, MentorResult } from '@/types';
+
+// Sidebar sections. `count` is filled in per-render for the badges.
+type SectionId =
+  | 'details'
+  | 'questions'
+  | 'pricing'
+  | 'landing'
+  | 'share'
+  | 'results';
+
+const SECTIONS: { id: SectionId; label: string; icon: LucideIcon }[] = [
+  { id: 'details', label: 'Details', icon: FileText },
+  { id: 'questions', label: 'Questions', icon: ListChecks },
+  { id: 'pricing', label: 'Product & pricing', icon: Tag },
+  { id: 'landing', label: 'Landing page', icon: LayoutTemplate },
+  { id: 'share', label: 'Share', icon: Share2 },
+  { id: 'results', label: 'Results', icon: BarChart3 },
+];
+const SECTION_IDS = SECTIONS.map((s) => s.id) as string[];
 
 function Info({ label, value }: { label: string; value: ReactNode }) {
   return (
@@ -45,6 +74,26 @@ function DetailView({ id }: { id: string }) {
   const [saveError, setSaveError] = useState('');
   const [statusBusy, setStatusBusy] = useState(false);
   const [notice, setNotice] = useState('');
+  const [section, setSectionState] = useState<SectionId>('details');
+
+  // Deep-link the active section via the URL hash (shareable + back-button).
+  useEffect(() => {
+    const fromHash = window.location.hash.replace('#', '');
+    if (SECTION_IDS.includes(fromHash)) setSectionState(fromHash as SectionId);
+    const onHash = () => {
+      const h = window.location.hash.replace('#', '');
+      if (SECTION_IDS.includes(h)) setSectionState(h as SectionId);
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  const goTo = (next: SectionId) => {
+    setSectionState(next);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', `#${next}`);
+    }
+  };
 
   const loadDetail = useCallback(async () => {
     setDetail(await mentorApi.getEditingDetail(id));
@@ -131,145 +180,222 @@ function DetailView({ id }: { id: string }) {
     );
   }
 
+  const isPersonality =
+    !!detail.result_categories &&
+    Object.keys(detail.result_categories).length > 0;
+
+  const counts: Partial<Record<SectionId, number>> = {
+    questions: detail.questions.length,
+    results: results?.length ?? undefined,
+  };
+
   return (
-    <div className="container max-w-3xl space-y-6 py-10">
-      <div className="flex items-center justify-between">
-        <div>
+    <div className="container max-w-6xl py-8">
+      {/* Header — global to the assessment */}
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
           <Link
             href="/mentor"
             className="text-sm text-muted-foreground hover:text-foreground"
           >
             ← Back to dashboard
           </Link>
-          <h1 className="mt-1 text-2xl font-bold">{detail.title}</h1>
+          <h1 className="mt-1 truncate text-2xl font-bold">{detail.title}</h1>
         </div>
-        <Badge variant={detail.status === 'PUBLISHED' ? 'default' : 'secondary'}>
-          {detail.status}
-        </Badge>
+        <div className="flex shrink-0 items-center gap-2">
+          <Badge
+            variant={detail.status === 'PUBLISHED' ? 'default' : 'secondary'}
+          >
+            {detail.status}
+          </Badge>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleStatus}
+            disabled={statusBusy}
+          >
+            {detail.status === 'PUBLISHED' ? 'Unpublish' : 'Publish'}
+          </Button>
+        </div>
       </div>
 
-      <ErrorMessage message={error} />
+      {error ? (
+        <div className="mb-4">
+          <ErrorMessage message={error} />
+        </div>
+      ) : null}
       {notice ? (
-        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+        <p className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
           {notice}
         </p>
       ) : null}
 
-      <Card>
-        <CardHeader className="flex-row items-center justify-between space-y-0">
-          <CardTitle>Assessment details</CardTitle>
-          {!editing ? (
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={toggleStatus}
-                disabled={statusBusy}
-              >
-                {detail.status === 'PUBLISHED' ? 'Unpublish' : 'Publish'}
-              </Button>
-              <Button size="sm" onClick={() => setEditing(true)}>
-                Edit
-              </Button>
-            </div>
-          ) : null}
-        </CardHeader>
-        <CardContent>
-          {editing ? (
-            <AssessmentForm
-              submitLabel="Save changes"
-              submitting={saving}
-              error={saveError}
-              initial={{
-                title: detail.title,
-                description: detail.description,
-                image_url: detail.image_url,
-                price: detail.price,
-                low_score_threshold: detail.low_score_threshold,
-                high_score_threshold: detail.high_score_threshold,
-                free_report_text: detail.free_report_text,
-                free_report_template: detail.free_report_template,
-                premium_report_description: detail.premium_report_description,
-                email_template: detail.email_template,
-                base_knowledge: detail.base_knowledge,
-                ai_enabled: detail.ai_enabled,
-                result_categories: detail.result_categories,
-                study_video_url: detail.study_video_url,
-                learning_resources: detail.learning_resources,
-              }}
-              onSubmit={handleSave}
-              onCancel={() => setEditing(false)}
-            />
-          ) : (
-            <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-              <Info label="Description" value={detail.description ?? '—'} />
-              {/* Score thresholds are skill-only; personality uses categories. */}
-              {detail.result_categories &&
-              Object.keys(detail.result_categories).length > 0 ? null : (
-                <>
-                  <Info
-                    label="Low threshold"
-                    value={detail.low_score_threshold ?? '—'}
-                  />
-                  <Info
-                    label="High threshold"
-                    value={detail.high_score_threshold ?? '—'}
-                  />
-                </>
-              )}
-              <Info
-                label="Free report text"
-                value={detail.free_report_text ?? '—'}
-              />
-              <Info
-                label="Opening video"
-                value={
-                  detail.study_video_url ? (
-                    <a
-                      href={detail.study_video_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline"
+      <div className="grid gap-6 md:grid-cols-[210px_minmax(0,1fr)]">
+        {/* Sidebar nav — horizontal scroller on mobile, sticky column on desktop */}
+        <aside className="md:sticky md:top-6 md:self-start">
+          <nav className="flex gap-1 overflow-x-auto pb-1 md:flex-col md:overflow-visible md:pb-0">
+            {SECTIONS.map((s) => {
+              const active = section === s.id;
+              const count = counts[s.id];
+              const Icon = s.icon;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => goTo(s.id)}
+                  aria-current={active ? 'page' : undefined}
+                  className={cn(
+                    'flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm transition-colors md:w-full',
+                    active
+                      ? 'bg-accent font-medium text-foreground'
+                      : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+                  )}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span>{s.label}</span>
+                  {count !== undefined ? (
+                    <span
+                      className={cn(
+                        'ml-auto rounded-full px-1.5 py-0.5 text-xs',
+                        active
+                          ? 'bg-background text-foreground'
+                          : 'bg-muted text-muted-foreground',
+                      )}
                     >
-                      {detail.study_video_url}
-                    </a>
-                  ) : (
-                    '—'
-                  )
-                }
-              />
-            </dl>
-          )}
-        </CardContent>
-      </Card>
+                      {count}
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
 
-      <ShareAssessment
-        assessmentId={id}
-        isPublished={detail.status === 'PUBLISHED'}
-      />
+        {/* Active section content */}
+        <div className="min-w-0 space-y-6">
+          {section === 'details' ? (
+            <Card>
+              <CardHeader className="flex-row items-center justify-between space-y-0">
+                <CardTitle>Assessment details</CardTitle>
+                {!editing ? (
+                  <Button size="sm" onClick={() => setEditing(true)}>
+                    Edit
+                  </Button>
+                ) : null}
+              </CardHeader>
+              <CardContent>
+                {editing ? (
+                  <AssessmentForm
+                    submitLabel="Save changes"
+                    submitting={saving}
+                    error={saveError}
+                    initial={{
+                      title: detail.title,
+                      description: detail.description,
+                      image_url: detail.image_url,
+                      price: detail.price,
+                      low_score_threshold: detail.low_score_threshold,
+                      high_score_threshold: detail.high_score_threshold,
+                      free_report_text: detail.free_report_text,
+                      free_report_template: detail.free_report_template,
+                      premium_report_description:
+                        detail.premium_report_description,
+                      email_template: detail.email_template,
+                      base_knowledge: detail.base_knowledge,
+                      ai_enabled: detail.ai_enabled,
+                      result_categories: detail.result_categories,
+                      study_video_url: detail.study_video_url,
+                      learning_resources: detail.learning_resources,
+                    }}
+                    onSubmit={handleSave}
+                    onCancel={() => setEditing(false)}
+                  />
+                ) : (
+                  <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                    <Info label="Description" value={detail.description ?? '—'} />
+                    {/* Score thresholds are skill-only; personality uses categories. */}
+                    {isPersonality ? null : (
+                      <>
+                        <Info
+                          label="Low threshold"
+                          value={detail.low_score_threshold ?? '—'}
+                        />
+                        <Info
+                          label="High threshold"
+                          value={detail.high_score_threshold ?? '—'}
+                        />
+                      </>
+                    )}
+                    <Info
+                      label="Free report text"
+                      value={detail.free_report_text ?? '—'}
+                    />
+                    <Info
+                      label="Opening video"
+                      value={
+                        detail.study_video_url ? (
+                          <a
+                            href={detail.study_video_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            {detail.study_video_url}
+                          </a>
+                        ) : (
+                          '—'
+                        )
+                      }
+                    />
+                  </dl>
+                )}
+              </CardContent>
+            </Card>
+          ) : null}
 
-      <ProductEditor assessmentId={id} assessmentTitle={detail.title} />
+          {section === 'questions' ? (
+            <QuestionEditor
+              assessmentId={id}
+              questions={detail.questions}
+              categories={detail.result_categories}
+              onChanged={loadDetail}
+            />
+          ) : null}
 
-      <LandingPageEditor
-        assessmentId={id}
-        isPublished={detail.status === 'PUBLISHED'}
-      />
+          {section === 'pricing' ? (
+            <ProductEditor assessmentId={id} assessmentTitle={detail.title} />
+          ) : null}
 
-      <QuestionEditor
-        assessmentId={id}
-        questions={detail.questions}
-        categories={detail.result_categories}
-        onChanged={loadDetail}
-      />
+          {section === 'landing' ? (
+            <LandingPageEditor
+              assessmentId={id}
+              isPublished={detail.status === 'PUBLISHED'}
+            />
+          ) : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Results</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {results === null ? <Loading /> : <ResultsTable results={results} />}
-        </CardContent>
-      </Card>
+          {section === 'share' ? (
+            <ShareAssessment
+              assessmentId={id}
+              isPublished={detail.status === 'PUBLISHED'}
+            />
+          ) : null}
+
+          {section === 'results' ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Results</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {results === null ? (
+                  <Loading />
+                ) : (
+                  <ResultsTable results={results} />
+                )}
+              </CardContent>
+            </Card>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }

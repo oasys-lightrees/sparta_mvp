@@ -611,6 +611,8 @@ export type VoucherPackage = {
   label: string;
   seats: number;
   amount: number;
+  // Optional image/logo shown on the package card on the landing page.
+  imageUrl: string | null;
 };
 export type VoucherPackages = VoucherPackage[];
 
