@@ -101,6 +101,12 @@ export interface Landing {
     body: string;
     imageUrl: string | null;
   };
+  contact: {
+    enabled: boolean;
+    title: string;
+    name: string;
+    whatsapp: string;
+  };
   finalCta: {
     enabled: boolean;
     title: string;

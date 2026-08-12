@@ -67,6 +67,12 @@ const BrandMark = ({ app }: { app: AssessmentApp }) => (
   </span>
 );
 
+/** Build a wa.me link from a WhatsApp number (digits only); null if empty. */
+function whatsappHref(whatsapp: string): string | null {
+  const digits = whatsapp.replace(/\D/g, '');
+  return digits ? `https://wa.me/${digits}` : null;
+}
+
 export function BrandedLanding({
   app,
   product = null,
@@ -91,6 +97,9 @@ export function BrandedLanding({
   accessCost?: number;
 }) {
   const { brand, theme, landing, assessment, products, reports } = app;
+  // Optional WhatsApp contact link (footer title + About-section button).
+  const contactHref =
+    landing.contact.enabled ? whatsappHref(landing.contact.whatsapp) : null;
   // Primary CTA reflects the access model: paid shows the access price, voucher
   // routes to redemption, free/freemium keep the configured copy. The actual
   // gate is enforced on the start page + backend — this only labels the door.
@@ -269,6 +278,17 @@ export function BrandedLanding({
                     {landing.about.body}
                   </p>
                 ) : null}
+                {contactHref ? (
+                  <a
+                    href={contactHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="lato-btn lato-btn--grad"
+                    style={{ marginTop: 20 }}
+                  >
+                    {landing.contact.title || 'Contact'}
+                  </a>
+                ) : null}
               </div>
               {landing.about.imageUrl ? (
                 <div className="lato-about__media">
@@ -354,21 +374,25 @@ export function BrandedLanding({
             </div>
             <div className="lato-fcol">
               <h4>Product</h4>
-              <a href="#products">Pricing</a>
-              <a href="#top">Overview</a>
+              <a href="#products">Products</a>
             </div>
-            <div className="lato-fcol">
-              <h4>Company</h4>
-              <a href="#">About</a>
-              <a href="#">Careers</a>
-              <a href="#">Contact</a>
-            </div>
-            <div className="lato-fcol">
-              <h4>Legal</h4>
-              <a href="#">Privacy</a>
-              <a href="#">Terms</a>
-              <a href="#">Security</a>
-            </div>
+            {contactHref ? (
+              <div className="lato-fcol">
+                <h4>
+                  <a href={contactHref} target="_blank" rel="noopener noreferrer">
+                    {landing.contact.title || 'Contact'}
+                  </a>
+                </h4>
+                {landing.contact.name ? (
+                  <a href={contactHref} target="_blank" rel="noopener noreferrer">
+                    {landing.contact.name}
+                  </a>
+                ) : null}
+                <a href={contactHref} target="_blank" rel="noopener noreferrer">
+                  {landing.contact.whatsapp}
+                </a>
+              </div>
+            ) : null}
           </div>
           <div className="lato-fbar">
             <span>

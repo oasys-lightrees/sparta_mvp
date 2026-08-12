@@ -31,6 +31,12 @@ export type AppConfigPatch = {
       body?: string;
       imageUrl?: string | null;
     };
+    contact?: {
+      enabled?: boolean;
+      title?: string;
+      name?: string;
+      whatsapp?: string;
+    };
     finalCta?: { enabled?: boolean; title?: string; subtitle?: string; button?: string };
   };
   seo?: { title?: string; description?: string };
