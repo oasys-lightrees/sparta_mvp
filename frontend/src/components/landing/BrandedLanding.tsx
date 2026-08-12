@@ -1,7 +1,7 @@
 import { type CSSProperties } from 'react';
 import Link from 'next/link';
 import type { AssessmentApp, Plan } from '@/types/assessment-app';
-import type { AccessMode, PricingTier, PublicProduct } from '@/types';
+import type { AccessMode, PricingTier, PublicProduct, VoucherPackage } from '@/types';
 import { formatIdr } from '@/lib/currency';
 import { BrandedAuthChip } from '@/components/branded/BrandedAuthChip';
 import { VoucherRedeemBox } from '@/components/branded/VoucherRedeemBox';
@@ -80,6 +80,7 @@ export function BrandedLanding({
   startHref = '#products',
   loginHref = '/login',
   dashboardHref = '/dashboard',
+  companyHref,
   redeemHref,
   homeHref = '#top',
   accessMode,
@@ -120,6 +121,11 @@ export function BrandedLanding({
     (tier) => tier.enabled,
   );
   const hasProductTiers = productTiers.length > 0;
+  // Company voucher (seat) packages sold alongside the individual tiers: a buyer
+  // purchases the whole package to get that many codes. Shown when configured.
+  const voucherPackages = (
+    Array.isArray(product?.voucher_packages) ? product.voucher_packages : []
+  ).filter((pkg) => pkg.amount > 0 && pkg.seats > 0);
 
   return (
     <div
@@ -329,6 +335,11 @@ export function BrandedLanding({
               </div>
             )}
           </div>
+          {voucherPackages.length > 0 && companyHref ? (
+            <div className="lato-wrap" style={{ marginTop: 28 }}>
+              <VoucherPackageCards packages={voucherPackages} companyHref={companyHref} />
+            </div>
+          ) : null}
         </section>
 
         {/* VOUCHER REDEEM — enter a company voucher code */}
@@ -486,6 +497,56 @@ function ProductTierCards({
         </div>
       ))}
     </div>
+  );
+}
+
+/**
+ * Company voucher (seat) packages shown as product cards. Buying a package
+ * issues that many voucher codes; the button routes to the company portal where
+ * a signed-in buyer completes the purchase from their balance.
+ */
+function VoucherPackageCards({
+  packages,
+  companyHref,
+}: {
+  packages: VoucherPackage[];
+  companyHref: string;
+}) {
+  return (
+    <>
+      <div className="lato-center" style={{ marginBottom: 18 }}>
+        <span className="lato-eyebrow" style={{ justifyContent: 'center' }}>
+          For teams
+        </span>
+        <h3 className="lato-h" style={{ fontSize: 'clamp(1.4rem,2.4vw,1.9rem)' }}>
+          Company voucher packages
+        </h3>
+        <p className="lato-sub" style={{ marginInline: 'auto' }}>
+          Buy a package of seats to get shareable codes for your team.
+        </p>
+      </div>
+      <div className="lato-plans">
+        {packages.map((pkg) => (
+          <div key={pkg.id} className="lato-plan">
+            <div className="lato-plan__name">{pkg.label || `${pkg.seats} seats`}</div>
+            <div className="lato-plan__tag">{pkg.seats} voucher codes</div>
+            <div className="lato-plan__price" style={{ fontWeight: 800 }}>
+              <b>{formatIdr(pkg.amount)}</b>
+            </div>
+            <div style={{ fontSize: '.82rem', color: 'var(--muted)', marginTop: 2 }}>
+              {formatIdr(Math.round(pkg.amount / pkg.seats))} per seat
+            </div>
+            <a
+              href={companyHref}
+              className="lato-btn lato-btn--ghost lato-btn--block"
+              style={{ marginTop: 14 }}
+            >
+              Buy team package
+            </a>
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
 
