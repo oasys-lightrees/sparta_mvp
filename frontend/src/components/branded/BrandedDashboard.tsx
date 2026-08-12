@@ -9,6 +9,7 @@ import { TopUpDialog } from '@/components/wallet/TopUpDialog';
 import type { AssessmentApp } from '@/types/assessment-app';
 import type { MyAttempt } from '@/types';
 import { BrandedShell, LatoIcon } from './shell';
+import { CompanyVouchers } from './CompanyVouchers';
 
 export function BrandedDashboard({
   app,
@@ -127,13 +128,6 @@ export function BrandedDashboard({
 
   // Personality assessments resolve to a result category, not a numeric score.
   const isPersonality = Boolean(attempts?.some((a) => a.result_profile));
-  const first = attempts?.[0];
-  const latestLabel = isPersonality ? 'Latest result' : 'Latest score';
-  const latestValue = !first
-    ? '—'
-    : isPersonality
-      ? first.result_profile?.name ?? '—'
-      : first.score;
 
   return (
     <BrandedShell app={app} homeHref={home} back={homeBack}>
@@ -147,9 +141,6 @@ export function BrandedDashboard({
             <a href={`/a/${assessmentId}/redeem`} className="lato-btn lato-btn--ghost">
               Redeem voucher
             </a>
-            <a href={`/a/${assessmentId}/start`} className="lato-btn lato-btn--grad">
-              Take again
-            </a>
           </div>
         </div>
 
@@ -159,10 +150,6 @@ export function BrandedDashboard({
         ) : null}
 
         <div className="lato-kpis">
-          <div className="lato-kpi">
-            <div className="lato-kpi__k">Assessments taken</div>
-            <div className="lato-kpi__v">{attempts === null ? '—' : attempts.length}</div>
-          </div>
           <div className="lato-kpi">
             <div className="lato-kpi__k">Wallet balance</div>
             <div className="lato-kpi__v">{balance === null ? '—' : formatIdr(balance)}</div>
@@ -179,8 +166,8 @@ export function BrandedDashboard({
             </button>
           </div>
           <div className="lato-kpi">
-            <div className="lato-kpi__k">{latestLabel}</div>
-            <div className="lato-kpi__v">{latestValue}</div>
+            <div className="lato-kpi__k">Assessments taken</div>
+            <div className="lato-kpi__v">{attempts === null ? '—' : attempts.length}</div>
           </div>
         </div>
 
@@ -190,7 +177,7 @@ export function BrandedDashboard({
               <p style={{ fontWeight: 600, color: 'var(--ink)' }}>No attempts yet</p>
               <p style={{ marginTop: 6 }}>Take the assessment to see your results here.</p>
               <a
-                href={`/a/${assessmentId}/start`}
+                href={`/a/${assessmentId}#products`}
                 className="lato-btn lato-btn--grad"
                 style={{ marginTop: 16 }}
               >
@@ -230,23 +217,15 @@ export function BrandedDashboard({
           </div>
         )}
 
-        {/* Team vouchers */}
-        <div className="lato-card" style={{ marginTop: 16 }}>
-          <div className="lato-card__i">
-            <LatoIcon name="check" />
+        {/* Team vouchers — the company portal, embedded in the dashboard */}
+        <div id="company" style={{ marginTop: 30 }}>
+          <div className="lato-dash__head" style={{ marginBottom: 14 }}>
+            <div>
+              <span className="lato-eyebrow">For teams</span>
+              <h1 style={{ fontSize: '1.3rem' }}>Team vouchers</h1>
+            </div>
           </div>
-          <h3 style={{ fontWeight: 700 }}>Team vouchers</h3>
-          <p style={{ color: 'var(--muted)', fontSize: '.92rem', marginTop: 6 }}>
-            Buy voucher codes in bulk for your team, share them out, and track
-            everyone&apos;s results in one place.
-          </p>
-          <a
-            href={`/a/${assessmentId}/company`}
-            className="lato-btn lato-btn--grad"
-            style={{ marginTop: 14 }}
-          >
-            Buy &amp; manage team vouchers
-          </a>
+          <CompanyVouchers assessmentId={assessmentId} />
         </div>
       </div>
 
