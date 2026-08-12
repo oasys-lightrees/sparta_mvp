@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useLanguage } from '@/lib/i18n/LanguageProvider';
+import type { TranslationKey } from '@/lib/i18n';
 import type {
   LearningResource,
   LearningResourceAccess,
@@ -38,13 +40,13 @@ const TYPE_LABEL: Record<LearningResourceType, string> = {
   course: 'Course',
 };
 
-const PROVIDER_OPTIONS: { value: VideoProvider | ''; label: string }[] = [
-  { value: '', label: 'Auto-detect' },
-  { value: 'youtube', label: 'YouTube' },
-  { value: 'vimeo', label: 'Vimeo' },
-  { value: 'mp4', label: 'Direct MP4' },
-  { value: 'file', label: 'Uploaded file' },
-  { value: 'external', label: 'External' },
+const PROVIDER_OPTIONS: { value: VideoProvider | ''; labelKey: TranslationKey }[] = [
+  { value: '', labelKey: 'lr.provAuto' },
+  { value: 'youtube', labelKey: 'lr.provYoutube' },
+  { value: 'vimeo', labelKey: 'lr.provVimeo' },
+  { value: 'mp4', labelKey: 'lr.provMp4' },
+  { value: 'file', labelKey: 'lr.provFile' },
+  { value: 'external', labelKey: 'lr.provExternal' },
 ];
 
 // Flat editor row: a resource plus the bucket (result) it belongs to.
@@ -133,6 +135,7 @@ function ResourceCard({
   onChange: (patch: Partial<Row>) => void;
   onRemove: () => void;
 }) {
+  const { t } = useLanguage();
   const isVideo = row.type === 'video';
   return (
     <div className="space-y-2 rounded-md border p-3">
@@ -146,10 +149,10 @@ function ResourceCard({
           onChange={(e) =>
             onChange({ access: e.target.value as LearningResourceAccess })
           }
-          aria-label="Access level"
+          aria-label={t('lr.accessAria')}
         >
-          <option value="free">Free (shown on result)</option>
-          <option value="premium">Locked (unlocks with access)</option>
+          <option value="free">{t('lr.accessFree')}</option>
+          <option value="premium">{t('lr.accessLocked')}</option>
         </select>
         <Button
           type="button"
@@ -158,14 +161,14 @@ function ResourceCard({
           className="ml-auto"
           onClick={onRemove}
         >
-          Remove
+          {t('lr.remove')}
         </Button>
       </div>
       <Input
         value={row.title}
         onChange={(e) => onChange({ title: e.target.value })}
-        placeholder={isVideo ? 'Title (e.g. Leadership Introduction)' : 'Title'}
-        aria-label="Resource title"
+        placeholder={isVideo ? t('lr.titleVideoPh') : t('lr.titlePh')}
+        aria-label={t('lr.titleAria')}
       />
       <Input
         type="url"
@@ -176,13 +179,13 @@ function ResourceCard({
             ? 'https://youtube.com/watch?v=… (or Vimeo / direct .mp4)'
             : 'https://… (PDF, article, file or link URL)'
         }
-        aria-label="Resource URL"
+        aria-label={t('lr.urlAria')}
       />
       <Textarea
         value={row.description}
         onChange={(e) => onChange({ description: e.target.value })}
-        placeholder="Short description (optional)"
-        aria-label="Resource description"
+        placeholder={t('lr.descPh')}
+        aria-label={t('lr.descAria')}
       />
       {isVideo ? (
         <div className="flex flex-wrap gap-2">
@@ -192,11 +195,11 @@ function ResourceCard({
             onChange={(e) =>
               onChange({ provider: e.target.value as VideoProvider | '' })
             }
-            aria-label="Video provider"
+            aria-label={t('lr.providerAria')}
           >
             {PROVIDER_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
-                {o.label}
+                {t(o.labelKey)}
               </option>
             ))}
           </select>
@@ -204,16 +207,16 @@ function ResourceCard({
             className="flex-1"
             value={row.durationLabel}
             onChange={(e) => onChange({ durationLabel: e.target.value })}
-            placeholder="Duration (e.g. 12 min)"
-            aria-label="Video duration"
+            placeholder={t('lr.durationPh')}
+            aria-label={t('lr.durationAria')}
           />
           <Input
             className="w-full"
             type="url"
             value={row.thumbnailUrl}
             onChange={(e) => onChange({ thumbnailUrl: e.target.value })}
-            placeholder="Thumbnail URL (optional)"
-            aria-label="Video thumbnail URL"
+            placeholder={t('lr.thumbPh')}
+            aria-label={t('lr.thumbAria')}
           />
         </div>
       ) : null}
@@ -237,6 +240,7 @@ export function LearningResourcesEditor({
   profiles: ResourceProfile[];
   onChange: (doc: LearningResourcesDoc | null) => void;
 }) {
+  const { t } = useLanguage();
   const [rows, setRows] = useState<Row[]>(() => flatten(initial));
 
   const apply = (next: Row[]) => {
@@ -270,35 +274,29 @@ export function LearningResourcesEditor({
   // still holding rows (so renaming a personality category never drops data).
   const sections = useMemo(() => {
     const base: ResourceProfile[] = [
-      { code: SHARED, label: 'Shared resources' },
+      { code: SHARED, label: t('lr.shared') },
       ...profiles,
     ];
     const known = new Set(base.map((s) => s.code));
     for (const r of rows) {
       if (!known.has(r.bucket)) {
-        base.push({ code: r.bucket, label: `${r.bucket} (unassigned)` });
+        base.push({ code: r.bucket, label: `${r.bucket} (${t('lr.unassigned')})` });
         known.add(r.bucket);
       }
     }
     return base;
-  }, [profiles, rows]);
+  }, [profiles, rows, t]);
 
   return (
     <div className="space-y-4 rounded-md border p-4">
       <div className="space-y-1">
-        <Label>Learning resources</Label>
-        <p className="text-xs text-muted-foreground">
-          Curate an independent library per result. Shared resources appear for
-          every result; each result profile below gets its own personalized set.
-          Videos support YouTube, Vimeo, or a direct file link.
-        </p>
+        <Label>{t('lr.title')}</Label>
+        <p className="text-xs text-muted-foreground">{t('lr.help')}</p>
       </div>
 
       {profiles.length === 0 ? (
         <p className="rounded-md border border-dashed bg-accent/20 px-3 py-2 text-xs text-muted-foreground">
-          Only shared resources are available right now. Define this
-          assessment&apos;s result categories (above) to give each personality
-          result its own resource library.
+          {t('lr.onlyShared')}
         </p>
       ) : null}
 
@@ -309,8 +307,7 @@ export function LearningResourcesEditor({
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold">{section.label}</span>
               <span className="text-xs text-muted-foreground">
-                {sectionRows.length} resource
-                {sectionRows.length === 1 ? '' : 's'}
+                {sectionRows.length} {t('lr.resourcesWord')}
               </span>
             </div>
 
@@ -324,15 +321,15 @@ export function LearningResourcesEditor({
             ))}
 
             <div className="flex flex-wrap gap-2">
-              {ADD_TYPES.map((t) => (
+              {ADD_TYPES.map((at) => (
                 <Button
-                  key={t.type}
+                  key={at.type}
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => addRow(section.code, t.type)}
+                  onClick={() => addRow(section.code, at.type)}
                 >
-                  + Add {t.label}
+                  + {t('lr.add')} {at.label}
                 </Button>
               ))}
             </div>
