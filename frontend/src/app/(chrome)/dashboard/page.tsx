@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { attemptApi } from '@/services/attempt.api';
 import { assessmentApi } from '@/services/assessment.api';
 import { balanceApi } from '@/services/balance.api';
+import { setSharedBalance } from '@/hooks/useBalance';
 import { formatIdr } from '@/lib/currency';
 import { voucherApi } from '@/services/voucher.api';
 import { useLanguage } from '@/lib/i18n/LanguageProvider';
@@ -88,6 +89,7 @@ function DashboardHome() {
         if (!active) return;
         setAttempts(mine);
         setBalance(wallet.balance);
+        setSharedBalance(wallet.balance);
       } catch (err) {
         if (active)
           setAttemptsError(
@@ -128,6 +130,7 @@ function DashboardHome() {
       try {
         const order = await balanceApi.getOrder(orderId);
         setBalance(order.balance);
+        setSharedBalance(order.balance);
         if (order.status === 'PAID') {
           setActionNotice(
             `Payment received. ${formatIdr(order.amount)} added. Balance: ${formatIdr(order.balance)}.`,
@@ -163,6 +166,7 @@ function DashboardHome() {
       }
       // Demo fallback (gateway not configured): credited immediately.
       setBalance(result.balance);
+      setSharedBalance(result.balance);
       setTopUpOpen(false);
       setActionNotice(`Added ${formatIdr(amount)}. Your balance is now ${formatIdr(result.balance)}.`);
     } catch (err) {
