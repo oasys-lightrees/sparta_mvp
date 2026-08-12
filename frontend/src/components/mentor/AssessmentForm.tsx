@@ -83,9 +83,6 @@ export function AssessmentForm({
   const [freeTemplate, setFreeTemplate] = useState(
     str(initial?.free_report_template),
   );
-  const [emailTemplate, setEmailTemplate] = useState(
-    str(initial?.email_template),
-  );
   const [studyVideoUrl, setStudyVideoUrl] = useState(
     str(initial?.study_video_url),
   );
@@ -175,7 +172,7 @@ export function AssessmentForm({
       free_report_template:
         isPersonality || freeTemplate.trim() === '' ? null : freeTemplate,
       premium_report_description: null,
-      email_template: emailTemplate.trim() === '' ? null : emailTemplate,
+      email_template: null,
       base_knowledge: null,
       ai_enabled: false,
       // Categories only apply to personality mode.
@@ -393,19 +390,6 @@ export function AssessmentForm({
         profiles={resourceProfiles}
         onChange={setResourcesDoc}
       />
-
-      <div className="space-y-2">
-        <Label htmlFor="email_template">Email template</Label>
-        <Textarea
-          id="email_template"
-          value={emailTemplate}
-          onChange={(e) => setEmailTemplate(e.target.value)}
-          className="min-h-[120px] font-mono text-xs"
-          placeholder={
-            'Optional. Variables: {{assessment_title}}, {{score}}, {{category}}, {{summary}}, {{free_report}}'
-          }
-        />
-      </div>
 
       <ErrorMessage message={localError || error || ''} />
 
