@@ -205,7 +205,6 @@ export function BrandedLanding({
                   style={{
                     width: '100%',
                     borderRadius: 16,
-                    border: '1px solid var(--line)',
                     objectFit: 'cover',
                   }}
                 />
