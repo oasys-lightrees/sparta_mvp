@@ -309,6 +309,39 @@ export function BrandedLanding({
           </section>
         ) : null}
 
+        {/* BENEFITS (optional) — a titled grid of image + heading + text cards */}
+        {landing.benefits.enabled && landing.benefits.items.length > 0 ? (
+          <section className="lato-section" id="benefits">
+            {landing.benefits.title ? (
+              <div className="lato-wrap lato-center">
+                <h2 className="lato-h">{landing.benefits.title}</h2>
+              </div>
+            ) : null}
+            <div className="lato-wrap">
+              <div className="lato-benefits">
+                {landing.benefits.items.map((it, i) => (
+                  <div key={i} className="lato-benefit">
+                    {it.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        className="lato-benefit__img"
+                        src={it.imageUrl}
+                        alt={it.title}
+                      />
+                    ) : null}
+                    {it.title ? <h3 className="lato-benefit__t">{it.title}</h3> : null}
+                    {it.body ? (
+                      <p className="lato-benefit__b" style={{ whiteSpace: 'pre-line' }}>
+                        {it.body}
+                      </p>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        ) : null}
+
         {/* PRODUCTS */}
         <section className="lato-section" id="products">
           <div className="lato-wrap lato-center">

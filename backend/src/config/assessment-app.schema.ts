@@ -196,6 +196,25 @@ export const LandingSchema = z.object({
       imageUrl: z.string().url().nullable().default(null),
     })
     .default({ enabled: false, title: 'About', body: '', imageUrl: null }),
+  // Optional "Benefits" section: a titled grid of cards, each with an image,
+  // heading and description (e.g. "4 Ways You Can Benefit…"). Off by default;
+  // the expert turns it on and fills it from the landing editor.
+  benefits: z
+    .object({
+      enabled: z.boolean().default(false),
+      title: z.string().default(''),
+      items: z
+        .array(
+          z.object({
+            title: z.string().default(''),
+            body: z.string().default(''),
+            imageUrl: z.string().url().nullable().default(null),
+          }),
+        )
+        .max(8)
+        .default([]),
+    })
+    .default({ enabled: false, title: '', items: [] }),
   // Optional "Contact" section: a clickable title in the footer that opens a
   // WhatsApp chat with the expert. Off by default; the expert turns it on and
   // fills the title, contact name and WhatsApp number from the landing editor.

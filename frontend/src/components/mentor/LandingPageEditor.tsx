@@ -19,6 +19,9 @@ import {
 } from '@/components/ui/card';
 import type { AssessmentApp } from '@/types/assessment-app';
 
+// One card in the configurable Benefits section.
+type BenefitItem = { title: string; body: string; imageUrl: string };
+
 // The editable subset of the branded landing/app config.
 type Form = {
   brandName: string;
@@ -41,6 +44,9 @@ type Form = {
   aboutTitle: string;
   aboutBody: string;
   aboutImageUrl: string;
+  benefitsEnabled: boolean;
+  benefitsTitle: string;
+  benefitsItems: BenefitItem[];
   contactEnabled: boolean;
   contactTitle: string;
   contactName: string;
@@ -74,6 +80,13 @@ const fromConfig = (a: AssessmentApp): Form => ({
   aboutTitle: a.landing.about.title,
   aboutBody: a.landing.about.body,
   aboutImageUrl: a.landing.about.imageUrl ?? '',
+  benefitsEnabled: a.landing.benefits.enabled,
+  benefitsTitle: a.landing.benefits.title,
+  benefitsItems: a.landing.benefits.items.map((it) => ({
+    title: it.title,
+    body: it.body,
+    imageUrl: it.imageUrl ?? '',
+  })),
   contactEnabled: a.landing.contact.enabled,
   contactTitle: a.landing.contact.title,
   contactName: a.landing.contact.name,
@@ -111,6 +124,23 @@ const toPatch = (f: Form): AppConfigPatch => ({
       title: f.aboutTitle.trim() === '' ? 'About' : f.aboutTitle.trim(),
       body: f.aboutBody,
       imageUrl: f.aboutImageUrl.trim() === '' ? null : f.aboutImageUrl.trim(),
+    },
+    benefits: {
+      enabled: f.benefitsEnabled,
+      title: f.benefitsTitle.trim(),
+      items: f.benefitsItems
+        // Drop fully empty cards so blank rows never render.
+        .filter(
+          (it) =>
+            it.title.trim() !== '' ||
+            it.body.trim() !== '' ||
+            it.imageUrl.trim() !== '',
+        )
+        .map((it) => ({
+          title: it.title.trim(),
+          body: it.body.trim(),
+          imageUrl: it.imageUrl.trim() === '' ? null : it.imageUrl.trim(),
+        })),
     },
     contact: {
       enabled: f.contactEnabled,
@@ -231,6 +261,29 @@ export function LandingPageEditor({
 
   const set = (patch: Partial<Form>) =>
     setForm((f) => (f ? { ...f, ...patch } : f));
+
+  // Benefits card list helpers.
+  const setBenefit = (i: number, patch: Partial<BenefitItem>) =>
+    setForm((f) =>
+      f
+        ? {
+            ...f,
+            benefitsItems: f.benefitsItems.map((it, idx) =>
+              idx === i ? { ...it, ...patch } : it,
+            ),
+          }
+        : f,
+    );
+  const addBenefit = () =>
+    setForm((f) =>
+      f && f.benefitsItems.length < 8
+        ? { ...f, benefitsItems: [...f.benefitsItems, { title: '', body: '', imageUrl: '' }] }
+        : f,
+    );
+  const removeBenefit = (i: number) =>
+    setForm((f) =>
+      f ? { ...f, benefitsItems: f.benefitsItems.filter((_, idx) => idx !== i) } : f,
+    );
 
   const save = async () => {
     if (!form) return;
@@ -466,6 +519,83 @@ export function LandingPageEditor({
               ) : (
                 <p className="text-xs text-muted-foreground">
                   The About section is hidden on your landing page.
+                </p>
+              )}
+            </div>
+
+            {/* Benefits */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Benefits section
+                </h4>
+                <label className="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={form.benefitsEnabled}
+                    onChange={(e) => set({ benefitsEnabled: e.target.checked })}
+                  />
+                  Show Benefits section
+                </label>
+              </div>
+              {form.benefitsEnabled ? (
+                <>
+                  <p className="text-xs text-muted-foreground">
+                    A titled grid of cards, each with an image, a heading and a
+                    short description (e.g. &ldquo;4 Ways You Can Benefit…&rdquo;).
+                  </p>
+                  <TextField
+                    label="Section title"
+                    value={form.benefitsTitle}
+                    onChange={(v) => set({ benefitsTitle: v })}
+                    placeholder="e.g. 4 Ways You Can Benefit from this assessment"
+                  />
+                  {form.benefitsItems.map((it, i) => (
+                    <div key={i} className="space-y-3 rounded-md border p-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-muted-foreground">
+                          Card {i + 1}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeBenefit(i)}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                      <TextField
+                        label="Heading"
+                        value={it.title}
+                        onChange={(v) => setBenefit(i, { title: v })}
+                        placeholder="e.g. Identifying"
+                      />
+                      <TextField
+                        label="Description"
+                        value={it.body}
+                        onChange={(v) => setBenefit(i, { body: v })}
+                        placeholder="What this benefit gives the reader."
+                        textarea
+                      />
+                      <ImageSourceField
+                        label="Icon / image"
+                        value={it.imageUrl}
+                        onChange={(v) => setBenefit(i, { imageUrl: v })}
+                        placeholder="https://example.com/icon.png"
+                        helpText="Shown at the top of the card. A square icon/illustration works best. PNG, SVG, JPG, JPEG or WEBP · up to 5 MB."
+                      />
+                    </div>
+                  ))}
+                  {form.benefitsItems.length < 8 ? (
+                    <Button type="button" variant="outline" size="sm" onClick={addBenefit}>
+                      + Add card
+                    </Button>
+                  ) : null}
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  The Benefits section is hidden on your landing page.
                 </p>
               )}
             </div>
