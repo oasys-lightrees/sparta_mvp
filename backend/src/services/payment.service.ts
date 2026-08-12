@@ -43,6 +43,12 @@ const snapBaseUrl = (): string =>
     ? 'https://app.midtrans.com/snap/v1'
     : 'https://app.sandbox.midtrans.com/snap/v1';
 
+// Core API (transaction status), a different host than the Snap endpoint.
+const coreBaseUrl = (): string =>
+  isProduction()
+    ? 'https://api.midtrans.com/v2'
+    : 'https://api.sandbox.midtrans.com/v2';
+
 // Origins the browser may be sent back to after payment (same allowlist as CORS).
 const allowedOrigins = (): string[] =>
   (process.env.CORS_ORIGINS ?? 'https://lato.example.com,http://localhost:3000')
@@ -268,6 +274,99 @@ const resolveStatus = (
   }
 };
 
+/** The order's current stored status. Throws 404 if the order is gone. */
+const readOrderStatus = async (orderId: string): Promise<string> => {
+  const [order] = await db
+    .select({ status: orders.status })
+    .from(orders)
+    .where(eq(orders.orderId, orderId))
+    .limit(1);
+  if (!order) throw new HttpError(404, 'Order not found');
+  return order.status;
+};
+
+/**
+ * Atomically claim the PAID transition and credit the wallet. The
+ * `status != 'PAID'` guard + RETURNING means a replayed webhook OR a
+ * return-redirect reconcile credits AT MOST ONCE — the loser matches 0 rows and
+ * is a no-op. Returns 'PAID' when it credited, 'noop' when already paid/absent.
+ */
+const creditPaidOrder = async (orderId: string): Promise<'PAID' | 'noop'> =>
+  db.transaction(async (tx) => {
+    const claimed = await tx
+      .update(orders)
+      .set({ status: 'PAID' })
+      .where(and(eq(orders.orderId, orderId), ne(orders.status, 'PAID')))
+      .returning({ userId: orders.userId, amount: orders.amount });
+    if (claimed.length === 0) return 'noop';
+    const { userId, amount } = claimed[0];
+    await tx
+      .update(users)
+      .set({ balance: sql`${users.balance} + ${amount}` })
+      .where(eq(users.id, userId));
+    await tx.insert(transactions).values({ userId, amount, type: 'TOPUP' });
+    return 'PAID';
+  });
+
+/**
+ * Apply a resolved Midtrans status to an order: credit on PAID, set the terminal
+ * status on FAILED/EXPIRED (never overriding a PAID order), acknowledge on null.
+ * Shared by the webhook and the return-redirect reconcile.
+ */
+const applyOrderStatus = async (
+  orderId: string,
+  next: 'PAID' | 'FAILED' | 'EXPIRED' | null,
+): Promise<{ order_id: string; status: string }> => {
+  if (next === null) {
+    return { order_id: orderId, status: await readOrderStatus(orderId) };
+  }
+  if (next === 'PAID') {
+    await creditPaidOrder(orderId);
+    return { order_id: orderId, status: await readOrderStatus(orderId) };
+  }
+  const updated = await db
+    .update(orders)
+    .set({ status: next })
+    .where(and(eq(orders.orderId, orderId), ne(orders.status, 'PAID')))
+    .returning({ status: orders.status });
+  if (updated.length === 0) {
+    return { order_id: orderId, status: await readOrderStatus(orderId) };
+  }
+  return { order_id: orderId, status: updated[0].status };
+};
+
+/**
+ * Query Midtrans' core API for one order's current transaction status. Used to
+ * reconcile a PENDING order when the browser returns from the redirect but the
+ * webhook hasn't arrived (common in the sandbox/simulator). Returns null on any
+ * error so the caller degrades to the stored status.
+ */
+const fetchMidtransStatus = async (
+  orderId: string,
+): Promise<MidtransNotification | null> => {
+  const serverKey = process.env.MIDTRANS_SERVER_KEY;
+  if (!serverKey) return null;
+  const auth = Buffer.from(`${serverKey}:`).toString('base64');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  try {
+    const res = await fetch(
+      `${coreBaseUrl()}/${encodeURIComponent(orderId)}/status`,
+      {
+        method: 'GET',
+        headers: { Accept: 'application/json', Authorization: `Basic ${auth}` },
+        signal: controller.signal,
+      },
+    );
+    if (!res.ok) return null;
+    return (await res.json().catch(() => null)) as MidtransNotification | null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
 /**
  * Handle a Midtrans payment notification (webhook). Verifies the signature,
  * then transitions the order and, on the first PAID transition, credits the
@@ -283,68 +382,7 @@ export const handleNotification = async (
   if (!orderId) {
     throw new HttpError(400, 'Missing order_id');
   }
-
-  const next = resolveStatus(n);
-
-  const currentStatus = async (
-    tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
-  ): Promise<string> => {
-    const [order] = await tx
-      .select({ status: orders.status })
-      .from(orders)
-      .where(eq(orders.orderId, orderId))
-      .limit(1);
-    if (!order) throw new HttpError(404, 'Order not found');
-    return order.status;
-  };
-
-  return db.transaction(async (tx) => {
-    // Non-actionable status (pending / authorize / refund …) — acknowledge.
-    if (next === null) {
-      return { order_id: orderId, status: await currentStatus(tx) };
-    }
-
-    if (next === 'PAID') {
-      // Atomically claim the PAID transition. The `status != 'PAID'` guard +
-      // RETURNING means a duplicate/replayed webhook credits AT MOST ONCE: the
-      // second delivery matches 0 rows and is a no-op.
-      const claimed = await tx
-        .update(orders)
-        .set({ status: 'PAID' })
-        .where(and(eq(orders.orderId, orderId), ne(orders.status, 'PAID')))
-        .returning({
-          userId: orders.userId,
-          amount: orders.amount,
-        });
-      if (claimed.length === 0) {
-        // Either no such order, or it was already PAID (already credited).
-        return { order_id: orderId, status: await currentStatus(tx) };
-      }
-      const { userId, amount } = claimed[0];
-      await tx
-        .update(users)
-        .set({ balance: sql`${users.balance} + ${amount}` })
-        .where(eq(users.id, userId));
-      await tx.insert(transactions).values({
-        userId,
-        amount,
-        type: 'TOPUP',
-      });
-      return { order_id: orderId, status: 'PAID' };
-    }
-
-    // FAILED / EXPIRED — set the terminal status, but never override a PAID order
-    // (a late fail/expire after settlement is ignored).
-    const updated = await tx
-      .update(orders)
-      .set({ status: next })
-      .where(and(eq(orders.orderId, orderId), ne(orders.status, 'PAID')))
-      .returning({ status: orders.status });
-    if (updated.length === 0) {
-      return { order_id: orderId, status: await currentStatus(tx) };
-    }
-    return { order_id: orderId, status: updated[0].status };
-  });
+  return applyOrderStatus(orderId, resolveStatus(n));
 };
 
 /**
@@ -367,6 +405,19 @@ export const getOrderStatus = async (userId: string, orderId: string) => {
     throw new HttpError(404, 'Order not found');
   }
 
+  // Still pending on our side? The webhook may not have arrived (very common in
+  // the sandbox/simulator, where Midtrans can't reach a local server). Ask
+  // Midtrans directly and credit the wallet if it's actually paid — the same
+  // idempotent PAID claim the webhook uses, so it can never double-credit.
+  let status: string = order.status;
+  if (status === 'PENDING' && isPaymentConfigured()) {
+    const remote = await fetchMidtransStatus(orderId);
+    if (remote) {
+      const applied = await applyOrderStatus(orderId, resolveStatus(remote));
+      status = applied.status;
+    }
+  }
+
   const [wallet] = await db
     .select({ balance: users.balance })
     .from(users)
@@ -375,7 +426,7 @@ export const getOrderStatus = async (userId: string, orderId: string) => {
 
   return {
     order_id: order.orderId,
-    status: order.status,
+    status,
     amount: order.amount,
     balance: wallet?.balance ?? 0,
   };
