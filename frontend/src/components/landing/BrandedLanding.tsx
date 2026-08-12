@@ -388,9 +388,6 @@ export function BrandedLanding({
                     {landing.contact.name}
                   </a>
                 ) : null}
-                <a href={contactHref} target="_blank" rel="noopener noreferrer">
-                  {landing.contact.whatsapp}
-                </a>
               </div>
             ) : null}
           </div>
