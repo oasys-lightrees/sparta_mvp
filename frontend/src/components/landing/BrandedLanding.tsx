@@ -144,6 +144,7 @@ export function BrandedLanding({
           <nav className="lato-links" aria-label="Primary">
             <a href="#top">Overview</a>
             <a href="#products">Products</a>
+            {landing.about.enabled ? <a href="#about">About</a> : null}
           </nav>
           <div className="lato-nav__r">
             <BrandedAuthChip loginHref={loginHref} dashboardHref={dashboardHref} />
@@ -154,6 +155,7 @@ export function BrandedLanding({
               <div className="lato-mnav__panel">
                 <a href="#top">Overview</a>
                 <a href="#products">Products</a>
+                {landing.about.enabled ? <a href="#about">About</a> : null}
                 <Link href="/">Back to LATO</Link>
                 <BrandedAuthChip loginHref={loginHref} dashboardHref={dashboardHref} />
               </div>
@@ -375,6 +377,7 @@ export function BrandedLanding({
             <div className="lato-fcol">
               <h4>Product</h4>
               <a href="#products">Products</a>
+              {landing.about.enabled ? <a href="#about">About</a> : null}
             </div>
             {contactHref ? (
               <div className="lato-fcol">
