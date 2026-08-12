@@ -24,6 +24,7 @@ const ICONS: Record<string, string> = {
   check: '<path d="M20 6L9 17l-5-5"/>',
   arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
   arrowLeft: '<path d="M19 12H5M11 6l-6 6 6 6"/>',
+  menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
 };
 function Icon({ name, size = 22 }: { name: string; size?: number }) {
   const path = ICONS[name] ?? ICONS.spark;
@@ -144,16 +145,18 @@ export function BrandedLanding({
           <nav className="lato-links" aria-label="Primary">
             <a href="#top">Overview</a>
             <a href="#products">Products</a>
+            {landing.about.enabled ? <a href="#about">About</a> : null}
           </nav>
           <div className="lato-nav__r">
             <BrandedAuthChip loginHref={loginHref} dashboardHref={dashboardHref} />
             <details className="lato-mnav">
               <summary aria-label="Menu">
-                <Icon name="arrow" size={18} />
+                <Icon name="menu" size={18} />
               </summary>
               <div className="lato-mnav__panel">
                 <a href="#top">Overview</a>
                 <a href="#products">Products</a>
+                {landing.about.enabled ? <a href="#about">About</a> : null}
                 <Link href="/">Back to LATO</Link>
                 <BrandedAuthChip loginHref={loginHref} dashboardHref={dashboardHref} />
               </div>
@@ -375,6 +378,7 @@ export function BrandedLanding({
             <div className="lato-fcol">
               <h4>Product</h4>
               <a href="#products">Products</a>
+              {landing.about.enabled ? <a href="#about">About</a> : null}
             </div>
             {contactHref ? (
               <div className="lato-fcol">
@@ -388,9 +392,6 @@ export function BrandedLanding({
                     {landing.contact.name}
                   </a>
                 ) : null}
-                <a href={contactHref} target="_blank" rel="noopener noreferrer">
-                  {landing.contact.whatsapp}
-                </a>
               </div>
             ) : null}
           </div>
