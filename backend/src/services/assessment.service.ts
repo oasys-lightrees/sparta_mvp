@@ -61,6 +61,8 @@ const publicColumns = {
   // Access model is public (drives the take-flow CTA); it never leaks scores.
   accessMode: assessments.accessMode,
   accessCost: assessments.accessCost,
+  // Opening video shown on the intro screen before the taker answers.
+  studyVideoUrl: assessments.studyVideoUrl,
 };
 
 /**
