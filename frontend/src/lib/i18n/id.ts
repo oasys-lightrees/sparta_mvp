@@ -171,4 +171,43 @@ export const id: Record<TranslationKey, string> = {
   'manage.highThreshold': 'Ambang atas',
   'manage.freeReportText': 'Teks laporan gratis',
   'manage.openingVideo': 'Video pembuka',
+
+  // Results table
+  'results.empty': 'Belum ada percobaan.',
+  'results.participant': 'Peserta',
+  'results.score': 'Skor',
+  'results.submitted': 'Dikirim',
+  'results.guest': 'Tamu',
+
+  // Share assessment
+  'share.title': 'Bagikan Asesmen',
+  'share.descPublished':
+    'Ini menautkan ke halaman arahan asesmen Anda. Siapa pun bisa membukanya dan mengikuti asesmen, tanpa perlu mendaftar.',
+  'share.descDraft':
+    'Terbitkan asesmen ini agar halaman arahannya aktif di tautan ini.',
+  'share.copyError':
+    'Tidak dapat menyalin otomatis. Pilih dan salin tautan di atas.',
+  'share.copied': 'Tersalin',
+  'share.copyLink': 'Salin Tautan',
+
+  // Question editor
+  'q.count': 'Pertanyaan',
+  'q.add': 'Tambah pertanyaan',
+  'q.none': 'Belum ada pertanyaan.',
+  'q.text': 'Teks pertanyaan',
+  'q.choices': 'Pilihan',
+  'q.choice': 'Pilihan',
+  'q.addChoice': 'Tambah pilihan',
+  'q.remove': 'Hapus',
+  'q.mapsTo': 'Memetakan ke:',
+  'q.edit': 'Ubah',
+  'q.delete': 'Hapus',
+  'q.save': 'Simpan pertanyaan',
+  'q.saving': 'Menyimpan…',
+  'q.cancel': 'Batal',
+  'q.errText': 'Teks pertanyaan wajib diisi',
+  'q.errChoice': 'Minimal satu pilihan diperlukan',
+  'q.errChoiceText': 'Setiap pilihan memerlukan teks',
+  'q.errScore': 'Setiap pilihan memerlukan skor bilangan bulat',
+  'q.scoreBadge': 'skor',
 };

@@ -170,4 +170,43 @@ export const en = {
   'manage.highThreshold': 'High threshold',
   'manage.freeReportText': 'Free report text',
   'manage.openingVideo': 'Opening video',
+
+  // Results table
+  'results.empty': 'No attempts yet.',
+  'results.participant': 'Participant',
+  'results.score': 'Score',
+  'results.submitted': 'Submitted',
+  'results.guest': 'Guest',
+
+  // Share assessment
+  'share.title': 'Share Assessment',
+  'share.descPublished':
+    'This links to your assessment’s landing page. Anyone can open it and take the assessment, no sign-up required.',
+  'share.descDraft':
+    'Publish this assessment to make its landing page live at this link.',
+  'share.copyError':
+    'Could not copy automatically. Select and copy the link above.',
+  'share.copied': 'Copied',
+  'share.copyLink': 'Copy Link',
+
+  // Question editor
+  'q.count': 'Questions',
+  'q.add': 'Add question',
+  'q.none': 'No questions yet.',
+  'q.text': 'Question text',
+  'q.choices': 'Choices',
+  'q.choice': 'Choice',
+  'q.addChoice': 'Add choice',
+  'q.remove': 'Remove',
+  'q.mapsTo': 'Maps to:',
+  'q.edit': 'Edit',
+  'q.delete': 'Delete',
+  'q.save': 'Save question',
+  'q.saving': 'Saving…',
+  'q.cancel': 'Cancel',
+  'q.errText': 'Question text is required',
+  'q.errChoice': 'At least one choice is required',
+  'q.errChoiceText': 'Every choice needs text',
+  'q.errScore': 'Every choice needs an integer score',
+  'q.scoreBadge': 'score',
 };
