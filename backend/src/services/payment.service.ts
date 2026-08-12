@@ -229,7 +229,11 @@ export type MidtransNotification = {
   fraud_status?: unknown;
 };
 
-const asString = (v: unknown): string => (typeof v === 'string' ? v : '');
+// Midtrans sends these fields as strings, but coerce numbers too so a payload
+// that (unexpectedly) sends e.g. gross_amount as a number can't silently blank
+// the signature input. Objects/null still stringify to '' (never a value).
+const asString = (v: unknown): string =>
+  typeof v === 'string' ? v : typeof v === 'number' ? String(v) : '';
 
 /**
  * Verify Midtrans' SHA-512 signature:
@@ -375,14 +379,26 @@ const fetchMidtransStatus = async (
 export const handleNotification = async (
   n: MidtransNotification,
 ): Promise<{ order_id: string; status: string }> => {
+  const orderId = asString(n.order_id);
+  const txStatus = asString(n.transaction_status);
+  const fraud = asString(n.fraud_status);
   if (!verifySignature(n)) {
+    // The single most common cause of "webhook received but balance unchanged":
+    // the MIDTRANS_SERVER_KEY on the server doesn't match the one that signed
+    // the notification (wrong key, or sandbox key vs a production notification).
+    console.warn(
+      `[midtrans] signature mismatch order=${orderId} status=${txStatus} — check MIDTRANS_SERVER_KEY / MIDTRANS_IS_PRODUCTION match the account that sent it`,
+    );
     throw new HttpError(401, 'Invalid signature');
   }
-  const orderId = asString(n.order_id);
   if (!orderId) {
     throw new HttpError(400, 'Missing order_id');
   }
-  return applyOrderStatus(orderId, resolveStatus(n));
+  const next = resolveStatus(n);
+  console.info(
+    `[midtrans] order=${orderId} transaction_status=${txStatus} fraud=${fraud} -> resolved=${next ?? 'no-change'}`,
+  );
+  return applyOrderStatus(orderId, next);
 };
 
 /**
