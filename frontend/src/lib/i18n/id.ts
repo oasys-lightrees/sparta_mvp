@@ -95,4 +95,46 @@ export const id: Record<TranslationKey, string> = {
   // Expert / admin headings
   'mentor.dashboard': 'Dasbor Ahli',
   'admin.dashboard': 'Dasbor Admin',
+
+  // Expert dashboard home
+  'mentor.subtitle': 'Buat dan kelola asesmen, pertanyaan, dan hasil Anda.',
+  'mentor.createAssessment': 'Buat asesmen',
+  'mentor.newAssessment': 'Asesmen baru',
+  'mentor.create': 'Buat',
+  'mentor.statTotal': 'Total Asesmen',
+  'mentor.statPublished': 'Asesmen Terbit',
+  'mentor.statTaken': 'Total Peserta Tes',
+  'mentor.statAvgScore': 'Skor Rata-rata',
+  'mentor.emptyTitle': 'Buat asesmen pertama Anda',
+  'mentor.emptyDesc':
+    'Bangun asesmen, tambahkan pertanyaan, dan mulai kumpulkan tanggapan serta pendapatan.',
+  // Expert assessment table
+  'mentor.colTitle': 'Judul',
+  'mentor.colStatus': 'Status',
+  'mentor.colAttempts': 'Percobaan',
+  'mentor.colActions': 'Tindakan',
+  'mentor.manage': 'Kelola',
+  'mentor.publish': 'Terbitkan',
+  'mentor.unpublish': 'Batalkan terbit',
+  'mentor.delete': 'Hapus',
+  // Expert analytics
+  'analytics.title': 'Analitik',
+  'analytics.boughtTitle': 'Asesmen dibeli',
+  'analytics.boughtDesc': 'Pembelian per hari',
+  'analytics.emptyBought': 'Belum ada pembelian',
+  'analytics.revenueTitle': 'Pendapatan dari waktu ke waktu',
+  'analytics.revenueDesc': 'Saldo (Rp) yang diperoleh per hari',
+  'analytics.emptyRevenue': 'Belum ada pendapatan berbayar',
+  // Expert revenue
+  'revenue.title': 'Pendapatan',
+  'revenue.total': 'Total Pendapatan',
+  'revenue.bought': 'Asesmen Dibeli',
+  'revenue.emptyTitle': 'Pembelian akan muncul di sini',
+  'revenue.emptyDesc':
+    'Saat seseorang membeli akses ke asesmen Anda, pembelian akan muncul di daftar ini.',
+  'revenue.colAssessment': 'Asesmen',
+  'revenue.colTier': 'Paket produk',
+  'revenue.colAmount': 'Jumlah',
+  'revenue.colDate': 'Tanggal',
+  'revenue.colBuyer': 'Dibeli oleh',
 };

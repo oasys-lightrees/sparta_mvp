@@ -94,4 +94,46 @@ export const en = {
   // Expert / admin headings
   'mentor.dashboard': 'Expert Dashboard',
   'admin.dashboard': 'Admin Dashboard',
+
+  // Expert dashboard home
+  'mentor.subtitle': 'Create and manage your assessments, questions and results.',
+  'mentor.createAssessment': 'Create assessment',
+  'mentor.newAssessment': 'New assessment',
+  'mentor.create': 'Create',
+  'mentor.statTotal': 'Total Assessments',
+  'mentor.statPublished': 'Published Assessments',
+  'mentor.statTaken': 'Total People Taken Tests',
+  'mentor.statAvgScore': 'Average Score',
+  'mentor.emptyTitle': 'Create your first assessment',
+  'mentor.emptyDesc':
+    'Build an assessment, add your questions, and start collecting responses and revenue.',
+  // Expert assessment table
+  'mentor.colTitle': 'Title',
+  'mentor.colStatus': 'Status',
+  'mentor.colAttempts': 'Attempts',
+  'mentor.colActions': 'Actions',
+  'mentor.manage': 'Manage',
+  'mentor.publish': 'Publish',
+  'mentor.unpublish': 'Unpublish',
+  'mentor.delete': 'Delete',
+  // Expert analytics
+  'analytics.title': 'Analytics',
+  'analytics.boughtTitle': 'Assessments bought',
+  'analytics.boughtDesc': 'Purchases per day',
+  'analytics.emptyBought': 'No purchases yet',
+  'analytics.revenueTitle': 'Revenue over time',
+  'analytics.revenueDesc': 'Balance (Rp) earned per day',
+  'analytics.emptyRevenue': 'No paid revenue yet',
+  // Expert revenue
+  'revenue.title': 'Revenue',
+  'revenue.total': 'Total Revenue',
+  'revenue.bought': 'Assessments Bought',
+  'revenue.emptyTitle': 'Purchases will appear here',
+  'revenue.emptyDesc':
+    'When someone buys access to your assessment, it shows up in this list.',
+  'revenue.colAssessment': 'Assessment',
+  'revenue.colTier': 'Product tier',
+  'revenue.colAmount': 'Amount',
+  'revenue.colDate': 'Date',
+  'revenue.colBuyer': 'Bought by',
 };

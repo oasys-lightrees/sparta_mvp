@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react';
 import { mentorApi } from '@/services/mentor.api';
 import { BarChartCard } from '@/components/charts/BarChartCard';
 import { LineChartCard } from '@/components/charts/LineChartCard';
+import { useLanguage } from '@/lib/i18n/LanguageProvider';
 import type { MentorAnalytics as MentorAnalyticsData } from '@/types';
 
 export function MentorAnalytics() {
+  const { t } = useLanguage();
   const [data, setData] = useState<MentorAnalyticsData | null>(null);
   const [error, setError] = useState('');
 
@@ -30,25 +32,25 @@ export function MentorAnalytics() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-xl font-semibold tracking-tight">Analytics</h2>
+      <h2 className="text-xl font-semibold tracking-tight">{t('analytics.title')}</h2>
       <div className="grid gap-6 lg:grid-cols-2">
         <BarChartCard
-          title="Assessments bought"
-          description="Purchases per day"
+          title={t('analytics.boughtTitle')}
+          description={t('analytics.boughtDesc')}
           data={data ? data.purchasesByDate : null}
           xKey="date"
           yKey="count"
           error={error}
-          emptyLabel="No purchases yet"
+          emptyLabel={t('analytics.emptyBought')}
         />
         <LineChartCard
-          title="Revenue over time"
-          description="Balance (Rp) earned per day"
+          title={t('analytics.revenueTitle')}
+          description={t('analytics.revenueDesc')}
           data={data ? data.revenueByDate : null}
           xKey="date"
           yKey="amount"
           error={error}
-          emptyLabel="No paid revenue yet"
+          emptyLabel={t('analytics.emptyRevenue')}
         />
       </div>
     </section>
