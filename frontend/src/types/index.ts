@@ -364,8 +364,13 @@ export type MentorResult = {
 
 export type MentorRevenueTxn = {
   assessmentTitle: string | null;
+  // Which pricing tier / voucher package was bought (null for legacy rows).
+  tierLabel: string | null;
   amount: number;
   date: string;
+  // Who bought it.
+  buyerName: string | null;
+  buyerEmail: string | null;
 };
 export type MentorRevenue = {
   totalRevenue: number;

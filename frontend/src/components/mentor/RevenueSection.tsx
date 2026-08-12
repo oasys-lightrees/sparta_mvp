@@ -85,15 +85,15 @@ export function RevenueSection() {
               icon={Wallet}
             />
             <StatCard
-              label="Paid Unlocks"
+              label="Assessments Bought"
               value={data.paidUnlocks}
               icon={Lock}
             />
           </div>
           {data.transactions.length === 0 ? (
             <EmptyState
-              title="Paid unlocks will appear here"
-              description="When a user unlocks paid access to your assessment, the revenue shows up in this list."
+              title="Purchases will appear here"
+              description="When someone buys access to your assessment, it shows up in this list."
             />
           ) : (
             <Card>
@@ -102,8 +102,10 @@ export function RevenueSection() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Assessment</TableHead>
+                      <TableHead>Product tier</TableHead>
                       <TableHead>Amount</TableHead>
                       <TableHead>Date</TableHead>
+                      <TableHead>Bought by</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -112,9 +114,22 @@ export function RevenueSection() {
                         <TableCell className="font-medium">
                           {t.assessmentTitle ?? '—'}
                         </TableCell>
+                        <TableCell>{t.tierLabel ?? '—'}</TableCell>
                         <TableCell>{formatIdr(t.amount)}</TableCell>
                         <TableCell>
                           {new Date(t.date).toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          {t.buyerName?.trim() ? (
+                            <div>
+                              <div>{t.buyerName}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {t.buyerEmail ?? ''}
+                              </div>
+                            </div>
+                          ) : (
+                            t.buyerEmail ?? '—'
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
