@@ -41,6 +41,10 @@ type Form = {
   aboutTitle: string;
   aboutBody: string;
   aboutImageUrl: string;
+  contactEnabled: boolean;
+  contactTitle: string;
+  contactName: string;
+  contactWhatsapp: string;
   finalEnabled: boolean;
   finalTitle: string;
   finalSubtitle: string;
@@ -70,6 +74,10 @@ const fromConfig = (a: AssessmentApp): Form => ({
   aboutTitle: a.landing.about.title,
   aboutBody: a.landing.about.body,
   aboutImageUrl: a.landing.about.imageUrl ?? '',
+  contactEnabled: a.landing.contact.enabled,
+  contactTitle: a.landing.contact.title,
+  contactName: a.landing.contact.name,
+  contactWhatsapp: a.landing.contact.whatsapp,
   finalEnabled: a.landing.finalCta.enabled,
   finalTitle: a.landing.finalCta.title,
   finalSubtitle: a.landing.finalCta.subtitle,
@@ -103,6 +111,12 @@ const toPatch = (f: Form): AppConfigPatch => ({
       title: f.aboutTitle.trim() === '' ? 'About' : f.aboutTitle.trim(),
       body: f.aboutBody,
       imageUrl: f.aboutImageUrl.trim() === '' ? null : f.aboutImageUrl.trim(),
+    },
+    contact: {
+      enabled: f.contactEnabled,
+      title: f.contactTitle.trim() === '' ? 'Contact' : f.contactTitle.trim(),
+      name: f.contactName.trim(),
+      whatsapp: f.contactWhatsapp.trim(),
     },
     finalCta: {
       enabled: f.finalEnabled,
@@ -452,6 +466,54 @@ export function LandingPageEditor({
               ) : (
                 <p className="text-xs text-muted-foreground">
                   The About section is hidden on your landing page.
+                </p>
+              )}
+            </div>
+
+            {/* Contact */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Contact section
+                </h4>
+                <label className="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={form.contactEnabled}
+                    onChange={(e) => set({ contactEnabled: e.target.checked })}
+                  />
+                  Show Contact section
+                </label>
+              </div>
+              {form.contactEnabled ? (
+                <>
+                  <p className="text-xs text-muted-foreground">
+                    A clickable title in the footer that opens a WhatsApp chat.
+                    When the About section is on, it also gets a button linking
+                    here.
+                  </p>
+                  <TextField
+                    label="Title"
+                    value={form.contactTitle}
+                    onChange={(v) => set({ contactTitle: v })}
+                    placeholder="e.g. Contact us"
+                  />
+                  <TextField
+                    label="Contact name"
+                    value={form.contactName}
+                    onChange={(v) => set({ contactName: v })}
+                    placeholder="e.g. James Gwee"
+                  />
+                  <TextField
+                    label="WhatsApp number"
+                    value={form.contactWhatsapp}
+                    onChange={(v) => set({ contactWhatsapp: v })}
+                    placeholder="e.g. 628123456789 (include country code)"
+                  />
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  The Contact section is hidden on your landing page.
                 </p>
               )}
             </div>

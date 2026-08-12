@@ -222,6 +222,8 @@
 .lato-fabout{max-width:34ch;color:var(--muted);font-size:.9rem;margin-top:14px}
 .lato-fcol{display:flex;flex-direction:column;gap:11px}
 .lato-fcol h4{font:600 .72rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.lato-fcol h4 a{color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit}
+.lato-fcol h4 a:hover{color:var(--b1)}
 .lato-fcol a{color:var(--ink-2);font-size:.9rem}
 .lato-fcol a:hover{color:var(--b1)}
 .lato-fbar{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;margin-top:44px;padding-top:22px;border-top:1px solid var(--line);color:var(--muted);font-size:.85rem}

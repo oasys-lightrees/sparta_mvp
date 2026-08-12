@@ -196,6 +196,17 @@ export const LandingSchema = z.object({
       imageUrl: z.string().url().nullable().default(null),
     })
     .default({ enabled: false, title: 'About', body: '', imageUrl: null }),
+  // Optional "Contact" section: a clickable title in the footer that opens a
+  // WhatsApp chat with the expert. Off by default; the expert turns it on and
+  // fills the title, contact name and WhatsApp number from the landing editor.
+  contact: z
+    .object({
+      enabled: z.boolean().default(false),
+      title: z.string().default('Contact'),
+      name: z.string().default(''),
+      whatsapp: z.string().default(''),
+    })
+    .default({ enabled: false, title: 'Contact', name: '', whatsapp: '' }),
   finalCta: z
     .object({
       // Whether the closing call-to-action section renders on the landing page.
