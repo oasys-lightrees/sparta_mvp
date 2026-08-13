@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table';
 import { Loading } from '@/components/common/Loading';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
+import { formatIdr } from '@/lib/currency';
 import type { AdminAssessment } from '@/types';
 
 export function AssessmentManagement() {
@@ -54,17 +55,6 @@ export function AssessmentManagement() {
         status: a.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED',
       }),
     );
-
-  const editPrice = (a: AdminAssessment) => {
-    const input = window.prompt(`New price for "${a.title}"`, String(a.price));
-    if (input === null) return;
-    const price = Number(input);
-    if (!Number.isInteger(price) || price < 0) {
-      setError('Price must be a non-negative integer');
-      return;
-    }
-    run(a.id, () => adminApi.updateAssessment(a.id, { price }));
-  };
 
   const editFee = (a: AdminAssessment) => {
     const input = window.prompt(
@@ -118,10 +108,10 @@ export function AssessmentManagement() {
                   {a.status}
                 </Badge>
               </TableCell>
-              <TableCell>{a.price > 0 ? `$${a.price}` : 'Free'}</TableCell>
+              <TableCell>{a.price > 0 ? formatIdr(a.price) : 'Free'}</TableCell>
               <TableCell>{a.platform_fee_percent}%</TableCell>
               <TableCell>{a.totalAttempts}</TableCell>
-              <TableCell>${a.price * a.totalAttempts}</TableCell>
+              <TableCell>{formatIdr(a.price * a.totalAttempts)}</TableCell>
               <TableCell>
                 <div className="flex justify-end gap-2">
                   <Button
@@ -131,14 +121,6 @@ export function AssessmentManagement() {
                     disabled={busyId === a.id}
                   >
                     {a.status === 'PUBLISHED' ? 'Unpublish' : 'Publish'}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => editPrice(a)}
-                    disabled={busyId === a.id}
-                  >
-                    Price
                   </Button>
                   <Button
                     variant="outline"
