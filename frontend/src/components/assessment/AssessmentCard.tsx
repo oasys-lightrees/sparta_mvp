@@ -15,6 +15,7 @@ import {
 import { AssessmentImage } from '@/components/assessment/AssessmentImage';
 import { LatoMark } from '@/components/brand/LatoMark';
 import { useLanguage } from '@/lib/i18n/LanguageProvider';
+import { formatIdr } from '@/lib/currency';
 import type { AssessmentSummary } from '@/types';
 
 export function AssessmentCard({
@@ -33,7 +34,7 @@ export function AssessmentCard({
         <span className="absolute right-3 top-3">
           {isPaid ? (
             <Badge variant="bronze" className="shadow-sm">
-              ${assessment.price}
+              {formatIdr(assessment.price)}
             </Badge>
           ) : (
             <Badge variant="secondary" className="shadow-sm">

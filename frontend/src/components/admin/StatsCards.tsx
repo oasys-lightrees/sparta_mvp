@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Activity, DollarSign, FileText, Users } from 'lucide-react';
+import { Activity, FileText, Users, Wallet } from 'lucide-react';
 import { adminApi } from '@/services/admin.api';
+import { formatIdr } from '@/lib/currency';
 import {
   Card,
   CardContent,
@@ -46,8 +47,8 @@ export function StatsCards() {
     { label: 'Total Attempts', value: stats.totalAttempts, icon: Activity },
     {
       label: 'Potential Revenue',
-      value: `$${stats.potentialRevenue}`,
-      icon: DollarSign,
+      value: formatIdr(stats.potentialRevenue),
+      icon: Wallet,
     },
   ];
 
