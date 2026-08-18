@@ -10,7 +10,8 @@ import {
 } from '../db/schema';
 import type { ProductContentBlock } from '../db/schema';
 import { resolveLearningResources } from '../config/learning-resources.schema';
-import { normalizeMode } from '../config/access';
+import { normalizeMode, policyFor } from '../config/access';
+import { hasGrant } from './access.service';
 import { HttpError } from '../utils/http-error';
 
 /**
@@ -94,6 +95,22 @@ export const getReport = async (userId: string, attemptId: string) => {
 
   const mode = normalizeMode(assessment?.accessMode);
 
+  // Result paywall: for gated modes (PAID/VOUCHER) the report is only revealed
+  // once the taker holds an access grant (bought a tier / redeemed a voucher).
+  // Ungated modes (FREE/FREEMIUM) are always unlocked. When locked we return a
+  // minimal shape — no score, level or content — so the taker "sees nothing"
+  // until they unlock. The unlock funnel drives them to a purchase.
+  const gated = policyFor(mode).startRequiresGrant;
+  const unlocked = !gated || (await hasGrant(userId, attempt.assessmentId));
+  if (!unlocked) {
+    return {
+      attempt_id: attempt.id,
+      locked: true as const,
+      assessment_title: assessment?.title ?? null,
+      access_mode: mode,
+    };
+  }
+
   // The paid premium report has been removed — anyone who reaches this result
   // gets the full deal, so all learning resources + the study video are shown.
   const resources = resolveLearningResources(
@@ -121,6 +138,7 @@ export const getReport = async (userId: string, attemptId: string) => {
 
   return {
     attempt_id: attempt.id,
+    locked: false as const,
     score: attempt.totalScore,
     level,
     assessment_title: assessment?.title ?? null,
@@ -211,6 +229,7 @@ export const listMine = async (userId: string) => {
       report_id: reports.id,
       report_type: reports.reportType,
       report_content: reports.content,
+      access_mode: assessments.accessMode,
     })
     .from(attempts)
     .innerJoin(assessments, eq(attempts.assessmentId, assessments.id))
@@ -238,21 +257,37 @@ export const listMine = async (userId: string) => {
     premiumRows.map((p) => [p.attemptId, p.content]),
   );
 
+  // Which of these assessments the user holds an access grant for — used to keep
+  // gated (unpaid) results hidden in the history, mirroring the report paywall.
+  const grantRows = await db
+    .select({ assessmentId: assessmentAccess.assessmentId })
+    .from(assessmentAccess)
+    .where(eq(assessmentAccess.userId, userId));
+  const grantedAssessments = new Set(grantRows.map((g) => g.assessmentId));
+
   return rows.map((r) => {
-    const { category_result, ...rest } = r;
+    const { category_result, access_mode, ...rest } = r;
+    // A gated assessment's result stays locked until the user has a grant.
+    const gated = policyFor(normalizeMode(access_mode)).startRequiresGrant;
+    const locked = gated && !grantedAssessments.has(r.assessment_id);
     // Personality assessments resolve to a result category, not a score. Surface
     // the winning category so the dashboard can show it instead of a 0 score.
-    const result_profile = category_result
-      ? {
-          code: category_result.dominant ?? '',
-          name: category_result.dominantName ?? category_result.dominant ?? '',
-        }
-      : null;
+    const result_profile =
+      !locked && category_result
+        ? {
+            code: category_result.dominant ?? '',
+            name: category_result.dominantName ?? category_result.dominant ?? '',
+          }
+        : null;
     return {
       ...rest,
+      // Withhold the score, result and report content while locked.
+      score: locked ? 0 : rest.score,
+      report_content: locked ? null : rest.report_content,
+      locked,
       result_profile,
       premium_unlocked: premiumByAttempt.has(r.attempt_id),
-      premium_content: premiumByAttempt.get(r.attempt_id) ?? null,
+      premium_content: locked ? null : premiumByAttempt.get(r.attempt_id) ?? null,
     };
   });
 };

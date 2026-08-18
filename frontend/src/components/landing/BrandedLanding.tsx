@@ -1,7 +1,7 @@
 import { type CSSProperties } from 'react';
 import Link from 'next/link';
 import type { AssessmentApp, Plan } from '@/types/assessment-app';
-import type { AccessMode, PricingTier, PublicProduct, VoucherPackage } from '@/types';
+import type { PricingTier, PublicProduct, VoucherPackage } from '@/types';
 import { formatIdr } from '@/lib/currency';
 import { BrandedAuthChip } from '@/components/branded/BrandedAuthChip';
 import './lato-theme.css';
@@ -82,8 +82,6 @@ export function BrandedLanding({
   companyHref,
   redeemHref,
   homeHref = '#top',
-  accessMode,
-  accessCost = 0,
 }: {
   app: AssessmentApp;
   product?: PublicProduct | null;
@@ -94,24 +92,16 @@ export function BrandedLanding({
   redeemHref?: string;
   // The assessment's own landing page (the brand logo links here).
   homeHref?: string;
-  accessMode?: AccessMode | null;
-  accessCost?: number;
 }) {
   const { brand, theme, landing, assessment, products, reports } = app;
   // Optional WhatsApp contact link (footer title + About-section button).
   const contactHref =
     landing.contact.enabled ? whatsappHref(landing.contact.whatsapp) : null;
-  // Primary CTA reflects the access model: paid shows the access price, voucher
-  // routes to redemption, free/freemium keep the configured copy. The actual
-  // gate is enforced on the start page + backend — this only labels the door.
-  const primaryLabel =
-    accessMode === 'VOUCHER'
-      ? 'Redeem a voucher to start'
-      : accessMode === 'PAID'
-        ? `Get access · ${formatIdr(accessCost)}`
-        : landing.hero.ctaPrimary;
-  const primaryHref =
-    accessMode === 'VOUCHER' ? (redeemHref ?? startHref) : startHref;
+  // Taking is free and open to everyone — the landing always routes straight
+  // into the assessment. Choosing a product and paying happens afterwards, once
+  // the taker has answered and wants to unlock their results (the unlock funnel).
+  const primaryLabel = landing.hero.ctaPrimary;
+  const primaryHref = startHref;
   const comps = reports.competencies.slice(0, 3);
   const codes = [`${brand.monogram}9F-2K`, `${brand.monogram}7Q-4X`, `${brand.monogram}1B-8M`];
   // A published product (with at least one enabled tier) replaces the static
@@ -354,11 +344,7 @@ export function BrandedLanding({
           </div>
           <div className="lato-wrap">
             {hasProductTiers && product ? (
-              <ProductTierCards
-                tiers={productTiers}
-                startHref={startHref}
-                redeemHref={redeemHref}
-              />
+              <ProductTierCards tiers={productTiers} startHref={startHref} />
             ) : (
               <div className="lato-plans">
                 {products.plans.map((p, i) => (
@@ -398,7 +384,7 @@ export function BrandedLanding({
                 <h2>{landing.finalCta.title}</h2>
                 {landing.finalCta.subtitle ? <p>{landing.finalCta.subtitle}</p> : null}
                 <a href={primaryHref} className="lato-btn lato-btn--lg">
-                  {accessMode === 'VOUCHER' ? primaryLabel : landing.finalCta.button}
+                  {landing.finalCta.button}
                 </a>
                 {landing.finalCta.fineprint ? (
                   <p className="fp">{landing.finalCta.fineprint}</p>
@@ -453,22 +439,12 @@ export function BrandedLanding({
 function ProductTierCards({
   tiers,
   startHref,
-  redeemHref,
 }: {
   tiers: PricingTier[];
   startHref: string;
-  redeemHref?: string;
 }) {
-  const hrefFor = (tier: PricingTier): string => {
-    if (tier.kind === 'VOUCHER') return redeemHref ?? startHref;
-    // A paid tier carries its own price + content, so route to its own checkout.
-    if (tier.kind === 'PAID') {
-      const sep = startHref.includes('?') ? '&' : '?';
-      return `${startHref}${sep}tier=${encodeURIComponent(tier.id)}`;
-    }
-    return startHref;
-  };
-
+  // Every card routes into the assessment. The tiers are a preview of what a
+  // taker can unlock; the actual choice + payment happens after they answer.
   return (
     <div className="lato-plans">
       {tiers.map((tier) => (
@@ -508,7 +484,7 @@ function ProductTierCards({
             </div>
           ) : null}
           <a
-            href={hrefFor(tier)}
+            href={startHref}
             className={
               tier.highlight
                 ? 'lato-btn lato-btn--grad lato-btn--block'

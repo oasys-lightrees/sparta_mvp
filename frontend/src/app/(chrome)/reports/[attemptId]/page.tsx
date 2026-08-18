@@ -37,6 +37,13 @@ function ReportContent({ attemptId }: { attemptId: string }) {
         await attemptApi.claim(attemptId);
         const data = await attemptApi.getReport(attemptId);
         if (!active) return;
+        // Gated results are revealed only after the taker unlocks them (buys a
+        // tier / redeems a voucher). On this platform surface we surface a clear
+        // message rather than the branded unlock funnel.
+        if (data.locked) {
+          setError('This report is locked. Unlock it to view your results.');
+          return;
+        }
         setReport(data);
         clearPendingAttempt();
       } catch (err) {

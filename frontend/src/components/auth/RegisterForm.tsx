@@ -37,8 +37,14 @@ export function RegisterForm() {
     setSubmitting(true);
     try {
       const user = await register(name, email, password);
+      // Prefer an explicit ?next= (e.g. the branded unlock funnel), then a
+      // pending guest attempt, then the role's home. `next` must be internal.
+      const nextParam = new URLSearchParams(window.location.search).get('next');
+      const safeNext = nextParam && nextParam.startsWith('/') ? nextParam : null;
       const pending = getPendingAttempt();
-      router.replace(pending ? `/reports/${pending}` : roleHome(user.role));
+      router.replace(
+        safeNext ?? (pending ? `/reports/${pending}` : roleHome(user.role)),
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
       setSubmitting(false);

@@ -107,6 +107,7 @@ export type ClaimResult = { attempt_id: string };
 export type Report = { type: ReportType; content: string };
 export type AttemptReport = {
   attempt_id: string;
+  locked: false;
   score: number;
   level: string;
   assessment_title: string | null;
@@ -125,6 +126,18 @@ export type AttemptReport = {
   product_content: ProductContentBlock[];
 };
 
+// A gated result the current user hasn't unlocked yet — the report is withheld
+// (no score/level/content) until they buy a tier or redeem a voucher.
+export type LockedReport = {
+  attempt_id: string;
+  locked: true;
+  assessment_title: string | null;
+  access_mode: AccessMode;
+};
+
+// The report endpoint returns either the full report or a locked placeholder.
+export type ReportResponse = AttemptReport | LockedReport;
+
 export type MyAttempt = {
   attempt_id: string;
   assessment_id: string;
@@ -136,6 +149,8 @@ export type MyAttempt = {
   report_id: string | null;
   report_type: ReportType | null;
   report_content: string | null;
+  // A gated result the user hasn't unlocked yet — score/result/content withheld.
+  locked: boolean;
   premium_unlocked: boolean;
   premium_content: string | null;
 };

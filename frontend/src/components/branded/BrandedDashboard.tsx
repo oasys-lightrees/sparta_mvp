@@ -177,7 +177,7 @@ export function BrandedDashboard({
               <p style={{ fontWeight: 600, color: 'var(--ink)' }}>No attempts yet</p>
               <p style={{ marginTop: 6 }}>Take the assessment to see your results here.</p>
               <a
-                href={`/a/${assessmentId}#products`}
+                href={`/a/${assessmentId}/start`}
                 className="lato-btn lato-btn--grad"
                 style={{ marginTop: 16 }}
               >
@@ -200,15 +200,31 @@ export function BrandedDashboard({
                 {(attempts ?? []).map((a) => (
                   <tr key={a.attempt_id}>
                     <td className="n">{new Date(a.created_at).toLocaleDateString()}</td>
-                    <td>{isPersonality ? a.result_profile?.name ?? '—' : a.score}</td>
+                    <td>
+                      {a.locked
+                        ? '🔒 Locked'
+                        : isPersonality
+                          ? a.result_profile?.name ?? '—'
+                          : a.score}
+                    </td>
                     <td style={{ textAlign: 'right' }}>
-                      <a
-                        href={`/a/${assessmentId}/report/${a.attempt_id}`}
-                        className="lato-btn lato-btn--ghost"
-                        style={{ padding: '.45em .8em', fontSize: '.82rem' }}
-                      >
-                        View
-                      </a>
+                      {a.locked ? (
+                        <a
+                          href={`/a/${assessmentId}/unlock/${a.attempt_id}`}
+                          className="lato-btn lato-btn--grad"
+                          style={{ padding: '.45em .8em', fontSize: '.82rem' }}
+                        >
+                          Unlock
+                        </a>
+                      ) : (
+                        <a
+                          href={`/a/${assessmentId}/report/${a.attempt_id}`}
+                          className="lato-btn lato-btn--ghost"
+                          style={{ padding: '.45em .8em', fontSize: '.82rem' }}
+                        >
+                          View
+                        </a>
+                      )}
                     </td>
                   </tr>
                 ))}
