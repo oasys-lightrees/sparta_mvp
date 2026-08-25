@@ -276,11 +276,7 @@ function DashboardHome() {
                         {a.assessment_title}
                       </TableCell>
                       <TableCell>
-                        {a.locked
-                          ? '🔒 Locked'
-                          : a.result_profile
-                            ? a.result_profile.name
-                            : a.score}
+                        {a.result_profile ? a.result_profile.name : a.score}
                       </TableCell>
                       <TableCell>
                         {new Date(a.created_at).toLocaleDateString()}
