@@ -420,7 +420,7 @@ export function BrandedLanding({
             <span>
               © {new Date().getFullYear()} {brand.brandName}. All rights reserved.
             </span>
-            <span>Powered by LATO, the assessment platform</span>
+            <span>Powered by LATO</span>
           </div>
         </div>
       </footer>
