@@ -14,7 +14,6 @@ import {
 } from '../db/schema';
 import { HttpError } from '../utils/http-error';
 import { sendEmail } from './email.service';
-import { assertCanStart } from './access.service';
 import {
   hasCategories,
   labelFor,
@@ -270,10 +269,10 @@ export const submit = async (assessmentId: string, input: SubmitInput) => {
     throw new HttpError(404, 'Assessment not found');
   }
 
-  // Access model authorization: gated modes (PAID/VOUCHER) require the taker to
-  // hold an access grant before an attempt may be created. Ungated modes
-  // (FREE/FREEMIUM) always pass — guests included — preserving the original UX.
-  await assertCanStart(assessmentId, input.userId ?? null, assessment.accessMode);
+  // Taking the assessment is open to everyone — guests included, every mode.
+  // The paywall now lives on the RESULT: gated modes (PAID/VOUCHER) gate the
+  // report (see attempt.service.getReport), not the act of answering. This lets
+  // a taker invest the effort first and unlock their results afterwards.
 
   const resultCategories: ResultCategories | null =
     assessment.resultCategories ?? null;

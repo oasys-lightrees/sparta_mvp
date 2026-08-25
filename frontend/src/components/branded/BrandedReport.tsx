@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { attemptApi } from '@/services/attempt.api';
 import { useAuth } from '@/hooks/useAuth';
 import { isDirectVideo } from '@/lib/video';
@@ -178,15 +179,22 @@ export function BrandedReport({
   assessmentId: string;
   attemptId: string;
 }) {
+  const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [report, setReport] = useState<AttemptReport | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
+  const home = `/a/${assessmentId}`;
+  const unlockHref = `${home}/unlock/${attemptId}`;
+
   useEffect(() => {
     if (authLoading) return;
+    // A report is tied to an account and gated by purchase. Anyone not signed in
+    // — or holding a not-yet-unlocked (gated) result — is routed to the unlock
+    // funnel, which signs them in, claims the attempt and takes payment.
     if (!user) {
-      setLoading(false);
+      router.replace(unlockHref);
       return;
     }
     let active = true;
@@ -194,7 +202,12 @@ export function BrandedReport({
       try {
         await attemptApi.claim(attemptId);
         const data = await attemptApi.getReport(attemptId);
-        if (active) setReport(data);
+        if (!active) return;
+        if (data.locked) {
+          router.replace(unlockHref);
+          return;
+        }
+        setReport(data);
       } catch (e) {
         if (active) setError(e instanceof Error ? e.message : 'Failed to load report');
       } finally {
@@ -204,39 +217,11 @@ export function BrandedReport({
     return () => {
       active = false;
     };
-  }, [attemptId, user, authLoading]);
+  }, [attemptId, user, authLoading, router, unlockHref]);
 
-  const home = `/a/${assessmentId}`;
-  const homeBack = { href: home, label: 'Home' };
   const dashboardBack = { href: `${home}/dashboard`, label: 'Dashboard' };
 
-  // auth gate (report is tied to an account)
-  if (!authLoading && !user) {
-    const next = encodeURIComponent(`/a/${assessmentId}/report/${attemptId}`);
-    return (
-      <BrandedShell app={app} homeHref={home} back={homeBack}>
-        <div className="lato-intro">
-          <div className="lato-card__i" style={{ margin: '0 auto 16px' }}>
-            <LatoIcon name="lock" />
-          </div>
-          <h1 style={{ fontSize: '1.6rem' }}>Your report is ready</h1>
-          <p className="lato-sub" style={{ marginInline: 'auto', marginTop: 10 }}>
-            Create a free account or log in to view your results and keep them in your dashboard.
-          </p>
-          <div style={{ marginTop: 22, display: 'flex', gap: 10, justifyContent: 'center' }}>
-            <a href={`/login?next=${next}`} className="lato-btn lato-btn--grad lato-btn--lg">
-              Log in to view
-            </a>
-            <a href={`/register?next=${next}`} className="lato-btn lato-btn--ghost lato-btn--lg">
-              Create account
-            </a>
-          </div>
-        </div>
-      </BrandedShell>
-    );
-  }
-
-  if (loading) {
+  if (loading || !user) {
     return (
       <BrandedShell app={app} homeHref={home} back={dashboardBack}>
         <div className="lato-loading">
@@ -300,6 +285,15 @@ export function BrandedReport({
         />
 
         <ProductContent blocks={report.product_content} />
+
+        <div style={{ marginTop: 26, textAlign: 'center' }}>
+          <a
+            href={`${home}/dashboard`}
+            className="lato-btn lato-btn--grad lato-btn--lg"
+          >
+            Go to my dashboard
+          </a>
+        </div>
       </div>
     </BrandedShell>
   );
